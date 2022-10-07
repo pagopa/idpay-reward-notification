@@ -15,20 +15,32 @@ spring:
   cloud:
     stream:
       function:
-        definition: rewardNotificationConsumer
+        definition: refundRuleConsumer
       bindings:
-        rewardNotificationConsumer-in-0:
-          destination: ${KAFKA_REWARD_NOTIFICATION_RULE_TOPIC:idpay-transaction-rule-update}
-          group: ${KAFKA_REWARD_NOTIFICATION_RULE_GROUP_ID:idpay-reward-notification-consumer-group}
+        refundRuleConsumer-in-0:
+          destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}
+          group: ${KAFKA_REFUND_RULE_REQUEST_GROUP_ID:idpay-reward-notification-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
+        errors-out-0:
+          destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-errors
       binders:
         kafka-idpay-rule:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_REWARD_NOTIFICATION_RULE_BROKER:${KAFKA_BROKER:}}
-              configuration.sasl.jaas.config: ${KAFKA_REWARD_NOTIFICATION_RULE_SASL_JAAS_CONFIG:}
+              brokers: ${KAFKA_REFUND_RULE_REQUEST_BROKER:${KAFKA_BROKER:}}
+              configuration.sasl.jaas.config: ${KAFKA_REFUND_RULE_REQUEST_SASL_JAAS_CONFIG:}
+        kafka-errors:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
       kafka:
         binder:
           auto-create-topics: false
@@ -39,21 +51,29 @@ spring:
             sasl.mechanism: ${KAFKA_CONFIG_SASL_MECHANISM:PLAIN}
             security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
         bindings:
-          trxProcessor-in-0:
+          refundRuleConsumer-in-0:
             consumer:
-              startOffset: ${KAFKA_REWARD_NOTIFICATION_RULE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              startOffset: ${KAFKA_REFUND_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_NOTIFICATION_RULE_ACK_MILLIS:10000}
-              standardHeaders: ${KAFKA_REWARD_NOTIFICATION_RULE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              ackTime: ${KAFKA_REFUND_RULE_REQUEST_ACK_MILLIS:10000}
+              standardHeaders: ${KAFKA_REFUND_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
-                  records: ${KAFKA_REWARD_NOTIFICATION_RULE_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
-                  interval.ms: ${KAFKA_REWARD_NOTIFICATION_RULE_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
-                connections.max.idle.ms: ${KAFKA_REWARD_NOTIFICATION_RULE_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
+                  records: ${KAFKA_REFUND_RULE_REQUEST_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_REFUND_RULE_REQUEST_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_REFUND_RULE_REQUEST_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
                 socket.connection.setup.timeout:
-                  max.ms: ${KAFKA_REWARD_NOTIFICATION_RULE_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
-                  ms: ${KAFKA_REWARD_NOTIFICATION_RULE_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+                  max.ms: ${KAFKA_REFUND_RULE_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_REFUND_RULE_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          errors-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-errors
+                connections.max.idle.ms: ${KAFKA_ERRORS_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_ERRORS_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_ERRORS_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_ERRORS_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
 
   data:
     mongodb:

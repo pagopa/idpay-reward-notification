@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode
 @Builder
-public class InitiativeDTO {
+public class InitiativeRefund2StoreDTO {
     @JsonProperty("initiativeId")
     private String initiativeId;
 
@@ -17,12 +17,6 @@ public class InitiativeDTO {
 
     @JsonProperty("organizationId")
     private String organizationId;
-
-    @JsonProperty("pdndToken")
-    private String pdndToken;
-
-    @JsonProperty("status")
-    private String status;
 
     @JsonProperty("general")
     private InitiativeGeneralDTO general;

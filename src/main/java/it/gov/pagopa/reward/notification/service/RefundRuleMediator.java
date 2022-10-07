@@ -10,6 +10,6 @@ import reactor.core.publisher.Flux;
  *     <li>store it inside DB</li>
  * </ol>
  * */
-public interface RewardNotificationRuleMediator {
+public interface RefundRuleMediator {
     void execute(Flux<Message<String>> initiativeDTOFlux);
 }

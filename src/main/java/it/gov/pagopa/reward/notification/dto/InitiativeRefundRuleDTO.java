@@ -15,7 +15,4 @@ public class InitiativeRefundRuleDTO {
 
     @JsonProperty("timeParameter")
     private TimeParameterDTO timeParameter;
-
-    @JsonProperty("additionalInfo")
-    private RefundAdditionalInfoDTO additionalInfo;
 }

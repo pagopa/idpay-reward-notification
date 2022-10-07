@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
-import it.gov.pagopa.reward.notification.dto.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.dto.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -41,6 +40,7 @@ public class RewardNotificationRuleFaker {
                 .timeType(TimeParameterDTO.TimeTypeEnum.DAILY)
                 .build();
         out.timeParameter(timeParameter);
+        out.organizationFiscalCode("ORGANIZATION_FISCAL_CODE_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
 
         TestUtils.checkNotNullFields(out);
         TestUtils.checkNotNullFields(accumulatedAmount);

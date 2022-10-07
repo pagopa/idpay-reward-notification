@@ -22,5 +22,5 @@ public class RewardNotificationRule {
     private String serviceId;
     private AccumulatedAmountDTO accumulatedAmount;
     private TimeParameterDTO timeParameter;
-
+    private String organizationFiscalCode;
 }

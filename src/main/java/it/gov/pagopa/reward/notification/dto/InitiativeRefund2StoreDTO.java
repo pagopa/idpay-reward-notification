@@ -18,6 +18,10 @@ public class InitiativeRefund2StoreDTO {
     @JsonProperty("organizationId")
     private String organizationId;
 
+    //TODO check field name (actually is not confirm)
+    @JsonProperty("organizationVat")
+    private String organizationVat;
+
     @JsonProperty("general")
     private InitiativeGeneralDTO general;
 

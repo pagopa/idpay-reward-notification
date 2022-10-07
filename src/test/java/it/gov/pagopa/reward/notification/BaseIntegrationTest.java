@@ -70,8 +70,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.jmx.enabled=true",
 
                 //region common feature disabled
-                "app.reward-rule.cache.refresh-ms-rate=60000",
-                "logging.level.it.gov.pagopa.reward.service.ErrorNotifierServiceImpl=WARN",
+                "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 //endregion
 
                 //region kafka brokers

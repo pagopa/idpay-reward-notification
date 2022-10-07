@@ -15,6 +15,7 @@ public class Initiative2RewardNotificationRuleMapper implements Function<Initiat
                 .initiativeName(initiativeRefund2StoreDTO.getInitiativeName())
                 .endDate(initiativeRefund2StoreDTO.getGeneral().getEndDate())
                 .organizationId(initiativeRefund2StoreDTO.getOrganizationId())
+                .organizationFiscalCode(initiativeRefund2StoreDTO.getOrganizationVat())
                 .serviceId(initiativeRefund2StoreDTO.getAdditionalInfo().getServiceId())
                 .accumulatedAmount(initiativeRefund2StoreDTO.getRefundRule().getAccumulatedAmount())
                 .timeParameter(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter())

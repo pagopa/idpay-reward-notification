@@ -44,6 +44,7 @@ public class InitiativeRefundDTOFaker {
         out.initiativeId("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.organizationId("ORGANIZATION_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+        out.organizationVat("ORGANIZATION_VAT_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
 
         InitiativeGeneralDTO initiativeGeneral = InitiativeGeneralDTO
                 .builder()

@@ -4,13 +4,16 @@ microservice-chart:
     tag: latest
     pullPolicy: Always
 
+  ingress:
+    host: "dev01.idpay.internal.dev.cstar.pagopa.it"
+
   resources:
     requests:
       memory: "256Mi"
-      cpu: "500m"
+      cpu: "300m"
     limits:
       memory: "4Gi"
-      cpu: "500m"
+      cpu: "300m"
 
 #  autoscaling:
 #    enable: true
@@ -31,6 +34,9 @@ microservice-chart:
 #          # metricAggregationInterval: "-1:1:0"
 #          metricAggregationType: Count
 #          targetValue: "30"
+
+  envSecret:
+    aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
 
   keyvault:
     name: "cstar-d-idpay-kv"

@@ -1,8 +1,9 @@
-package it.gov.pagopa.reward.notification.service;
+package it.gov.pagopa.reward.notification.service.rule;
 
-import it.gov.pagopa.reward.notification.dto.InitiativeRefund2StoreDTO;
+import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.Initiative2RewardNotificationRuleMapper;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -13,7 +14,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class RefundRuleMediatorTest {
+class RefundRuleMediatorServiceTest {
     @Test
     void mediatorTest(){
         // Given
@@ -22,7 +23,7 @@ class RefundRuleMediatorTest {
         RewardNotificationRuleService rewardNotificationRuleServiceMock = Mockito.mock(RewardNotificationRuleService.class);
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
 
-        RefundRuleMediator mediator = new RefundRuleMediatorImpl(commitMillis,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleServiceMock,errorNotifierServiceMock, TestUtils.objectMapper);
+        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl(commitMillis,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleServiceMock,errorNotifierServiceMock, TestUtils.objectMapper);
 
         InitiativeRefund2StoreDTO initiativeRefund2StoreDTO1 = InitiativeRefundDTOFaker.mockInstance(1);
         InitiativeRefund2StoreDTO initiativeRefund2StoreDTO2 = InitiativeRefundDTOFaker.mockInstance(2);

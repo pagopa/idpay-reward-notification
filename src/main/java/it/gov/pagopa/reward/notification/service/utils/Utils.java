@@ -2,6 +2,8 @@ package it.gov.pagopa.reward.notification.service.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
 import java.util.function.Consumer;
@@ -18,5 +20,17 @@ public final class Utils {
             onError.accept(e);
             return null;
         }
+    }
+
+    private static final String PAYLOAD_FIELD_USER_ID = "\"%s\"".formatted(TransactionDTO.Fields.userId);
+    /** It will read userId field from {@link RewardTransactionDTO} payload */
+    public static String readUserId(String payload) {
+        int userIdIndex = payload.indexOf(PAYLOAD_FIELD_USER_ID);
+        if(userIdIndex>-1){
+            String afterUserId = payload.substring(userIdIndex+8);
+            final int afterOpeningQuote = afterUserId.indexOf('"') + 1;
+            return afterUserId.substring(afterOpeningQuote, afterUserId.indexOf('"', afterOpeningQuote));
+        }
+        return null;
     }
 }

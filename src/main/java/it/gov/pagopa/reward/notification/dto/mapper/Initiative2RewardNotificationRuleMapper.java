@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
-import it.gov.pagopa.reward.notification.dto.InitiativeRefund2StoreDTO;
+import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import org.springframework.stereotype.Service;
 

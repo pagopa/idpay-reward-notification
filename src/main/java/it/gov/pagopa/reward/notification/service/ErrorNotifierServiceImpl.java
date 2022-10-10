@@ -27,21 +27,38 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     private final String refundRuleServer;
     private final String refundRuleTopic;
 
+    private final String rewardResponseMessagingServiceType;
+    private final String rewardResponseServer;
+    private final String rewardResponseTopic;
+
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.type}") String refundRuleMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers}") String refundRuleServer,
-                                    @Value("${spring.cloud.stream.bindings.refundRuleConsumer-in-0.destination}") String refundRuleTopic) {
+                                    @Value("${spring.cloud.stream.bindings.refundRuleConsumer-in-0.destination}") String refundRuleTopic,
+
+                                    @Value("${spring.cloud.stream.binders.kafka-rewarded-transactions.type}") String rewardResponseMessagingServiceType,
+                                    @Value("${spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardResponseServer,
+                                    @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}") String rewardResponseTopic) {
         this.streamBridge = streamBridge;
 
         this.refundRuleMessagingServiceType = refundRuleMessagingServiceType;
         this.refundRuleServer = refundRuleServer;
         this.refundRuleTopic = refundRuleTopic;
+
+        this.rewardResponseMessagingServiceType = rewardResponseMessagingServiceType;
+        this.rewardResponseServer = rewardResponseServer;
+        this.rewardResponseTopic = rewardResponseTopic;
     }
 
     @Override
     public void notifyRewardNotifierRule(Message<?> message, String description, boolean retryable, Throwable exception) {
         notify(refundRuleMessagingServiceType, refundRuleServer, refundRuleTopic, message, description, retryable, exception);
+    }
+
+    @Override
+    public void notifyRewardResponse(Message<?> message, String description, boolean retryable, Throwable exception) {
+        notify(rewardResponseMessagingServiceType, rewardResponseServer, rewardResponseTopic, message, description, retryable, exception);
     }
 
     @Override

@@ -1,6 +1,7 @@
-package it.gov.pagopa.reward.notification.dto;
+package it.gov.pagopa.reward.notification.dto.rule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
 import lombok.*;
 
 @Data

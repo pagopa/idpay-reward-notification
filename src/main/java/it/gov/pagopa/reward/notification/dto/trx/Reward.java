@@ -27,7 +27,7 @@ public class Reward {
     private boolean weeklyCapped;
 
     /** Counters */
-    private RewardCounters counters;
+    private RewardCounters counters = new RewardCounters();
 
     public Reward(BigDecimal reward){
         this.providedReward=reward;

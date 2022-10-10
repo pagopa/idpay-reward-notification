@@ -16,7 +16,7 @@ public class RewardNotificationRuleServiceImpl implements RewardNotificationRule
 
     @Override
     public Mono<RewardNotificationRule> findById(String initiativeId) {
-        return rewardNotificationRuleRepository.findById(initiativeId);
+        return rewardNotificationRuleRepository.findById(initiativeId).cache();
     }
 
     @Override

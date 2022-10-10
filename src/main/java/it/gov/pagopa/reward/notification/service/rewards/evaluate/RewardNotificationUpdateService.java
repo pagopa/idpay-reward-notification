@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.rewards;
+package it.gov.pagopa.reward.notification.service.rewards.evaluate;
 
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;

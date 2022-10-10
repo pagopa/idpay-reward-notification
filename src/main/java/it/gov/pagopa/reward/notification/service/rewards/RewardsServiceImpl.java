@@ -30,7 +30,7 @@ public class RewardsServiceImpl implements RewardsService {
                 })
                 .defaultIfEmpty(trx)
                 .onErrorResume(e -> Mono.empty())
-                .doOnNext(x -> log.trace("[REWARD_NOTIFICATION] Duplicate check successful ended: {}", trx.getId()));
+                .doOnNext(x -> log.trace("[REWARD_NOTIFICATION] Duplicate check successful ended: {}_{}", trx.getId(), initiativeId));
     }
 
     @Override

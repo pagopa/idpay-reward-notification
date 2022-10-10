@@ -2,14 +2,13 @@ package it.gov.pagopa.reward.notification.service.rewards;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.reward.notification.dto.mapper.RewardMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
-import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
+import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -35,9 +34,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
 
     private final LockService lockService;
     private final RewardsService rewardsService;
-    private final RewardNotificationRuleService rewardNotificationRuleService;
-    private final RewardNotificationUpdateService rewardNotificationUpdateService;
-    private final RewardMapper rewardMapper;
+    private final RewardNotificationRuleEvaluatorService ruleEvaluatorService;
     private final ErrorNotifierService errorNotifierService;
 
     private final Duration commitDelay;
@@ -48,17 +45,14 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
     public RewardsMediatorServiceImpl(
             LockService lockService,
             RewardsService rewardsService,
-            RewardNotificationRuleService rewardNotificationRuleService, RewardNotificationUpdateService rewardNotificationUpdateService, RewardMapper rewardMapper,
-            ErrorNotifierService errorNotifierService,
+            RewardNotificationRuleEvaluatorService ruleEvaluatorService, ErrorNotifierService errorNotifierService,
 
             @Value("${spring.cloud.stream.kafka.bindings.rewardTrxConsumer-in-0.consumer.ackTime}") long commitMillis,
 
             ObjectMapper objectMapper) {
         this.lockService = lockService;
         this.rewardsService = rewardsService;
-        this.rewardNotificationRuleService = rewardNotificationRuleService;
-        this.rewardNotificationUpdateService = rewardNotificationUpdateService;
-        this.rewardMapper = rewardMapper;
+        this.ruleEvaluatorService = ruleEvaluatorService;
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
 
@@ -165,20 +159,6 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
         Reward reward = triple.getRight();
         RewardTransactionDTO trx = triple.getLeft();
 
-        return rewardNotificationRuleService.findById(initiativeId)
-                .flatMap(rule ->
-                        rewardNotificationUpdateService.configureRewardNotification(trx, rule, reward)
-                                .map(notificationId -> Pair.of(rule, notificationId)))
-                .switchIfEmpty(Mono.fromSupplier(() -> {
-                    String errorMsg = "Cannot find initiative having id: %s".formatted(initiativeId);
-                    errorNotifierService.notifyRewardResponse(message, errorMsg, true, new IllegalStateException(errorMsg));
-                    return Pair.of(null, null);
-                }))
-                .map(rule2NotificationId -> {
-                    Rewards r = rewardMapper.apply(initiativeId, reward, trx, rule2NotificationId.getKey());
-                    r.setNotificationId(rule2NotificationId.getValue());
-                    return r;
-                })
-                .flatMap(rewardsService::save);
+        return ruleEvaluatorService.retrieveAndEvaluate(initiativeId, reward, trx, message);
     }
 }

@@ -42,13 +42,23 @@ public class RewardTransactionDTOFaker {
     }
 
     /**
-     * It will return an example of {@link RewardTransactionDTO}. Providing a bias, it will return a pseudo-casual object
+     * @see #mockInstance(Integer) using INITIATIVEID
      */
     public static RewardTransactionDTO mockInstance(Integer bias) {
         return mockInstanceBuilder(bias).build();
     }
 
+    /**
+     * It will return an example of {@link RewardTransactionDTO}. Providing a bias, it will return a pseudo-casual object
+     */
+    public static RewardTransactionDTO mockInstance(Integer bias, String initiativeId) {
+        return mockInstanceBuilder(bias, initiativeId).build();
+    }
+
     public static RewardTransactionDTO.RewardTransactionDTOBuilder<?, ?> mockInstanceBuilder(Integer bias) {
+        return mockInstanceBuilder(bias, "INITIATIVEID");
+    }
+    public static RewardTransactionDTO.RewardTransactionDTOBuilder<?, ?> mockInstanceBuilder(Integer bias, String initiativeId) {
         LocalDate trxDate = LocalDate.of(2022, getRandomPositiveNumber(bias, 11) + 1, getRandomPositiveNumber(bias, 27)+1);
         LocalTime trxTime = LocalTime.of(getRandomPositiveNumber(bias, 23), getRandomPositiveNumber(bias, 59), getRandomPositiveNumber(bias, 59));
         LocalDateTime trxDateTime = LocalDateTime.of(trxDate, trxTime);
@@ -88,7 +98,7 @@ public class RewardTransactionDTOFaker {
 
                 .status("REWARDED")
                 .rewards(Map.of(
-                        "INITIATIVEID", new Reward(amount.multiply(BigDecimal.valueOf(0.1)).setScale(2, RoundingMode.HALF_DOWN))
+                        initiativeId, new Reward(amount.multiply(BigDecimal.valueOf(0.1)).setScale(2, RoundingMode.HALF_DOWN))
                 ));
 
         out.id(computeTrxId(out.build()));

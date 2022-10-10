@@ -15,6 +15,11 @@ public class RewardNotificationRuleServiceImpl implements RewardNotificationRule
     }
 
     @Override
+    public Mono<RewardNotificationRule> findById(String initiativeId) {
+        return rewardNotificationRuleRepository.findById(initiativeId);
+    }
+
+    @Override
     public Mono<RewardNotificationRule> save(RewardNotificationRule rewardNotificationRule) {
         return rewardNotificationRuleRepository.save(rewardNotificationRule);
     }

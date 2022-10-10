@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.service.rewards;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
@@ -58,5 +59,21 @@ class RewardsServiceTest {
 
         // Then
         Assertions.assertNull(result);
+    }
+
+    @Test
+    void checkDuplicateTransactionsRejectedOk() {
+        // Given
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+
+        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), trx, RewardNotificationRuleFaker.mockInstance(1));
+        rewardDuplicate.setStatus(RewardStatus.REJECTED);
+        Mockito.when(rewardsRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(rewardDuplicate));
+
+        // When
+        RewardTransactionDTO result = rewardsService.checkDuplicateReward(trx,"INITIATIVEID").block();
+
+        // Then
+        Assertions.assertSame(trx, result);
     }
 }

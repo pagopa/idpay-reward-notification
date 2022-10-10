@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
+import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +35,8 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
 
     private final LockService lockService;
     private final RewardsService rewardsService;
+    private final RewardNotificationRuleService rewardNotificationRuleService;
+    private final RewardNotificationUpdateService rewardNotificationUpdateService;
     private final RewardMapper rewardMapper;
     private final ErrorNotifierService errorNotifierService;
 
@@ -45,7 +48,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
     public RewardsMediatorServiceImpl(
             LockService lockService,
             RewardsService rewardsService,
-            RewardMapper rewardMapper,
+            RewardNotificationRuleService rewardNotificationRuleService, RewardNotificationUpdateService rewardNotificationUpdateService, RewardMapper rewardMapper,
             ErrorNotifierService errorNotifierService,
 
             @Value("${spring.cloud.stream.kafka.bindings.rewardTrxConsumer-in-0.consumer.ackTime}") long commitMillis,
@@ -53,6 +56,8 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
             ObjectMapper objectMapper) {
         this.lockService = lockService;
         this.rewardsService = rewardsService;
+        this.rewardNotificationRuleService = rewardNotificationRuleService;
+        this.rewardNotificationUpdateService = rewardNotificationUpdateService;
         this.rewardMapper = rewardMapper;
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
@@ -125,7 +130,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
                 .mapNotNull(this::deserializeMessage)
                 .flatMapMany(this::readRewards)
                 .flatMap(this::checkDuplicateReward)
-                .flatMap(this::retrieveInitiativeAndEvaluate)
+                .flatMap(r -> retrieveInitiativeAndEvaluate(r, message))
                 .doOnEach(lockReleaser)
                 .collectList();
     }
@@ -155,8 +160,25 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
     }
 
 
-    private Mono<Rewards> retrieveInitiativeAndEvaluate(Triple<RewardTransactionDTO, String, Reward> triple) {
-        // TODO
-        return null;
+    private Mono<Rewards> retrieveInitiativeAndEvaluate(Triple<RewardTransactionDTO, String, Reward> triple, Message<String> message) {
+        String initiativeId = triple.getMiddle();
+        Reward reward = triple.getRight();
+        RewardTransactionDTO trx = triple.getLeft();
+
+        return rewardNotificationRuleService.findById(initiativeId)
+                .flatMap(rule ->
+                        rewardNotificationUpdateService.configureRewardNotification(trx, rule, reward)
+                                .map(notificationId -> Pair.of(rule, notificationId)))
+                .switchIfEmpty(Mono.fromSupplier(() -> {
+                    String errorMsg = "Cannot find initiative having id: %s".formatted(initiativeId);
+                    errorNotifierService.notifyRewardResponse(message, errorMsg, true, new IllegalStateException(errorMsg));
+                    return Pair.of(null, null);
+                }))
+                .map(rule2NotificationId -> {
+                    Rewards r = rewardMapper.apply(initiativeId, reward, trx, rule2NotificationId.getKey());
+                    r.setNotificationId(rule2NotificationId.getValue());
+                    return r;
+                })
+                .flatMap(rewardsService::save);
     }
 }

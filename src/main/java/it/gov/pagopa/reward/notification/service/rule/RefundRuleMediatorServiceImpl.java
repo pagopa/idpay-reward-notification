@@ -1,10 +1,12 @@
-package it.gov.pagopa.reward.notification.service;
+package it.gov.pagopa.reward.notification.service.rule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.reward.notification.dto.InitiativeRefund2StoreDTO;
+import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.Initiative2RewardNotificationRuleMapper;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
+import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -19,7 +21,7 @@ import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class RefundRuleMediatorImpl extends BaseKafkaConsumer<InitiativeRefund2StoreDTO, RewardNotificationRule> implements RefundRuleMediator {
+public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeRefund2StoreDTO, RewardNotificationRule> implements RefundRuleMediatorService {
 
     private final Duration commitDelay;
     private final Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper;
@@ -28,7 +30,7 @@ public class RefundRuleMediatorImpl extends BaseKafkaConsumer<InitiativeRefund2S
 
     private final ObjectReader objectReader;
 
-    public RefundRuleMediatorImpl(
+    public RefundRuleMediatorServiceImpl(
             @Value("${spring.cloud.stream.kafka.bindings.refundRuleConsumer-in-0.consumer.ackTime}")
             long commitMillis,
             Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper,

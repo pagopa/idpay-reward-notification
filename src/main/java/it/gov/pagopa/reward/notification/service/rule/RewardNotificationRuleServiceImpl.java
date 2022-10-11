@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service;
+package it.gov.pagopa.reward.notification.service.rule;
 
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
@@ -12,6 +12,11 @@ public class RewardNotificationRuleServiceImpl implements RewardNotificationRule
 
     public RewardNotificationRuleServiceImpl(RewardNotificationRuleRepository rewardNotificationRuleRepository) {
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
+    }
+
+    @Override
+    public Mono<RewardNotificationRule> findById(String initiativeId) {
+        return rewardNotificationRuleRepository.findById(initiativeId).cache();
     }
 
     @Override

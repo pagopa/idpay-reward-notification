@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
-import it.gov.pagopa.reward.notification.service.RefundRuleMediator;
+import it.gov.pagopa.reward.notification.service.rule.RefundRuleMediatorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
@@ -11,14 +11,14 @@ import java.util.function.Consumer;
 @Configuration
 public class RefundRuleConsumerConfig {
 
-    private final RefundRuleMediator refundRuleMediator;
+    private final RefundRuleMediatorService refundRuleMediatorService;
 
-    public RefundRuleConsumerConfig(RefundRuleMediator refundRuleMediator) {
-        this.refundRuleMediator = refundRuleMediator;
+    public RefundRuleConsumerConfig(RefundRuleMediatorService refundRuleMediatorService) {
+        this.refundRuleMediatorService = refundRuleMediatorService;
     }
 
     @Bean
     public Consumer<Flux<Message<String>>> refundRuleConsumer(){
-        return refundRuleMediator::execute;
+        return refundRuleMediatorService::execute;
     }
 }

@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service;
+package it.gov.pagopa.reward.notification.service.rule;
 
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
@@ -10,6 +10,6 @@ import reactor.core.publisher.Flux;
  *     <li>store it inside DB</li>
  * </ol>
  * */
-public interface RefundRuleMediator {
+public interface RefundRuleMediatorService {
     void execute(Flux<Message<String>> initiativeDTOFlux);
 }

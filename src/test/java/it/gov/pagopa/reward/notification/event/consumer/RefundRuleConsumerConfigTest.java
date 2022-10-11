@@ -79,6 +79,10 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private long waitForInitiativeStored(int n) {
+        return waitForInitiativeStored(n, rewardNotificationRuleRepository);
+    }
+
+    public static long waitForInitiativeStored(int n, RewardNotificationRuleRepository rewardNotificationRuleRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
         waitFor(()->(countSaved[0]=rewardNotificationRuleRepository.count().block()) >= n, ()->"Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);

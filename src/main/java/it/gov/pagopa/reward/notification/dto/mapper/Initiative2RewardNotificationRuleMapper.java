@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
-import it.gov.pagopa.reward.notification.dto.InitiativeRefund2StoreDTO;
+import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ public class Initiative2RewardNotificationRuleMapper implements Function<Initiat
                 .endDate(initiativeRefund2StoreDTO.getGeneral().getEndDate())
                 .organizationId(initiativeRefund2StoreDTO.getOrganizationId())
                 .organizationFiscalCode(initiativeRefund2StoreDTO.getOrganizationVat())
-                .serviceId(initiativeRefund2StoreDTO.getAdditionalInfo().getServiceId())
+                .serviceId(initiativeRefund2StoreDTO.getAdditionalInfo()!=null ? initiativeRefund2StoreDTO.getAdditionalInfo().getServiceId() : null)
                 .accumulatedAmount(initiativeRefund2StoreDTO.getRefundRule().getAccumulatedAmount())
                 .timeParameter(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter())
                 .build();

@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
-import it.gov.pagopa.reward.notification.dto.TimeParameterDTO;
+import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;

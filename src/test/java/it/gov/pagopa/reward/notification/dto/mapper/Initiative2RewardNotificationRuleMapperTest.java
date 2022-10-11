@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 
-import it.gov.pagopa.reward.notification.dto.InitiativeRefund2StoreDTO;
+import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;

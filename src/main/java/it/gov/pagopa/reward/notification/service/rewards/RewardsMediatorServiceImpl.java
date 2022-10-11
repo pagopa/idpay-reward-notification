@@ -146,7 +146,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
 
     private Mono<Triple<RewardTransactionDTO, String, Reward>> checkDuplicateReward(Triple<RewardTransactionDTO, String, Reward> triple) {
         return rewardsService.checkDuplicateReward(triple.getLeft(), triple.getMiddle())
-                .thenReturn(triple);
+                .map(x -> triple);
     }
 
     public int calculateLockId(String userId) {

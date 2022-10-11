@@ -28,7 +28,7 @@ public class RewardMapper {
                 .build();
     }
 
-    private String buildRewardId(RewardTransactionDTO trx, String initiativeId) {
+    public String buildRewardId(RewardTransactionDTO trx, String initiativeId) {
         return "%s_%s".formatted(trx.getId(), initiativeId);
     }
 }

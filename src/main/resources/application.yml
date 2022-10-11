@@ -15,7 +15,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: refundRuleConsumer
+        definition: refundRuleConsumer;rewardTrxConsumer
       bindings:
         refundRuleConsumer-in-0:
           destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}

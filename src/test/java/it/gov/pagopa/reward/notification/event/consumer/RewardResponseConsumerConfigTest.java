@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefundRuleDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
@@ -35,12 +36,10 @@ import org.springframework.test.context.TestPropertySource;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -49,7 +48,8 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
+//        "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.rewards.RewardsServiceImpl=WARN",
 })
 @Slf4j
 class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
@@ -127,7 +127,9 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         });
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
-        waitForRewardsStored(validTrx+1+1); // +1 duplicate +1 errorUseCases (no initiative)
+        long timeBeforeDbCheck = System.currentTimeMillis();
+        int expectedStored = validTrx+1+1; // +1 duplicate +1 errorUseCases (no initiative)
+        Assertions.assertEquals(expectedStored, waitForRewardsStored(expectedStored));
         long timeEnd = System.currentTimeMillis();
 
         rewardsRepository.findAll()
@@ -162,7 +164,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                 notValidTrx,
                 alreadyProcessed,
                 timePublishingOnboardingRequest,
-                timeEnd - timePublishingOnboardingRequest,
+                timeEnd - timeBeforeDbCheck,
                 timeEnd - timePublishOnboardingStart
         );
 
@@ -336,11 +338,16 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         );
     }
 
+    Set<String> errorUseCasesStored_userid = Set.of("NOT_EXISTENT_INITIATIVE_ID_USER_ID");
     private void checkResponse(Rewards reward) {
-        String trxId = reward.getTrxId();
-        int biasRetrieve = Integer.parseInt(trxId.substring(4));
-        useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
-//        createRewardNotification()
+        if(RewardStatus.ACCEPTED.equals(reward.getStatus())) {
+            String trxId = reward.getUserId();
+            int biasRetrieve = Integer.parseInt(trxId.substring(6));
+            useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
+            //        createRewardNotification()
+        } else {
+            Assertions.assertTrue(errorUseCasesStored_userid.contains(reward.getUserId()), "Invalid rejected reward: " + reward);
+        }
     }
 
     //region useCases
@@ -465,15 +472,15 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION] Unexpected JSON", jsonNotValid, null)
         ));
 
-        final String notExistentInitiative = "NOT_EXISTENT_INITIATIVE_ID";
+        final String notExistentInitiativeUserId = "NOT_EXISTENT_INITIATIVE_ID_USER_ID";
         String notExistentInitiativeUseCase = TestUtils.jsonSerializer(
                 RewardTransactionDTOFaker.mockInstanceBuilder(errorUseCases.size(), "NOT_EXISTENT_INITIATIVE_ID")
-                        .userId(notExistentInitiative)
+                        .userId(notExistentInitiativeUserId)
                         .build()
         );
         errorUseCases.add(Pair.of(
                 () -> notExistentInitiativeUseCase,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION] An error occurred evaluating transaction", notExistentInitiativeUseCase, notExistentInitiative)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION] Cannot find initiative having id: NOT_EXISTENT_INITIATIVE_ID", notExistentInitiativeUseCase, notExistentInitiativeUserId)
         ));
 
         // TODO uncomment and configure when rewardNotification logic has been implemented

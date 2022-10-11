@@ -29,7 +29,7 @@ class RewardsServiceTest {
 
     @BeforeEach
     void init(){
-        rewardsService = new RewardsServiceImpl(rewardsRepositoryMock);
+        rewardsService = new RewardsServiceImpl(rewardsRepositoryMock, rewardMapper);
     }
 
     @Test

@@ -48,7 +48,6 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
-//        "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
         "logging.level.it.gov.pagopa.reward.notification.service.rewards.RewardsServiceImpl=WARN",
 })
 @Slf4j

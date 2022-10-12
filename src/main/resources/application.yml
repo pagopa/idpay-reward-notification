@@ -15,7 +15,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: refundRuleConsumer;rewardTrxConsumer
+        definition: refundRuleConsumer;rewardTrxConsumer;ibanRequestConsumer
       bindings:
         refundRuleConsumer-in-0:
           destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}
@@ -27,6 +27,11 @@ spring:
           group: ${KAFKA_REWARD_RESPONSE_GROUP_ID:idpay-rewards-notification}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-rewarded-transactions
+        ibanRequestConsumer-in-0:
+          destination:  ${KAFKA_CHECKIBAN_REQUEST_TOPIC:idpay-checkiban-evaluation}
+          group: ${KAFKA_CHECKIBAN_REQUEST_GROUP_ID:idpay-reward-notification}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-checkiban-request
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -45,6 +50,12 @@ spring:
               brokers: ${KAFKA_REWARD_RESPONSE_BROKER:${KAFKA_BROKER:}}
               configuration:
                 sasl.jaas.config: ${REWARD_RESPONSE_SASL_JAAS_CONFIG:}
+        kafka-checkiban-request:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_CHECKIBAN_REQUEST_BROKER:${KAFKA_BROKER:}}
+              configuration.sasl.jaas.config: ${KAFKA_CHECKIBAN_REQUEST_SASL_JAAS_CONFIG:}
         kafka-errors:
           type: kafka
           environment:
@@ -93,6 +104,21 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_REWARD_RESPONSE_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_REWARD_RESPONSE_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          ibanRequestConsumer-in-0:
+            consumer:
+              startOffset: ${KAFKA_CHECKIBAN_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_CHECKIBAN_REQUEST_ACK_MILLIS:10000}
+              standardHeaders: ${KAFKA_CHECKIBAN_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              configuration:
+                max.poll:
+                  records: ${KAFKA_CHECKIBAN_REQUEST_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_CHECKIBAN_REQUEST_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_CHECKIBAN_REQUEST_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_CHECKIBAN_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_CHECKIBAN_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
           errors-out-0:
             producer:
               configuration:

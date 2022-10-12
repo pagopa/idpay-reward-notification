@@ -14,6 +14,6 @@ public class RewardNotificationUpdateServiceImpl implements RewardNotificationUp
     public Mono<String> configureRewardNotification(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
         log.trace("[REWARD_NOTIFICATION] Configuring reward notification {}_{}", trx.getId(), rule.getInitiativeId())
         ;
-        return Mono.just("NOTIFICATIONID"); //TODO
+        return Mono.just("%s_%s_NOTIFICATIONID".formatted(rule.getInitiativeId(), trx.getUserId())); //TODO
     }
 }

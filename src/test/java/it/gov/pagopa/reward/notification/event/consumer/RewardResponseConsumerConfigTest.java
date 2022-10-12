@@ -12,12 +12,14 @@ import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
 import it.gov.pagopa.reward.notification.service.LockServiceImpl;
+import it.gov.pagopa.reward.notification.service.rewards.RewardsService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
-import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -27,19 +29,18 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,9 +58,9 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
 
     @Autowired
     private RewardsRepository rewardsRepository;
-    // TODO uncomment when rewardNotification logic has been implemented
-//    @Autowired
-//    private RewardsNotificationRepository rewardsNotificationRepository;
+    @Autowired
+    private RewardsNotificationRepository rewardsNotificationRepository;
+    // TODO uncomment when rewardsOrganizationExports logic has been implemented
 //    @Autowired
 //    private RewardsOrganizationExportsRepository rewardsOrganizationExportsRepository;
 
@@ -74,6 +75,10 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
     @SpyBean
     private RewardNotificationRuleEvaluatorService rewardNotificationRuleEvaluatorServiceSpy;
 
+    // TODO remove after rewardNotification logic impl
+    @SpyBean
+    private RewardsService rewardsServiceSpy;
+
     @AfterEach
     void checkLockBouquet() throws NoSuchFieldException, IllegalAccessException {
         final Field locksField = LockServiceImpl.class.getDeclaredField("locks");
@@ -85,8 +90,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
     @AfterEach
     void clearData() {
         rewardsRepository.deleteAll().block();
-        // TODO uncomment when rewardNotification logic has been implemented
-//        rewardsNotificationRepository.deleteAll().block();
+        rewardsNotificationRepository.deleteAll().block();
+        // TODO uncomment when rewardsOrganizationExports logic has been implemented
 //        rewardsOrganizationExportsRepository.deleteAll().block();
         ruleRepository.deleteAll().block();
     }
@@ -95,31 +100,43 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
     void testTransactionProcessor() throws JsonProcessingException {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
-        int duplicateTrx = Math.min(100, validTrx/2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
+        int duplicateTrx = Math.min(100, validTrx / 2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
         long maxWaitingMs = 30000;
 
         publishRewardRules();
 
-        Rewards rewardDuplicated = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), RewardTransactionDTOFaker.mockInstance(1), RewardNotificationRuleFaker.mockInstance(1),"ALREADY_PROCESSED_REWARD");
-        rewardsRepository.save(rewardDuplicated).block();
+        RewardTransactionDTO trxAlreadyProcessed = storeTrxAlreadyProcessed();
+
+        // TODO removeme after rewardNotification logic build
+        Mockito.doAnswer(a -> {
+                    Rewards r = a.getArgument(0);
+                    return rewardsNotificationRepository.save(
+                                    RewardsNotification.builder()
+                                            .id(r.getNotificationId())
+                                            .trxIds(List.of(r.getTrxId()))
+                                            .build())
+                            .then((Mono<Rewards>) a.callRealMethod());
+                })
+                .when(rewardsServiceSpy)
+                .save(Mockito.any());
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
 
-        trxs.add(objectMapper.writeValueAsString(rewardDuplicated));
+        trxs.add(TestUtils.jsonSerializer(trxAlreadyProcessed));
         int alreadyProcessed = 1;
 
-        long totalSendMessages = trxs.size()+duplicateTrx;
+        long totalSendMessages = trxs.size() + duplicateTrx;
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        int[] i=new int[]{0};
+        int[] i = new int[]{0};
         trxs.forEach(p -> {
             final String userId = Utils.readUserId(p);
-            publishIntoEmbeddedKafka(topicRewardResponse, null, userId,p);
+            publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p);
 
             // to test duplicate trx and their right processing order
-            if(i[0]<duplicateTrx){
+            if (i[0] < duplicateTrx) {
                 i[0]++;
                 publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
@@ -127,7 +144,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeBeforeDbCheck = System.currentTimeMillis();
-        int expectedStored = validTrx+1+1; // +1 duplicate +1 errorUseCases (no initiative)
+        int expectedStored = validTrx + 1 + 1; // +1 duplicate +1 errorUseCases (no initiative)
         Assertions.assertEquals(expectedStored, waitForRewardsStored(expectedStored));
         long timeEnd = System.currentTimeMillis();
 
@@ -137,6 +154,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                 .block();
 
         verifyDuplicateCheck();
+
+        verifyNotElaborated(trx -> trx.getId().equals(trxAlreadyProcessed.getId()));
 
         // TODO uncomment when rewardNotification logic has been implemented
 //        Assertions.assertEquals(
@@ -170,6 +189,35 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         checkOffsets(totalSendMessages);
     }
 
+    private RewardTransactionDTO storeTrxAlreadyProcessed() {
+        String alreadyProcessedInitiative = "INITIATIVEID";
+
+        RewardTransactionDTO trxAlreadyProcessed = RewardTransactionDTOFaker.mockInstance(1);
+        trxAlreadyProcessed.setCorrelationId("ALREADY_PROCESSED_REWARD_CORRELATION_ID");
+        trxAlreadyProcessed.setRewards(Map.of(alreadyProcessedInitiative, new Reward(BigDecimal.ONE)));
+
+        storeRewardNotification(trxAlreadyProcessed, alreadyProcessedInitiative, List.of(trxAlreadyProcessed.getId()));
+
+        return trxAlreadyProcessed;
+    }
+
+    private void storeRewardNotification(RewardTransactionDTO trx, String initiativeId, List<String> trxIds) {
+        Rewards rewardAlreadyProcessed = storeReward(trx, initiativeId, RewardStatus.ACCEPTED);
+
+        rewardsNotificationRepository.save(RewardsNotification.builder()
+                .id(rewardAlreadyProcessed.getNotificationId())
+                .trxIds(trxIds)
+                .build()).block();
+    }
+
+    private Rewards storeReward(RewardTransactionDTO trx, String initiativeId, RewardStatus rewardStatus) {
+        Reward reward = trx.getRewards().get(initiativeId);
+        Rewards storedRewards = rewardMapper.apply(initiativeId, reward, trx, null, "%s_%s_NOTIFICATIONID".formatted(trx.getId(), initiativeId));
+        storedRewards.setStatus(rewardStatus);
+        rewardsRepository.save(storedRewards).block();
+        return storedRewards;
+    }
+
     private List<String> buildValidPayloads(int bias, int validOnboardings) {
         return IntStream.range(bias, bias + validOnboardings)
                 .mapToObj(this::mockInstance)
@@ -178,15 +226,19 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private long waitForRewardsStored(int n) {
-        long[] countSaved={0};
+        long[] countSaved = {0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardsRepository.count().block()) >= n, ()->"Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
+        waitFor(() -> (countSaved[0] = rewardsRepository.count().block()) >= n, () -> "Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 
     private void verifyDuplicateCheck() {
+        verifyNotElaborated(trx -> trx.getSenderCode().endsWith(DUPLICATE_SUFFIX));
+    }
+
+    private void verifyNotElaborated(ArgumentMatcher<RewardTransactionDTO> matcher) {
         Mockito.verify(rewardNotificationRuleEvaluatorServiceSpy, Mockito.never()).retrieveAndEvaluate(Mockito.any(), Mockito.any(),
-                Mockito.argThat(trx -> trx.getSenderCode().endsWith(DUPLICATE_SUFFIX)),
+                Mockito.argThat(matcher),
                 Mockito.any());
     }
 
@@ -338,8 +390,9 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
     }
 
     Set<String> errorUseCasesStored_userid = Set.of("NOT_EXISTENT_INITIATIVE_ID_USER_ID");
+
     private void checkResponse(Rewards reward) {
-        if(RewardStatus.ACCEPTED.equals(reward.getStatus())) {
+        if (RewardStatus.ACCEPTED.equals(reward.getStatus())) {
             String trxId = reward.getUserId();
             int biasRetrieve = Integer.parseInt(trxId.substring(6));
             useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
@@ -357,8 +410,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
             // initiative daily notified
             Pair.of(
                     i -> RewardTransactionDTOFaker.mockInstanceBuilder(i)
-                                    .rewards(Map.of(INITIATIVE_ID_NOTIFY_DAILY, new Reward(BigDecimal.TEN)))
-                                    .build(),
+                            .rewards(Map.of(INITIATIVE_ID_NOTIFY_DAILY, new Reward(BigDecimal.TEN)))
+                            .build(),
                     reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, LocalDate.now().plusDays(1), BigDecimal.TEN)
             ),
             // initiative weekly notified
@@ -437,6 +490,36 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                         return reward;
                     },
                     reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED, LocalDate.now().plusDays(1), BigDecimal.TEN)
+            ),
+
+            // initiative stored, but not processed
+            Pair.of(
+                    i -> {
+                        Reward reward = new Reward(BigDecimal.TEN);
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(INITIATIVE_ID_NOTIFY_DAILY, reward))
+                                .build();
+
+                        storeRewardNotification(trx, INITIATIVE_ID_NOTIFY_DAILY, Collections.emptyList());
+
+                        return trx;
+                    },
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, LocalDate.now().plusDays(1), BigDecimal.TEN)
+            ),
+
+            // initiative stored, but rejected
+            Pair.of(
+                    i -> {
+                        Reward reward = new Reward(BigDecimal.TEN);
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(INITIATIVE_ID_NOTIFY_DAILY, reward))
+                                .build();
+
+                        storeReward(trx, INITIATIVE_ID_NOTIFY_DAILY, RewardStatus.REJECTED);
+
+                        return trx;
+                    },
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, LocalDate.now().plusDays(1), BigDecimal.TEN)
             )
     );
 

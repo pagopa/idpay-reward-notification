@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.iban.request;
+package it.gov.pagopa.reward.notification.service.iban;
 
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
@@ -17,5 +17,10 @@ public class RewardIbanServiceImpl implements RewardIbanService {
     @Override
     public Mono<RewardIban> save(RewardIban rewardIban) {
         return rewardIbanRepository.save(rewardIban);
+    }
+
+    @Override
+    public Mono<RewardIban> deleteIban(RewardIban rewardIban) {
+        return rewardIbanRepository.deleteByIdAndIban(rewardIban.getId(),rewardIban.getIban());
     }
 }

@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.iban.IbanRequestDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
 import it.gov.pagopa.reward.notification.test.fakers.IbanRequestDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;

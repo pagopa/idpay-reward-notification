@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.service.iban.request.RewardIbanServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.iban.RewardIbanServiceImpl=WARN",
 })
 @Slf4j
 class IbanRequestConsumerConfigTest extends BaseIntegrationTest {

@@ -335,6 +335,7 @@ public abstract class BaseIntegrationTest {
             }
             errorUseCases.get(useCaseId).getSecond().accept(record);
         }
+        checkPublishedOffsets(topicErrors,expectedErrorMessagesNumber);
     }
 
     protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {

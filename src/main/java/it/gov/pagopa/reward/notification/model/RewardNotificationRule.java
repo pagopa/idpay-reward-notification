@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.model;
 
-import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
+import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import lombok.*;
 import org.springframework.data.annotation.Id;

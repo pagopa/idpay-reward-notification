@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.dto;
+package it.gov.pagopa.reward.notification.dto.rule;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

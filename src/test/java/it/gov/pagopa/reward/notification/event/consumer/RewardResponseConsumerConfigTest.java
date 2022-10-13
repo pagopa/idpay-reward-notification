@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
-import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
+import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardMapper;
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;

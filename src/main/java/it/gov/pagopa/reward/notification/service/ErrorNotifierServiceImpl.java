@@ -31,6 +31,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     private final String rewardResponseServer;
     private final String rewardResponseTopic;
 
+    private final String rewardIbanRequestServiceType;
+    private final String rewardIbanRequestServer;
+    private final String rewardIbanRequestTopic;
+
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.type}") String refundRuleMessagingServiceType,
@@ -39,7 +44,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
 
                                     @Value("${spring.cloud.stream.binders.kafka-rewarded-transactions.type}") String rewardResponseMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardResponseServer,
-                                    @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}") String rewardResponseTopic) {
+                                    @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}") String rewardResponseTopic,
+
+                                    @Value("${spring.cloud.stream.binders.kafka-checkiban-request.type}") String rewardIbanRequestServiceType,
+                                    @Value("${spring.cloud.stream.binders.kafka-checkiban-request.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardIbanRequestServer,
+                                    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}") String rewardIbanRequestTopic) {
         this.streamBridge = streamBridge;
 
         this.refundRuleMessagingServiceType = refundRuleMessagingServiceType;
@@ -49,6 +58,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
         this.rewardResponseMessagingServiceType = rewardResponseMessagingServiceType;
         this.rewardResponseServer = rewardResponseServer;
         this.rewardResponseTopic = rewardResponseTopic;
+
+        this.rewardIbanRequestServiceType = rewardIbanRequestServiceType;
+        this.rewardIbanRequestServer = rewardIbanRequestServer;
+        this.rewardIbanRequestTopic = rewardIbanRequestTopic;
     }
 
     @Override
@@ -59,6 +72,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     @Override
     public void notifyRewardResponse(Message<?> message, String description, boolean retryable, Throwable exception) {
         notify(rewardResponseMessagingServiceType, rewardResponseServer, rewardResponseTopic, message, description, retryable, exception);
+    }
+
+    @Override
+    public void notifyRewardIbanRequest(Message<?> message, String description, boolean retryable, Throwable exception) {
+        notify(rewardIbanRequestServiceType, rewardIbanRequestServer, rewardIbanRequestTopic, message, description, retryable, exception);
     }
 
     @Override

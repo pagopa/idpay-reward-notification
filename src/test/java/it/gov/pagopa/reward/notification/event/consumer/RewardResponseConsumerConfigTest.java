@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardMapper;
@@ -35,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -97,7 +95,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
     }
 
     @Test
-    void testTransactionProcessor() throws JsonProcessingException {
+    void testConsumer() {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
         int duplicateTrx = Math.min(100, validTrx / 2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
@@ -106,19 +104,6 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         publishRewardRules();
 
         RewardTransactionDTO trxAlreadyProcessed = storeTrxAlreadyProcessed();
-
-        // TODO removeme after rewardNotification logic build
-        Mockito.doAnswer(a -> {
-                    Rewards r = a.getArgument(0);
-                    return rewardsNotificationRepository.save(
-                                    RewardsNotification.builder()
-                                            .id(r.getNotificationId())
-                                            .trxIds(List.of(r.getTrxId()))
-                                            .build())
-                            .then((Mono<Rewards>) a.callRealMethod());
-                })
-                .when(rewardsServiceSpy)
-                .save(Mockito.any());
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());

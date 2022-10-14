@@ -54,7 +54,7 @@ public class IbanRequestMediatorServiceImpl extends BaseKafkaConsumer<IbanReques
     @Override
     protected void subscribeAfterCommits(Flux<List<RewardIban>> afterCommits2subscribe) {
         afterCommits2subscribe
-                .subscribe(i -> log.debug("[REWARD_NOTIFICATION_IBAN] Processed offsets committed successfully"));
+                .subscribe(i -> log.debug("[REWARD_NOTIFICATION_IBAN_REQUEST] Processed offsets committed successfully"));
     }
 
     @Override
@@ -64,13 +64,13 @@ public class IbanRequestMediatorServiceImpl extends BaseKafkaConsumer<IbanReques
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyRewardIbanRequest(message, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", false, e);
+        return e -> errorNotifierService.notifyRewardIbanRequest(message, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", false, e);
 
     }
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyRewardIbanRequest(message, "[REWARD_NOTIFICATION_IBAN] An error occurred evaluating iban", false, e);
+        errorNotifierService.notifyRewardIbanRequest(message, "[REWARD_NOTIFICATION_IBAN_REQUEST] An error occurred evaluating iban", false, e);
     }
 
     @Override
@@ -82,6 +82,6 @@ public class IbanRequestMediatorServiceImpl extends BaseKafkaConsumer<IbanReques
 
     @Override
     protected String getFlowName() {
-        return "REWARD_NOTIFICATION_IBAN";
+        return "REWARD_NOTIFICATION_IBAN_REQUEST";
     }
 }

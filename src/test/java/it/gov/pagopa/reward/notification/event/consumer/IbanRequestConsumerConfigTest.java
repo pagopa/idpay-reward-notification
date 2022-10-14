@@ -111,13 +111,13 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotExpected = "{\"userId\":\"USERID_0\",unexpectedStructureForIban:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
         String jsonNotValid = "{\"userId\":\"USERID_1\",invalidJsonForIban";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", jsonNotValid)
         ));
     }
 

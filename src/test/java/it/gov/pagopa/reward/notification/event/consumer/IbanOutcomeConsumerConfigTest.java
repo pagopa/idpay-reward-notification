@@ -40,7 +40,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     private IbanRequestDTO2RewardIbanMapper requestDTO2RewardIbanMapper;
 
     @Test
-    void ibanOutcomeConsumer() throws InterruptedException {
+    void ibanOutcomeConsumer(){
         int ibanNumber = 1000;
         int notValidIban = errorUseCases.size();
         int UnknownIban = 100;
@@ -157,13 +157,13 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotExpected = "{\"userId\":\"USERID_0\",unexpectedStructureForIban:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_OUTCOME] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
         String jsonNotValid = "{\"userId\":\"USERID_1\",invalidJsonForIban";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_OUTCOME] Unexpected JSON", jsonNotValid)
         ));
     }
 

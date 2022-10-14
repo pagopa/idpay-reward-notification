@@ -6,6 +6,6 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import reactor.core.publisher.Mono;
 
-public interface RewardNotificationUpdateService {
+public interface RewardNotificationHandlerFacadeService {
     Mono<RewardsNotification> configureRewardNotification(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward);
 }

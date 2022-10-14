@@ -21,15 +21,15 @@ import reactor.core.publisher.Mono;
 public class RewardNotificationRuleEvaluatorServiceImpl implements RewardNotificationRuleEvaluatorService {
 
     private final RewardNotificationRuleService rewardNotificationRuleService;
-    private final RewardNotificationUpdateService rewardNotificationUpdateService;
+    private final RewardNotificationHandlerFacadeService rewardNotificationHandlerFacadeService;
     private final RewardMapper rewardMapper;
     private final RewardsService rewardsService;
     private final RewardsNotificationRepository notificationRepository;
     private final ErrorNotifierService errorNotifierService;
 
-    public RewardNotificationRuleEvaluatorServiceImpl(RewardNotificationRuleService rewardNotificationRuleService, RewardNotificationUpdateService rewardNotificationUpdateService, RewardMapper rewardMapper, RewardsService rewardsService, RewardsNotificationRepository notificationRepository, ErrorNotifierService errorNotifierService) {
+    public RewardNotificationRuleEvaluatorServiceImpl(RewardNotificationRuleService rewardNotificationRuleService, RewardNotificationHandlerFacadeService rewardNotificationHandlerFacadeService, RewardMapper rewardMapper, RewardsService rewardsService, RewardsNotificationRepository notificationRepository, ErrorNotifierService errorNotifierService) {
         this.rewardNotificationRuleService = rewardNotificationRuleService;
-        this.rewardNotificationUpdateService = rewardNotificationUpdateService;
+        this.rewardNotificationHandlerFacadeService = rewardNotificationHandlerFacadeService;
         this.rewardMapper = rewardMapper;
         this.rewardsService = rewardsService;
         this.notificationRepository = notificationRepository;
@@ -40,7 +40,7 @@ public class RewardNotificationRuleEvaluatorServiceImpl implements RewardNotific
     public Mono<Rewards> retrieveAndEvaluate(String initiativeId, Reward reward, RewardTransactionDTO trx, Message<String> message) {
         return rewardNotificationRuleService.findById(initiativeId)
                 .flatMap(rule ->
-                        rewardNotificationUpdateService.configureRewardNotification(trx, rule, reward)
+                        rewardNotificationHandlerFacadeService.configureRewardNotification(trx, rule, reward)
                                 .map(notificationId -> Pair.of(rule, notificationId))
                                 .defaultIfEmpty(Pair.of(rule, null))
                                 .doOnNext(rule2Notification -> {

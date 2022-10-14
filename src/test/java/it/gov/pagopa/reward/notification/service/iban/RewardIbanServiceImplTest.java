@@ -1,12 +1,19 @@
 package it.gov.pagopa.reward.notification.service.iban;
 
+import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
+import it.gov.pagopa.reward.notification.dto.iban.IbanRequestDTO;
+import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
+import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
+import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
 
 class RewardIbanServiceImplTest {
 
@@ -40,32 +47,37 @@ class RewardIbanServiceImplTest {
         RewardIbanRepository rewardIbanRepositoryMock = Mockito.mock(RewardIbanRepository.class);
         RewardIbanService rewardIbanService = new RewardIbanServiceImpl(rewardIbanRepositoryMock);
 
+        IbanOutcomeDTO ibanOutcomeDTO1 = IbanOutcomeDTOFaker.mockInstanceBuilder(1)
+                .status(IbanConstants.STATUS_KO)
+                .build();
+        IbanOutcomeDTO ibanOutcomeDTO2 = IbanOutcomeDTOFaker.mockInstanceBuilder(2)
+                .status(IbanConstants.STATUS_KO)
+                .build();
+
+        String id1 = IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO1);
+        String id2 = IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO2);
+
         RewardIban rewardIban1 = RewardIban.builder()
-                .id("USERIDINITIATIVEID1")
-                .userId("USERID1")
-                .initiativeId("INITIATIVEID1")
-                .iban("IBAN1")
-                .checkIbanOutcome(IbanConstants.STATUS_KO)
+                .id(IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO1))
+                .userId(ibanOutcomeDTO1.getUserId())
+                .initiativeId(ibanOutcomeDTO1.getInitiativeId())
+                .iban(ibanOutcomeDTO1.getIban())
+                .timestamp(LocalDateTime.of(2022,10,14,17,23))
                 .build();
 
-        RewardIban rewardIban2 = RewardIban.builder()
-                .id("USERIDINITIATIVEID2")
-                .userId("USERID2")
-                .initiativeId("INITIATIVEID2")
-                .iban("IBAN2")
-                .checkIbanOutcome(IbanConstants.STATUS_KO)
-                .build();
-
-        Mockito.when(rewardIbanRepositoryMock.deleteByIdAndIban(Mockito.same(rewardIban1.getId()), Mockito.same(rewardIban1.getIban()))).thenReturn(Mono.just(rewardIban1));
-        Mockito.when(rewardIbanRepositoryMock.deleteByIdAndIban(Mockito.same(rewardIban2.getId()), Mockito.same(rewardIban2.getIban()))).thenReturn(Mono.empty());
+        Mockito.when(rewardIbanRepositoryMock.deleteByIdAndIban(id1, ibanOutcomeDTO1.getIban())).thenReturn(Mono.just(rewardIban1));
+        Mockito.when(rewardIbanRepositoryMock.deleteByIdAndIban(id2, ibanOutcomeDTO2.getIban())).thenReturn(Mono.empty());
 
         // When
-        RewardIban result1 = rewardIbanService.deleteIban(rewardIban1).block();
-        RewardIban result2 = rewardIbanService.deleteIban(rewardIban2).block();
+        RewardIban result1 = rewardIbanService.deleteIban(ibanOutcomeDTO1).block();
+        RewardIban result2 = rewardIbanService.deleteIban(ibanOutcomeDTO2).block();
 
         // Then
         Assertions.assertNotNull(result1);
-        Assertions.assertEquals(rewardIban1, result1);
+        Assertions.assertEquals(ibanOutcomeDTO1.getUserId(), result1.getUserId());
+        Assertions.assertEquals(ibanOutcomeDTO1.getInitiativeId(), result1.getInitiativeId());
+        Assertions.assertEquals(ibanOutcomeDTO1.getIban(), result1.getIban());
+        TestUtils.checkNotNullFields(result1, "checkIbanOutcome");
 
         Assertions.assertNull(result2);
 

@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.notification.service.iban;
 
+import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
+import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +24,18 @@ public class RewardIbanServiceImpl implements RewardIbanService {
     }
 
     @Override
-    public Mono<RewardIban> deleteIban(RewardIban rewardIban) {
-        return rewardIbanRepository.deleteByIdAndIban(rewardIban.getId(), rewardIban.getIban())
+    public Mono<RewardIban> deleteIban(IbanOutcomeDTO ibanOutcomeDTO) {
+        return rewardIbanRepository.deleteByIdAndIban(IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO), ibanOutcomeDTO.getIban())
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.info("UserId: {} initiativeId: {} and iban {} do not match into the DB", rewardIban.getUserId(), rewardIban.getInitiativeId(), rewardIban.getIban());
-                    return Mono.empty();
-                }
-        ));
+                            log.info("UserId: {} initiativeId: {} and iban {} do not match into the DB", ibanOutcomeDTO.getUserId(), ibanOutcomeDTO.getInitiativeId(), ibanOutcomeDTO.getIban());
+                            return Mono.empty();
+                        }
+                ));
+    }
+
+    //TODO implement logic
+    @Override
+    public Mono<RewardIban> updateStatus(IbanOutcomeDTO ibanOutcomeDTO) {
+        return Mono.empty();
     }
 }

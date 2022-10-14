@@ -98,6 +98,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
     }
 
+    //TODO add unknown logic
     private void checkStatusDB(int n) {
         Assertions.assertEquals(n,rewardIbanRepository.count().block());
 

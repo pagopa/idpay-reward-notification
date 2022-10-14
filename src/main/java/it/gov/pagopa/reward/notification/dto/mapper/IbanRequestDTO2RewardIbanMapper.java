@@ -20,7 +20,7 @@ public class IbanRequestDTO2RewardIbanMapper implements Function<IbanRequestDTO,
                 .build();
     }
 
-    public String buildId(IbanRequestDTO ibanRequestDTO) {
+    public static String buildId(IbanRequestDTO ibanRequestDTO) {
         return ibanRequestDTO.getUserId()
                 .concat(ibanRequestDTO.getInitiativeId());
     }

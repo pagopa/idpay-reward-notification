@@ -2,11 +2,8 @@ package it.gov.pagopa.reward.notification.service.iban.outcome;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
-import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
-import it.gov.pagopa.reward.notification.service.iban.outcome.filter.IbanOutcomeFilter;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -26,22 +23,20 @@ import java.time.LocalDateTime;
 @ExtendWith(MockitoExtension.class)
 class IbanOutcomeMediatorServiceImplTest {
     @Mock
-    private IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapperMock;
-
-    @Mock
-    private IbanOutcomeFilter ibanOutcomeFilter;
-
-    @Mock
-    private RewardIbanService rewardIbanServiceMock;
-
+    private IbanOutcomeOperationsService ibanOutcomeOperationsServiceMock;
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
+
 
     private IbanOutcomeMediatorService ibanOutcomeMediatorService;
 
     @BeforeEach
     void setUp() {
-            ibanOutcomeMediatorService = new IbanOutcomeMediatorServiceImpl(1000, ibanOutcomeDTO2RewardIbanMapperMock, ibanOutcomeFilter, rewardIbanServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
+            ibanOutcomeMediatorService = new IbanOutcomeMediatorServiceImpl(
+                    1000,
+                    ibanOutcomeOperationsServiceMock,
+                    errorNotifierServiceMock,
+                    TestUtils.objectMapper);
     }
 
     @Test
@@ -73,23 +68,18 @@ class IbanOutcomeMediatorServiceImplTest {
                 .checkIbanOutcome(ibanOutcomeDTO1.getStatus())
                 .timestamp(LocalDateTime.now()).build();
 
-        Mockito.when(ibanOutcomeFilter.test(ibanOutcomeDTO1)).thenReturn(true);
-        Mockito.when(ibanOutcomeFilter.test(ibanOutcomeDTO2)).thenReturn(true);
-        Mockito.when(ibanOutcomeFilter.test(ibanOutcomeDTO3)).thenReturn(false);
-
-        Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeDTO1)).thenReturn(rewardIban1);
-        Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeDTO2)).thenThrow(RuntimeException.class);
-
-        Mockito.when(rewardIbanServiceMock.deleteIban(Mockito.same(rewardIban1))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+        Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO1)).thenReturn(Mono.just(rewardIban1));
+        Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO2)).thenThrow(RuntimeException.class);
+        //TODO implement logic
+//        Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO3)).thenThrow(RuntimeException.class);
 
         // When
         ibanOutcomeMediatorService.execute(messageFlux);
 
         // Then
-        Mockito.verify(ibanOutcomeFilter, Mockito.times(3)).test(Mockito.any());
-        Mockito.verify(ibanOutcomeDTO2RewardIbanMapperMock, Mockito.times(2)).apply(Mockito.any());
-        Mockito.verify(rewardIbanServiceMock).deleteIban(Mockito.any());
-        Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
+        Mockito.verify(ibanOutcomeOperationsServiceMock, Mockito.times(3)).execute(Mockito.any());
+        //TODO check errors
+        Mockito.verify(errorNotifierServiceMock, Mockito.times(3)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
         Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
     }
 }

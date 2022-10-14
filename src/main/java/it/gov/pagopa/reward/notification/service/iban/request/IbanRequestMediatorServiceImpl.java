@@ -54,7 +54,7 @@ public class IbanRequestMediatorServiceImpl extends BaseKafkaConsumer<IbanReques
     @Override
     protected void subscribeAfterCommits(Flux<List<RewardIban>> afterCommits2subscribe) {
         afterCommits2subscribe
-                .subscribe(i -> log.debug("[REWARD_NOTIFICATION_IBAN_REQUEST] Processed offsets committed successfully"));
+                .subscribe(i -> log.debug("[REWARD_NOTIFICATION_IBAN_REQUEST] Processed offsets for IBAN in request topic committed successfully"));
     }
 
     @Override
@@ -65,7 +65,6 @@ public class IbanRequestMediatorServiceImpl extends BaseKafkaConsumer<IbanReques
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
         return e -> errorNotifierService.notifyRewardIbanRequest(message, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", false, e);
-
     }
 
     @Override

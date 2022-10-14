@@ -10,7 +10,6 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-//TODO check
 public class IbanOutcomeDTO extends IbanRequestDTO {
     @JsonProperty("status")
     private String status;

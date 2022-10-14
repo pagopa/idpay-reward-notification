@@ -64,6 +64,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.refundRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -87,6 +88,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-checkiban-request.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
@@ -126,6 +128,8 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardResponse;
     @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}")
     protected String topicIbanRequest;
+    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}")
+    protected String topicIbanOutcome;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
 
@@ -135,6 +139,8 @@ public abstract class BaseIntegrationTest {
     protected String groupIdRewardResponse;
     @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.group}")
     protected String groupIdIbanRequestConsumer;
+    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
+    protected String groupIdIbanOutcomeConsumer;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {

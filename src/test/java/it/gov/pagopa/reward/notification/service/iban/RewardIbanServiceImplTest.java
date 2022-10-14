@@ -45,7 +45,7 @@ class RewardIbanServiceImplTest {
                 .userId("USERID1")
                 .initiativeId("INITIATIVEID1")
                 .iban("IBAN1")
-                .checkIbanOutcome(IbanConstants.KO)
+                .checkIbanOutcome(IbanConstants.STATUS_KO)
                 .build();
 
         RewardIban rewardIban2 = RewardIban.builder()
@@ -53,7 +53,7 @@ class RewardIbanServiceImplTest {
                 .userId("USERID2")
                 .initiativeId("INITIATIVEID2")
                 .iban("IBAN2")
-                .checkIbanOutcome(IbanConstants.KO)
+                .checkIbanOutcome(IbanConstants.STATUS_KO)
                 .build();
 
         Mockito.when(rewardIbanRepositoryMock.deleteByIdAndIban(Mockito.same(rewardIban1.getId()), Mockito.same(rewardIban1.getIban()))).thenReturn(Mono.just(rewardIban1));

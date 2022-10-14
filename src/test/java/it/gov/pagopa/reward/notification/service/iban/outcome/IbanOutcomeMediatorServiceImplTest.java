@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMap
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
+import it.gov.pagopa.reward.notification.service.iban.outcome.filter.IbanOutcomeFilter;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -27,59 +28,68 @@ class IbanOutcomeMediatorServiceImplTest {
     @Mock
     private IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapperMock;
 
-        @Mock
-        private RewardIbanService rewardIbanServiceMock;
+    @Mock
+    private IbanOutcomeFilter ibanOutcomeFilter;
 
-        @Mock
-        private ErrorNotifierService errorNotifierServiceMock;
+    @Mock
+    private RewardIbanService rewardIbanServiceMock;
 
-        private IbanOutcomeMediatorService ibanOutcomeMediatorService;
+    @Mock
+    private ErrorNotifierService errorNotifierServiceMock;
 
-        @BeforeEach
-        void setUp() {
-            ibanOutcomeMediatorService = new IbanOutcomeMediatorServiceImpl(1000, ibanOutcomeDTO2RewardIbanMapperMock, rewardIbanServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
-        }
+    private IbanOutcomeMediatorService ibanOutcomeMediatorService;
 
-        @Test
-        void execute(){
-            // Given
-            //Initializing KO messages
-            IbanOutcomeDTO ibanOutcomeDTO1 = IbanOutcomeDTOFaker.mockInstance(1);
-            ibanOutcomeDTO1.setStatus(IbanConstants.KO);
-            Message<String> msg1 = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeDTO1)).build();
-            IbanOutcomeDTO ibanOutcomeDTO2 = IbanOutcomeDTOFaker.mockInstance(2);
-            ibanOutcomeDTO2.setStatus(IbanConstants.KO);
-            Message<String> msg2 = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeDTO2)).build();
-            IbanOutcomeDTO ibanOutcomeDTO3 = IbanOutcomeDTOFaker.mockInstance(2);
+    @BeforeEach
+    void setUp() {
+            ibanOutcomeMediatorService = new IbanOutcomeMediatorServiceImpl(1000, ibanOutcomeDTO2RewardIbanMapperMock, ibanOutcomeFilter, rewardIbanServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
+    }
 
-            //Initializing UNKNOWN_PSP message
-            ibanOutcomeDTO3.setStatus(IbanConstants.UNKNOWN_PSP);
-            Message<String> msg3 = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeDTO3)).build();
+    @Test
+    void execute(){
+        // Given
+        //Initializing KO messages
+        IbanOutcomeDTO ibanOutcomeDTO1 = IbanOutcomeDTOFaker.mockInstance(1);
+        ibanOutcomeDTO1.setStatus(IbanConstants.STATUS_KO);
+        Message<String> msg1 = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeDTO1)).build();
+        IbanOutcomeDTO ibanOutcomeDTO2 = IbanOutcomeDTOFaker.mockInstance(2);
+        ibanOutcomeDTO2.setStatus(IbanConstants.STATUS_KO);
+        Message<String> msg2 = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeDTO2)).build();
 
-            //Initializing invalid message
-            Message<String> msg4 = MessageBuilder.withPayload("INVALID JSON").build();
+        //Initializing UNKNOWN_PSP message
+        IbanOutcomeDTO ibanOutcomeDTO3 = IbanOutcomeDTOFaker.mockInstance(2);
+        ibanOutcomeDTO3.setStatus(IbanConstants.STATUS_UNKNOWN_PSP);
+        Message<String> msg3 = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeDTO3)).build();
 
-            Flux<Message<String>> messageFlux = Flux.just(msg1, msg2, msg3, msg4);
+        //Initializing invalid message
+        Message<String> msg4 = MessageBuilder.withPayload("INVALID JSON").build();
 
-            RewardIban rewardIban1 = RewardIban.builder()
-                    .id(ibanOutcomeDTO1.getUserId().concat(ibanOutcomeDTO1.getInitiativeId()))
-                    .userId(ibanOutcomeDTO1.getUserId())
-                    .initiativeId(ibanOutcomeDTO1.getInitiativeId())
-                    .iban(ibanOutcomeDTO1.getIban())
-                    .checkIbanOutcome(ibanOutcomeDTO1.getStatus())
-                    .timestamp(LocalDateTime.now()).build();
-            Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeDTO1)).thenReturn(rewardIban1);
-            Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeDTO2)).thenThrow(RuntimeException.class);
+        Flux<Message<String>> messageFlux = Flux.just(msg1, msg2, msg3, msg4);
 
-            Mockito.when(rewardIbanServiceMock.deleteIban(Mockito.same(rewardIban1))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+        RewardIban rewardIban1 = RewardIban.builder()
+                .id(ibanOutcomeDTO1.getUserId().concat(ibanOutcomeDTO1.getInitiativeId()))
+                .userId(ibanOutcomeDTO1.getUserId())
+                .initiativeId(ibanOutcomeDTO1.getInitiativeId())
+                .iban(ibanOutcomeDTO1.getIban())
+                .checkIbanOutcome(ibanOutcomeDTO1.getStatus())
+                .timestamp(LocalDateTime.now()).build();
 
-            // When
-            ibanOutcomeMediatorService.execute(messageFlux);
+        Mockito.when(ibanOutcomeFilter.test(ibanOutcomeDTO1)).thenReturn(true);
+        Mockito.when(ibanOutcomeFilter.test(ibanOutcomeDTO2)).thenReturn(true);
+        Mockito.when(ibanOutcomeFilter.test(ibanOutcomeDTO3)).thenReturn(false);
 
-            // Then
-            Mockito.verify(ibanOutcomeDTO2RewardIbanMapperMock, Mockito.times(2)).apply(Mockito.any());
-            Mockito.verify(rewardIbanServiceMock).deleteIban(Mockito.any());
-            Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
-            Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
-        }
+        Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeDTO1)).thenReturn(rewardIban1);
+        Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeDTO2)).thenThrow(RuntimeException.class);
+
+        Mockito.when(rewardIbanServiceMock.deleteIban(Mockito.same(rewardIban1))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+
+        // When
+        ibanOutcomeMediatorService.execute(messageFlux);
+
+        // Then
+        Mockito.verify(ibanOutcomeFilter, Mockito.times(3)).test(Mockito.any());
+        Mockito.verify(ibanOutcomeDTO2RewardIbanMapperMock, Mockito.times(2)).apply(Mockito.any());
+        Mockito.verify(rewardIbanServiceMock).deleteIban(Mockito.any());
+        Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
+        Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
+    }
 }

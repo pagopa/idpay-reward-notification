@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
-import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
+import it.gov.pagopa.reward.notification.service.iban.outcome.filter.IbanOutcomeFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -27,6 +27,8 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaConsumer<IbanOutcom
     private final Duration commitDelay;
 
     private final IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapper;
+
+    private final IbanOutcomeFilter ibanOutcomeFilter;
     private final RewardIbanService rewardIbanService;
     private final ErrorNotifierService errorNotifierService;
 
@@ -37,11 +39,15 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaConsumer<IbanOutcom
             long commitMillis,
 
             IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapper,
+            IbanOutcomeFilter ibanOutcomeFilter,
+
             RewardIbanService rewardIbanService,
             ErrorNotifierService errorNotifierService,
+
             ObjectMapper objectMapper) {
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.ibanOutcomeDTO2RewardIbanMapper = ibanOutcomeDTO2RewardIbanMapper;
+        this.ibanOutcomeFilter = ibanOutcomeFilter;
         this.rewardIbanService = rewardIbanService;
         this.errorNotifierService = errorNotifierService;
 
@@ -78,7 +84,7 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaConsumer<IbanOutcom
     @Override
     protected Mono<RewardIban> execute(IbanOutcomeDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
-                .filter(p -> p.getStatus().equals(IbanConstants.KO))
+                .filter(ibanOutcomeFilter)
                 .map(ibanOutcomeDTO2RewardIbanMapper)
                 .flatMap(rewardIbanService::deleteIban);
     }

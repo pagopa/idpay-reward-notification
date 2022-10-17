@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;
 
+    @AfterEach
     void cleanData(){
         rewardNotificationRuleRepository.deleteAll().block();
     }

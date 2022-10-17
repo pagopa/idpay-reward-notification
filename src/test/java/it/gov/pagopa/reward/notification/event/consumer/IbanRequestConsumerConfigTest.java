@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
     private RewardIbanRepository rewardIbanRepository;
 
+    @AfterEach
     void cleanData(){
         rewardIbanRepository.deleteAll().block();
     }

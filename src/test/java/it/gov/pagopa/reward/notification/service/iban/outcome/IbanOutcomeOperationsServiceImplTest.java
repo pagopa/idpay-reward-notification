@@ -48,7 +48,7 @@ class IbanOutcomeOperationsServiceImplTest {
     }
 
     @Test
-    void executeStatusUnkown() {
+    void executeNotStatusKO() {
         // Given
         IbanOutcomeDTO ibanOutcomeDTO = IbanOutcomeDTOFaker.mockInstance(1);
         ibanOutcomeDTO.setStatus(IbanConstants.STATUS_UNKNOWN_PSP);
@@ -71,22 +71,6 @@ class IbanOutcomeOperationsServiceImplTest {
         Assertions.assertEquals(rewardIban, result);
 
         Mockito.verify(rewardIbanServiceMock).updateStatus(ibanOutcomeDTO);
-        Mockito.verify(rewardIbanServiceMock, Mockito.never()).deleteIban(Mockito.any());
-    }
-
-    @Test
-    void executeStatusInvalid() {
-        // Given
-        IbanOutcomeDTO ibanOutcomeDTO = IbanOutcomeDTOFaker.mockInstance(1);
-        ibanOutcomeDTO.setStatus("ANOTHER_STATUS");
-
-        // When
-        Optional<RewardIban> result = ibanOutcomeOperationsService.execute(ibanOutcomeDTO).blockOptional();
-
-        // Then
-        Assertions.assertTrue(result.isEmpty());
-
-        Mockito.verify(rewardIbanServiceMock, Mockito.never()).updateStatus(Mockito.any());
         Mockito.verify(rewardIbanServiceMock, Mockito.never()).deleteIban(Mockito.any());
     }
 }

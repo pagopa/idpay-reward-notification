@@ -19,15 +19,9 @@ public class IbanOutcomeOperationsServiceImpl implements IbanOutcomeOperationsSe
 
     @Override
     public Mono<RewardIban> execute(IbanOutcomeDTO ibanOutcomeDTO) {
-        return switch (ibanOutcomeDTO.getStatus()){
-            case IbanConstants.STATUS_KO -> rewardIbanService.deleteIban(ibanOutcomeDTO);
-            case IbanConstants.STATUS_UNKNOWN_PSP -> rewardIbanService.updateStatus(ibanOutcomeDTO);
-            default -> invalidStatusType(ibanOutcomeDTO);
-        };
-    }
-
-    private Mono<RewardIban> invalidStatusType(IbanOutcomeDTO ibanOutcomeDTO){
-        log.error("Error in evaluate iban %s. Cause: unexpected status type".formatted(ibanOutcomeDTO.getIban()));
-        return Mono.empty();
+        if (IbanConstants.STATUS_KO.equals(ibanOutcomeDTO.getStatus())) {
+            return rewardIbanService.deleteIban(ibanOutcomeDTO);
+        }
+        return rewardIbanService.updateStatus(ibanOutcomeDTO);
     }
 }

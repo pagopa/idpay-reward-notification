@@ -43,38 +43,42 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     void ibanOutcomeConsumer(){
         int ibanNumber = 1000;
         int notValidIban = errorUseCases.size();
+        int invalidStatus = 100;
         int UnknownIban = 100;
         long maxWaitingMs = 30000;
 
         inizializingDB(ibanNumber);
 
         List<String> ibanPayloads = new ArrayList<>(ibanNumber+notValidIban+UnknownIban);
-        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban+UnknownIban, notValidIban+UnknownIban+ibanNumber, true));
+        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban+invalidStatus+UnknownIban, notValidIban+invalidStatus+UnknownIban+ibanNumber, true));
         ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
-        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+UnknownIban, false));
+        ibanPayloads.addAll(buildNotValidStatus(notValidIban, notValidIban+invalidStatus));
+        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban+invalidStatus, notValidIban+invalidStatus+UnknownIban, false));
+//        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+UnknownIban, false));
 
         long timeStart=System.currentTimeMillis();
         ibanPayloads.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForIbanStoreChanged(UnknownIban+notValidIban);
-        Assertions.assertEquals(countSaved, notValidIban, UnknownIban);
+        long countSaved = waitForIbanStoreChanged(UnknownIban+notValidIban+invalidStatus);
+        Assertions.assertEquals(countSaved, notValidIban+invalidStatus+UnknownIban);
         long timeEnd=System.currentTimeMillis();
 
-        checkStatusDB(notValidIban, UnknownIban);
+        checkStatusDB(notValidIban, invalidStatus, UnknownIban);
         checkErrorsPublished(notValidIban, maxWaitingMs, errorUseCases);
 
         System.out.printf("""
             ************************
-            Time spent to send %d (%d + %d + %d) messages (from start): %d millis
+            Time spent to send %d (%d + %d + %d + %d) messages (from start): %d millis
             Time spent to assert iban store changed count (from previous check): %d millis
             ************************
             Test Completed in %d millis
             ************************
             """,
-                ibanNumber + notValidIban + UnknownIban,
+                ibanNumber + notValidIban + invalidStatus + UnknownIban,
                 ibanNumber,
                 notValidIban,
+                invalidStatus,
                 UnknownIban,
                 timePublishingEnd-timeStart,
                 timeEnd-timePublishingEnd,
@@ -98,14 +102,37 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
     }
 
-    private void checkStatusDB(int errorCaseNumber, int unknownNumber) {
+    private void checkStatusDB(int errorCaseNumber, int invalidStatusNumber, int unknownNumber) {
         checkIdErrors(errorCaseNumber);
 
-        checkIdUnknown(errorCaseNumber, unknownNumber);
+        checkIdInvalidStatus(errorCaseNumber, invalidStatusNumber);
+
+        checkIdUnknown(errorCaseNumber+invalidStatusNumber, unknownNumber);
     }
 
-    private void checkIdUnknown(int errorCaseNumber, int unknownNumber) {
-        List<RewardIban> ibansInfo = IntStream.range(errorCaseNumber, errorCaseNumber+unknownNumber)
+    private void checkIdInvalidStatus(int startNumber, int invalidStatusNumber) {
+        List<RewardIban> ibansInfo = IntStream.range(startNumber, startNumber+invalidStatusNumber)
+                .mapToObj(i -> RewardIban.builder()
+                        .id(userId.concat(initiativeId).formatted(i,i))
+                        .userId(userId.formatted(i))
+                        .initiativeId(initiativeId.formatted(i))
+                        .iban(iban.formatted(i))
+                        .build())
+                .toList();
+        ibansInfo.forEach(m -> {
+            RewardIban result = rewardIbanRepository.findById(m.getId()).block();
+            Assertions.assertNotNull(result);
+            TestUtils.checkNotNullFields(result, "checkIbanOutcome");
+
+            Assertions.assertEquals(m.getUserId(), result.getUserId());
+            Assertions.assertEquals(m.getInitiativeId(), result.getInitiativeId());
+            Assertions.assertEquals(m.getId(), result.getId());
+            Assertions.assertEquals(m.getIban(), result.getIban());
+        });
+    }
+
+    private void checkIdUnknown(int startNumber, int unknownNumber) {
+        List<RewardIban> ibansInfo = IntStream.range(startNumber, startNumber+unknownNumber)
                 .mapToObj(i -> RewardIban.builder()
                         .id(userId.concat(initiativeId).formatted(i,i))
                         .userId(userId.formatted(i))
@@ -147,6 +174,17 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         });
     }
 
+    private List<String> buildNotValidStatus(int bias, int n) {
+        return IntStream.range(bias, n)
+                .mapToObj(i -> IbanOutcomeDTOFaker.mockInstanceBuilder(i)
+                        .userId(userId.formatted(i))
+                        .initiativeId(initiativeId.formatted(i))
+                        .iban(iban.formatted(i))
+                        .status("ANOTHER_STATUS")
+                        .build())
+                .map(TestUtils::jsonSerializer)
+                .toList();
+    }
     private List<String> buildCheckIbanOutcome(int bias, int n, boolean isKO) {
         return IntStream.range(bias, n)
                 .mapToObj(i -> IbanOutcomeDTOFaker.mockInstanceBuilder(i)

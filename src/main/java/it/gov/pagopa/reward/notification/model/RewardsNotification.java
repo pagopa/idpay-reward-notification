@@ -28,7 +28,6 @@ public class RewardsNotification {
     private String initiativeName;
     private String organizationId;
     private String organizationFiscalCode;
-    private String serviceId;
     private String userId;
     private Integer progressive;
     private Long rewardCents;

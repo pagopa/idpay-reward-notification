@@ -19,7 +19,6 @@ public class RewardNotificationRule {
     private String initiativeName;
     private LocalDate endDate;
     private String organizationId;
-    private String serviceId;
     private AccumulatedAmountDTO accumulatedAmount;
     private TimeParameterDTO timeParameter;
     private String organizationFiscalCode;

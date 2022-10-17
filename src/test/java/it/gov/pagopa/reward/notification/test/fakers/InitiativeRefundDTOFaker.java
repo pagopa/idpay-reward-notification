@@ -53,11 +53,6 @@ public class InitiativeRefundDTOFaker {
 
         out.general(initiativeGeneral);
 
-        InitiativeAdditionalDTO initiativeAdditional = InitiativeAdditionalDTO.builder()
-                .serviceId("SERVICE_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")))
-                .build();
-        out.additionalInfo(initiativeAdditional);
-
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)
                 .refundThreshold(new BigDecimal("100.00"))

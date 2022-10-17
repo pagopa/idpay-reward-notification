@@ -28,7 +28,6 @@ public class RewardNotificationRuleFaker {
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.endDate(LocalDate.now());
         out.organizationId("ORGANIZATION_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.serviceId("SERVICE_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
 
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)

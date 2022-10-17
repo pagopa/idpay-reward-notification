@@ -16,8 +16,13 @@ public class RewardNotificationRuleValidatorServiceImpl implements RewardNotific
             throw new IllegalArgumentException("[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid rule %s".formatted(rule));
         }
 
-        if (timeParameter != null && timeParameter.getTimeType() == null) {
-            throw new IllegalArgumentException("[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid time rule %s".formatted(rule));
+        if (timeParameter != null) {
+            if (timeParameter.getTimeType() == null) {
+                throw new IllegalArgumentException("[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid time rule %s".formatted(rule));
+            }
+            if(TimeParameterDTO.TimeTypeEnum.CLOSED.equals(timeParameter.getTimeType()) && rule.getEndDate()==null){
+                throw new IllegalArgumentException("[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid time closed rule %s".formatted(rule));
+            }
         }
 
         if (accumulatedAmount != null) {

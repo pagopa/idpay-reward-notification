@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "rewards_notification")
 public class RewardsNotification {
 
@@ -29,14 +29,15 @@ public class RewardsNotification {
     private String organizationId;
     private String organizationFiscalCode;
     private String userId;
-    private Integer progressive;
+    private Long progressive;
     private Long rewardCents;
+    @Builder.Default
     private List<String> trxIds=new ArrayList<>();
     private DepositType depositType;
     private LocalDate startDepositDate;
     private LocalDate endDepositDate;
     /** The notification date searched */
-    private LocalDateTime notificationDate;
+    private LocalDate notificationDate;
     /** The export creation date  */
     private LocalDateTime sendDate;
     private String exportId;

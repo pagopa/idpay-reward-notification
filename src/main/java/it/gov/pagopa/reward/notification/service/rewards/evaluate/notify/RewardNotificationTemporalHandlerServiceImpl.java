@@ -1,23 +1,58 @@
 package it.gov.pagopa.reward.notification.service.rewards.evaluate.notify;
 
+import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.utils.Utils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
 
+@Slf4j
 @Service
-public class RewardNotificationTemporalHandlerServiceImpl implements RewardNotificationHandlerService {
+public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNotificationHandlerService implements RewardNotificationHandlerService {
+
+    public RewardNotificationTemporalHandlerServiceImpl(RewardsNotificationRepository rewardsNotificationRepository, RewardsNotificationMapper mapper) {
+        super(rewardsNotificationRepository, mapper);
+    }
 
     @Override
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
-        return Mono.just(RewardsNotification.builder()
-                .id("%s_%s_TEMPORAL_NOTIFICATIONID".formatted(rule.getInitiativeId(), trx.getUserId()))
-                .trxIds(List.of(trx.getId()))
-                .build()); //TODO
+        LocalDate notificationDate = calculateNotificationDate(LocalDate.now(), rule);
+        String notificationId = buildNotificationId(trx, rule, notificationDate);
+
+        return rewardsNotificationRepository.findById(notificationId)
+                .switchIfEmpty(createNewNotification(trx, rule, notificationDate, notificationId))
+                .doOnNext(n -> updateReward(trx, rule, reward, n));
+    }
+
+    public LocalDate calculateNotificationDate(LocalDate startDate, RewardNotificationRule rule) {
+        return switch (rule.getTimeParameter().getTimeType()){
+            case DAILY -> startDate.plusDays(1);
+            case WEEKLY -> startDate.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+            case MONTHLY -> startDate.with(TemporalAdjusters.firstDayOfNextMonth());
+            case QUARTERLY -> startDate.withDayOfMonth(1).withMonth((startDate.get(IsoFields.QUARTER_OF_YEAR)*3)).plusMonths(1);
+            case CLOSED -> {
+                LocalDate nextDate = startDate.plusDays(1);
+                yield nextDate.compareTo(rule.getEndDate()) > 0 ? nextDate : rule.getEndDate();
+            }
+        };
+    }
+
+    private String buildNotificationId(RewardTransactionDTO trx, RewardNotificationRule rule, LocalDate notificationDate) {
+        return "%s_%s_%s".formatted(
+                trx.getUserId(),
+                rule.getInitiativeId(),
+                notificationDate.format(Utils.FORMATTER_DATE)
+        );
     }
 
 }

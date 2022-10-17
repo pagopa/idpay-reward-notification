@@ -26,6 +26,15 @@ class RewardNotificationRuleValidatorServiceTest {
     }
 
     @Test
+    void testInvalidTimeClosedRule(){
+        RewardNotificationRule rule = new RewardNotificationRule();
+        rule.setTimeParameter(new TimeParameterDTO());
+        rule.getTimeParameter().setTimeType(TimeParameterDTO.TimeTypeEnum.CLOSED);
+
+        test(rule, "[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid time closed rule %s");
+    }
+
+    @Test
     void testInvalidAccumulatedRule(){
         RewardNotificationRule rule = new RewardNotificationRule();
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());

@@ -130,8 +130,18 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidTimeRuleJson)
         ));
 
+        RewardNotificationRule notValidTimeClosedRule = new RewardNotificationRule();
+        notValidTimeClosedRule.setInitiativeId("id_4");
+        notValidTimeClosedRule.setTimeParameter(new TimeParameterDTO());
+        notValidTimeClosedRule.getTimeParameter().setTimeType(TimeParameterDTO.TimeTypeEnum.CLOSED);
+        String notValidTimeClosedRuleJson = TestUtils.jsonSerializer(notValidTimeClosedRule);
+        errorUseCases.add(Pair.of(
+                () -> notValidTimeClosedRuleJson,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidTimeClosedRuleJson)
+        ));
+
         RewardNotificationRule notValidAccumulatedRule = new RewardNotificationRule();
-        notValidAccumulatedRule.setInitiativeId("id_4");
+        notValidAccumulatedRule.setInitiativeId("id_5");
         notValidAccumulatedRule.setAccumulatedAmount(new AccumulatedAmountDTO());
         String notValidAccumulatedRuleJson = TestUtils.jsonSerializer(notValidAccumulatedRule);
         errorUseCases.add(Pair.of(
@@ -140,7 +150,7 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
         ));
 
         RewardNotificationRule notValidThresholdRule = new RewardNotificationRule();
-        notValidThresholdRule.setInitiativeId("id_5");
+        notValidThresholdRule.setInitiativeId("id_6");
         notValidThresholdRule.setAccumulatedAmount(new AccumulatedAmountDTO());
         notValidThresholdRule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED);
         String notValidThresholdRuleJson = TestUtils.jsonSerializer(notValidThresholdRule);

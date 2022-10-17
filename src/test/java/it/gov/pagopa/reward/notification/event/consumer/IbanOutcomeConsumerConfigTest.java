@@ -31,9 +31,9 @@ import java.util.stream.IntStream;
 })
 class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
-    String userId = "USERID_%s";
-    String initiativeId = "INITIATIVEID_%s";
-    String iban = "IBAN_%s";
+    private final String userId = "USERID_%s";
+    private final String initiativeId = "INITIATIVEID_%s";
+    private final String iban = "IBAN_%s";
     @Autowired
     private RewardIbanRepository rewardIbanRepository;
     @Autowired
@@ -61,7 +61,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         Assertions.assertEquals(countSaved, notValidIban, UnknownIban);
         long timeEnd=System.currentTimeMillis();
 
-        checkStatusDB(notValidIban+UnknownIban);
+        checkStatusDB(notValidIban, UnknownIban);
         checkErrorsPublished(notValidIban, maxWaitingMs, errorUseCases);
 
         System.out.printf("""
@@ -98,11 +98,37 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
     }
 
-    //TODO add unknown logic
-    private void checkStatusDB(int n) {
-        Assertions.assertEquals(n,rewardIbanRepository.count().block());
+    private void checkStatusDB(int errorCaseNumber, int unknownNumber) {
+        checkIdErrors(errorCaseNumber);
 
-        List<RewardIban> ibansInfo = IntStream.range(0, n)
+        checkIdUnknown(errorCaseNumber, unknownNumber);
+    }
+
+    private void checkIdUnknown(int errorCaseNumber, int unknownNumber) {
+        List<RewardIban> ibansInfo = IntStream.range(errorCaseNumber, errorCaseNumber+unknownNumber)
+                .mapToObj(i -> RewardIban.builder()
+                        .id(userId.concat(initiativeId).formatted(i,i))
+                        .userId(userId.formatted(i))
+                        .initiativeId(initiativeId.formatted(i))
+                        .iban(iban.formatted(i))
+                        .checkIbanOutcome(IbanConstants.STATUS_UNKNOWN_PSP)
+                        .build())
+                .toList();
+        ibansInfo.forEach(m -> {
+            RewardIban result = rewardIbanRepository.findById(m.getId()).block();
+            Assertions.assertNotNull(result);
+            TestUtils.checkNotNullFields(result);
+
+            Assertions.assertEquals(m.getUserId(), result.getUserId());
+            Assertions.assertEquals(m.getInitiativeId(), result.getInitiativeId());
+            Assertions.assertEquals(m.getId(), result.getId());
+            Assertions.assertEquals(m.getIban(), result.getIban());
+            Assertions.assertEquals(m.getCheckIbanOutcome(), result.getCheckIbanOutcome());
+        });
+    }
+
+    private void checkIdErrors(int errorCaseNumber) {
+        List<RewardIban> ibansInfo = IntStream.range(0, errorCaseNumber)
                 .mapToObj(i -> RewardIban.builder()
                         .id(userId.concat(initiativeId).formatted(i,i))
                         .userId(userId.formatted(i))

@@ -68,18 +68,24 @@ class IbanOutcomeMediatorServiceImplTest {
                 .checkIbanOutcome(ibanOutcomeDTO1.getStatus())
                 .timestamp(LocalDateTime.now()).build();
 
+        RewardIban rewardIban3 = RewardIban.builder()
+                .id(ibanOutcomeDTO3.getUserId().concat(ibanOutcomeDTO3.getInitiativeId()))
+                .userId(ibanOutcomeDTO3.getUserId())
+                .initiativeId(ibanOutcomeDTO3.getInitiativeId())
+                .iban(ibanOutcomeDTO3.getIban())
+                .checkIbanOutcome(ibanOutcomeDTO3.getStatus())
+                .timestamp(LocalDateTime.now()).build();
+
         Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO1)).thenReturn(Mono.just(rewardIban1));
         Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO2)).thenThrow(RuntimeException.class);
-        //TODO implement logic
-//        Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO3)).thenThrow(RuntimeException.class);
+        Mockito.when(ibanOutcomeOperationsServiceMock.execute(ibanOutcomeDTO3)).thenReturn(Mono.just(rewardIban3));
 
         // When
         ibanOutcomeMediatorService.execute(messageFlux);
 
         // Then
         Mockito.verify(ibanOutcomeOperationsServiceMock, Mockito.times(3)).execute(Mockito.any());
-        //TODO check errors
-        Mockito.verify(errorNotifierServiceMock, Mockito.times(3)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
+        Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
         Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
     }
 }

@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Service
 @Slf4j
 public class RewardIbanServiceImpl implements RewardIbanService {
@@ -33,9 +35,16 @@ public class RewardIbanServiceImpl implements RewardIbanService {
                 ));
     }
 
-    //TODO implement logic
     @Override
     public Mono<RewardIban> updateStatus(IbanOutcomeDTO ibanOutcomeDTO) {
-        return Mono.empty();
+        RewardIban rewardIban = RewardIban.builder()
+                .id(IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO))
+                .userId(ibanOutcomeDTO.getUserId())
+                .initiativeId(ibanOutcomeDTO.getInitiativeId())
+                .iban(ibanOutcomeDTO.getIban())
+                .timestamp(LocalDateTime.now())
+                .checkIbanOutcome(ibanOutcomeDTO.getStatus())
+                .build();
+        return this.save(rewardIban);
     }
 }

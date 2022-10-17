@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
-import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
@@ -11,6 +10,7 @@ import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,32 +36,35 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     private final String iban = "IBAN_%s";
     @Autowired
     private RewardIbanRepository rewardIbanRepository;
-    @Autowired
-    private IbanRequestDTO2RewardIbanMapper requestDTO2RewardIbanMapper;
+
+    @AfterEach
+    void cleanData(){
+        rewardIbanRepository.deleteAll().block();
+    }
 
     @Test
     void ibanOutcomeConsumer(){
         int ibanNumber = 1000;
         int notValidIban = errorUseCases.size();
-        int UnknownIban = 100;
+        int unknownIban = 100;
         long maxWaitingMs = 30000;
 
         initializingDB(ibanNumber);
 
-        List<String> ibanPayloads = new ArrayList<>(ibanNumber+notValidIban+UnknownIban);
-        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban+UnknownIban, notValidIban+UnknownIban+ibanNumber, true));
+        List<String> ibanPayloads = new ArrayList<>(ibanNumber+notValidIban+unknownIban);
+        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban+unknownIban, notValidIban+unknownIban+ibanNumber, true));
         ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
-        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+UnknownIban, false));
+        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+unknownIban, false));
 
         long timeStart=System.currentTimeMillis();
         ibanPayloads.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForIbanStoreChanged(UnknownIban+notValidIban);
-        Assertions.assertEquals(countSaved, notValidIban+UnknownIban);
+        long countSaved = waitForIbanStoreChanged(unknownIban+notValidIban);
+        Assertions.assertEquals(countSaved, notValidIban+unknownIban);
         long timeEnd=System.currentTimeMillis();
 
-        checkStatusDB(notValidIban, UnknownIban);
+        checkStatusDB(notValidIban, unknownIban);
         checkErrorsPublished(notValidIban, maxWaitingMs, errorUseCases);
 
         System.out.printf("""
@@ -72,10 +75,10 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
             Test Completed in %d millis
             ************************
             """,
-                ibanNumber + notValidIban  + UnknownIban,
+                ibanNumber + notValidIban  + unknownIban,
                 ibanNumber,
                 notValidIban,
-                UnknownIban,
+                unknownIban,
                 timePublishingEnd-timeStart,
                 timeEnd-timePublishingEnd,
                 timeEnd-timeStart

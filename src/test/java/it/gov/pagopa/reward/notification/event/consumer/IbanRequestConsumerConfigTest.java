@@ -31,6 +31,10 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
     private RewardIbanRepository rewardIbanRepository;
 
+    void cleanData(){
+        rewardIbanRepository.deleteAll().block();
+    }
+
     @Test
     void testRewardIbanPersistence(){
         int validIban = 1000;

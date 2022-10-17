@@ -24,6 +24,10 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;
 
+    void cleanData(){
+        rewardNotificationRuleRepository.deleteAll().block();
+    }
+
     @Test
     void testRewardNotificationRulePersistence(){
         int validInitiatives = 100;

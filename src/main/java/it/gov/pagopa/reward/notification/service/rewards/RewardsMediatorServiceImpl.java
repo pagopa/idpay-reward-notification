@@ -71,7 +71,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION] An error occurred evaluating transaction", true, e);
+        errorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION] An error occurred evaluating transaction result", true, e);
     }
 
     @Override

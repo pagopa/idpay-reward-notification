@@ -56,8 +56,10 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
 
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
 
-    private static final LocalDate NEXT_WEEK=LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
-    private static final LocalDate NEXT_QUARTER=LocalDate.now().withDayOfMonth(1).withMonth((LocalDate.now().get(IsoFields.QUARTER_OF_YEAR)*3)).plusMonths(1);
+    public static final LocalDate TODAY = LocalDate.now();
+    public static final LocalDate TOMORROW = TODAY.plusDays(1);
+    private static final LocalDate NEXT_WEEK= TODAY.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+    private static final LocalDate NEXT_QUARTER= TODAY.withDayOfMonth(1).withMonth((TODAY.get(IsoFields.QUARTER_OF_YEAR)*3)).plusMonths(1);
 
     @Autowired
     private RewardsRepository rewardsRepository;
@@ -107,11 +109,15 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         publishRewardRules();
 
         RewardTransactionDTO trxAlreadyProcessed = storeTrxAlreadyProcessed();
+        RewardTransactionDTO trxNotRewarded = RewardTransactionDTOFaker.mockInstance(0);
+        trxNotRewarded.setRewards(Collections.emptyMap());
+        trxNotRewarded.setId("NOTREWARDEDTRX");
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
 
+        trxs.add(TestUtils.jsonSerializer(trxNotRewarded));
         trxs.add(TestUtils.jsonSerializer(trxAlreadyProcessed));
         int alreadyProcessed = 1;
 
@@ -136,10 +142,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         Assertions.assertEquals(expectedStored, waitForRewardsStored(expectedStored));
         long timeEnd = System.currentTimeMillis();
 
-        rewardsRepository.findAll()
-                .doOnNext(this::checkResponse)
-                .collectList()
-                .block();
+        Objects.requireNonNull(rewardsRepository.findAll().collectList().block())
+                .forEach(this::checkResponse);
 
         verifyDuplicateCheck();
 
@@ -173,13 +177,6 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         checkOffsets(totalSendMessages);
     }
 
-    private List<RewardsNotification> prepare2Compare(Collection<RewardsNotification> values) {
-        return values.stream()
-                .sorted(Comparator.comparing(RewardsNotification::getUserId).thenComparing(RewardsNotification::getId))
-                .peek(r -> r.setExternalId(r.getExternalId() != null ? r.getExternalId().substring(36) : null))
-                .toList();
-    }
-
     private RewardTransactionDTO storeTrxAlreadyProcessed() {
         String alreadyProcessedInitiative = "INITIATIVEID";
 
@@ -187,7 +184,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         trxAlreadyProcessed.setCorrelationId("ALREADY_PROCESSED_REWARD_CORRELATION_ID");
         trxAlreadyProcessed.setRewards(Map.of(alreadyProcessedInitiative, new Reward(BigDecimal.ONE)));
 
-        RewardsNotification rewardsNotification = storeRewardNotification(trxAlreadyProcessed, alreadyProcessedInitiative, LocalDate.now(), 100L, DepositType.PARTIAL, List.of(trxAlreadyProcessed.getId()));
+        RewardsNotification rewardsNotification = storeRewardNotification(trxAlreadyProcessed, alreadyProcessedInitiative, TODAY, 100L, DepositType.PARTIAL, List.of(trxAlreadyProcessed.getId()));
 
         expectedRewardNotifications.put("ALREADY_PROCESSED_REWARD_CORRELATION_ID", rewardsNotification);
 
@@ -233,8 +230,15 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                 Mockito.any());
     }
 
+    private List<RewardsNotification> prepare2Compare(Collection<RewardsNotification> values) {
+        return values.stream()
+                .sorted(Comparator.comparing(RewardsNotification::getUserId).thenComparing(RewardsNotification::getId))
+                .peek(r -> r.setExternalId(r.getExternalId() != null ? r.getExternalId().substring(36) : null))
+                .toList();
+    }
+
     // region initiative build
-    private final LocalDate initiativeEndDate = LocalDate.now().plusDays(10);
+    private final LocalDate initiativeEndDate = TODAY.plusDays(10);
 
     private static final String INITIATIVE_ID_NOTIFY_DAILY = "INITIATIVEID_DAILY";
     private static final String INITIATIVE_ID_NOTIFY_WEEKLY = "INITIATIVEID_WEEKLY";
@@ -321,7 +325,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(LocalDate.now().minusDays(1))
+                                .endDate(TODAY.minusDays(1))
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .timeParameter(TimeParameterDTO.builder()
@@ -391,8 +395,9 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
         if (RewardStatus.ACCEPTED.equals(reward.getStatus())) {
             String trxId = reward.getUserId();
             int biasRetrieve = Integer.parseInt(trxId.substring(6));
-            useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
-            //        createRewardNotification()
+            if(biasRetrieve >= errorUseCases.size()){
+                useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
+            }
         } else {
             Assertions.assertTrue(errorUseCasesStored_userid.contains(reward.getUserId()), "Invalid rejected reward: " + reward);
         }
@@ -409,12 +414,16 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
                                 .build();
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1000L, DepositType.PARTIAL);
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, LocalDate.now().plusDays(1), BigDecimal.TEN)
+                    reward -> {
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN);
+                    }
             ),
             // useCase 1: initiative weekly notified
             Pair.of(
@@ -424,13 +433,14 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(11))))
                                 .build();
                         LocalDate expectedNotificationDate = NEXT_WEEK;
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1100L, DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_WEEKLY
+                            , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_WEEKLY, NEXT_WEEK.format(Utils.FORMATTER_DATE))
                             , NEXT_WEEK
-                            , BigDecimal.TEN)
+                            , BigDecimal.valueOf(11))
             ),
             // useCase 2: initiative quarterly notified
             Pair.of(
@@ -440,13 +450,14 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(12))))
                                 .build();
                         LocalDate expectedNotificationDate = NEXT_QUARTER;
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1200L, DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_QUARTERLY
+                            , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_QUARTERLY, NEXT_QUARTER.format(Utils.FORMATTER_DATE))
                             , NEXT_QUARTER
-                            , BigDecimal.TEN)
+                            , BigDecimal.valueOf(12))
             ),
             // useCase 3: initiative closed notified
             Pair.of(
@@ -456,11 +467,15 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(13))))
                                 .build();
                         LocalDate expectedNotificationDate = initiativeEndDate.plusDays(1);
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1300L, DepositType.FINAL);
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_CLOSED, initiativeEndDate.plusDays(1), BigDecimal.TEN)
+                    reward -> {
+                        LocalDate expectedNotificationDate = initiativeEndDate.plusDays(1);
+                        String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_CLOSED, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_CLOSED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(13));
+                    }
             ),
             // useCase 4: initiative closed in past days notified
             Pair.of(
@@ -469,12 +484,16 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(14))))
                                 .build();
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1400L, DepositType.FINAL);
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, LocalDate.now().plusDays(1), BigDecimal.TEN)
+                    reward -> {
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(14));
+                    }
             ),
 
             // useCase 5: initiative threshold notified not past
@@ -485,7 +504,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(15))))
                                 .build();
                         LocalDate expectedNotificationDate = null;
-//                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
 //                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1500L, DepositType.PARTIAL);
                         // TODO mocked result, remove me after implementation
                         expectedRewardNotifications.put(trx.getUserId(),
@@ -496,7 +515,9 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD, null, BigDecimal.TEN)
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
+                            , null, BigDecimal.valueOf(15))
             ),
 
             // useCase 6: initiative threshold notified overflowed
@@ -506,8 +527,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(100))))
                                 .build();
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-//                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        LocalDate expectedNotificationDate = TOMORROW;
+//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
 //                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 10000L, DepositType.PARTIAL);
                         // TODO mocked result, remove me after implementation
                         expectedRewardNotifications.put(trx.getUserId(),
@@ -518,7 +539,10 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD, LocalDate.now().plusDays(1), BigDecimal.valueOf(100))
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
+                            , null // TODO , TOMORROW
+                            , BigDecimal.valueOf(100))
             ),
             // useCase 7: initiative threshold notified overflowed after new trx
             Pair.of(
@@ -528,8 +552,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
                                 .build();
 //                        storeRewardNotification(trx, initiativeId, List.of(trx.getId()));
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-//                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        LocalDate expectedNotificationDate = TOMORROW;
+//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
 //                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 10900L, DepositType.PARTIAL);
                         // TODO mocked result, remove me after implementation
                         expectedRewardNotifications.put(trx.getUserId(),
@@ -540,7 +564,10 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD, LocalDate.now().plusDays(1), BigDecimal.valueOf(109))
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
+                            , null // TODO, TOMORROW
+                            , BigDecimal.TEN)
             ),
             // useCase 8: initiative notified when initiative at budged exhausted, but not exhausted
             Pair.of(
@@ -550,7 +577,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
                                 .build();
                         LocalDate expectedNotificationDate = null;
-//                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
 //                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1000L, DepositType.FINAL);
                         // TODO mocked result, remove me after implementation
                         expectedRewardNotifications.put(trx.getUserId(),
@@ -561,7 +588,9 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED, null, BigDecimal.TEN)
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
+                            , "%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_EXHAUSTED, reward.getUserId())
+                            , null, BigDecimal.TEN)
             ),
             // useCase 9: initiative notified when budged exhausted, receiving exhausted
             Pair.of(
@@ -572,8 +601,8 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, reward))
                                 .build();
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-//                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        LocalDate expectedNotificationDate = TOMORROW;
+//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
 //                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1000L, DepositType.FINAL);
                         // TODO mocked result, remove me after implementation
                         expectedRewardNotifications.put(trx.getUserId(),
@@ -584,7 +613,10 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED, LocalDate.now().plusDays(1), BigDecimal.TEN)
+                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
+                            , "%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_EXHAUSTED, reward.getUserId())
+                            , null // TODO, TOMORROW
+                            , BigDecimal.TEN)
             ),
 
             // useCase 10: initiative stored, but not processed -> thus new notification created
@@ -595,17 +627,19 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
                                 .build();
 
-                        LocalDate notificationDate = LocalDate.now().plusDays(1);
-                        RewardsNotification storedNotification = storeRewardNotification(trx, initiativeId, notificationDate, 1000L, DepositType.PARTIAL, Collections.emptyList());
+                        RewardsNotification storedNotification = storeRewardNotification(trx, initiativeId, TOMORROW, 1000L, DepositType.PARTIAL, Collections.emptyList());
                         expectedRewardNotifications.put("PREVIOUS_" + trx.getId(), storedNotification);
 
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
-                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, 2L, initiativeId, 1000L, DepositType.PARTIAL);
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, TOMORROW.format(Utils.FORMATTER_DATE));
+                        updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, 2L, initiativeId, 1000L, DepositType.PARTIAL);
 
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, LocalDate.now().plusDays(1), BigDecimal.TEN)
+                    reward -> {
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN);
+                    }
             ),
 
             // useCase 11: initiative stored, but rejected -> thus now ACCEPTED and processed
@@ -618,18 +652,31 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
 
                         storeReward(trx, initiativeId, RewardStatus.REJECTED);
 
-                        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-                        String expectedNotificationId = trx.getUserId() + "_" + initiativeId + "_" + expectedNotificationDate.format(Utils.FORMATTER_DATE);
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1000L, DepositType.PARTIAL);
 
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, LocalDate.now().plusDays(1), BigDecimal.TEN)
+                    reward -> {
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN);
+                    }
             )
     );
 
-    private void assertRewardNotification(Rewards evaluation, String expectedInitiativeId, LocalDate expectedNotificationDate, BigDecimal expectedReward) {
-        // TODO search rewardNotification and assert values
+    private void assertRewardNotification(Rewards evaluation, String expectedInitiativeId, String notificationId, LocalDate expectedNotificationDate, BigDecimal expectedReward) {
+        String errorMsg = "Unexpected result verifying reward: " + evaluation;
+
+        Assertions.assertEquals(evaluation.getInitiativeId(), expectedInitiativeId, errorMsg);
+        Assertions.assertEquals(evaluation.getNotificationId(), notificationId, errorMsg);
+        Assertions.assertEquals(evaluation.getReward(), expectedReward, errorMsg);
+
+        RewardsNotification notification = rewardsNotificationRepository.findById(notificationId).block();
+        Assertions.assertNotNull(notification, errorMsg);
+        Assertions.assertEquals(List.of(evaluation.getTrxId()), notification.getTrxIds(), errorMsg);
+        Assertions.assertEquals(expectedNotificationDate, notification.getNotificationDate(), errorMsg);
     }
 
     private RewardsNotification updateExpectedRewardNotification(String notificationId, LocalDate notificationDate, RewardTransactionDTO trx, String initiativeId, long rewardCents, DepositType depositType) {
@@ -689,20 +736,19 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION] Cannot find initiative having id: NOT_EXISTENT_INITIATIVE_ID", notExistentInitiativeUseCase, notExistentInitiativeUserId)
         ));
 
-        // TODO uncomment and configure when rewardNotification logic has been implemented
-//        final String failingUpdatingRewardNotification = "FAILING_UPDATING_REWARD_NOTIFICATION";
-//        String failingUpdatingRewardNotificationUseCase = TestUtils.jsonSerializer(
-//                RewardTransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
-//                        .userId(failingUpdatingRewardNotification)
-//                        .build()
-//        );
-//        errorUseCases.add(Pair.of(
-//                () -> {
-//                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i -> failingCounterUpdateUserId.equals(i.getUserId())));
-//                    return failingUpdatingRewardNotificationUseCase;
-//                },
-//                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingUpdatingRewardNotificationUseCase, failingCounterUpdateUserId)
-//        ));
+        final String failingUpdatingRewardNotificationUserId = "FAILING_UPDATING_REWARD_NOTIFICATION";
+        String failingUpdatingRewardNotificationUseCase = TestUtils.jsonSerializer(
+                RewardTransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                        .userId(failingUpdatingRewardNotificationUserId)
+                        .build()
+        );
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(rewardNotificationRuleEvaluatorServiceSpy).retrieveAndEvaluate(Mockito.eq("INITIATIVEID"), Mockito.any(), Mockito.argThat(i -> failingUpdatingRewardNotificationUserId.equals(i.getUserId())), Mockito.any());
+                    return failingUpdatingRewardNotificationUseCase;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION] An error occurred evaluating transaction result", failingUpdatingRewardNotificationUseCase, failingUpdatingRewardNotificationUserId)
+        ));
 
     }
 

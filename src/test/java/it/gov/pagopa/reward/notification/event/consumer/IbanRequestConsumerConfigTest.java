@@ -25,6 +25,7 @@ import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.iban.RewardIbanServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.iban.request.IbanRequestMediatorServiceImpl=WARN",
 })
 @Slf4j
 class IbanRequestConsumerConfigTest extends BaseIntegrationTest {

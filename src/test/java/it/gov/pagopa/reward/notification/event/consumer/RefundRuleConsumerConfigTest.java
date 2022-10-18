@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+@TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
+})
 class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
     @Autowired

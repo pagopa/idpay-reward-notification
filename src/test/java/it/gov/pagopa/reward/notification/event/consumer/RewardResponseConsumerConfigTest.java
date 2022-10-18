@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.LockServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -124,6 +127,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
                 publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
         });
+        publishIntoEmbeddedKafka(topicRewardResponse, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeBeforeDbCheck = System.currentTimeMillis();
@@ -322,7 +326,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
 
     protected void checkOffsets(long expectedReadMessages) {
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardResponse, groupIdRewardResponse, expectedReadMessages, 20, 1000);
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardResponse, groupIdRewardResponse, expectedReadMessages+1, 20, 1000);
         long timeCommitChecked = System.currentTimeMillis();
 
         System.out.printf("""
@@ -501,7 +505,7 @@ class RewardResponseConsumerConfigTest extends BaseIntegrationTest {
 
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
-        checkErrorMessageHeaders(topicRewardResponse, errorMessage, errorDescription, expectedPayload, expectedKey);
+        checkErrorMessageHeaders(topicRewardResponse, groupIdRewardResponse, errorMessage, errorDescription, expectedPayload, expectedKey);
     }
     //endregion
 }

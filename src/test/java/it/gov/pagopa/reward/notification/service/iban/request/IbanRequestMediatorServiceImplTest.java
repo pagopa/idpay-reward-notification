@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.iban.IbanRequestDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
 import it.gov.pagopa.reward.notification.test.fakers.IbanRequestDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -19,6 +20,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +39,7 @@ class IbanRequestMediatorServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ibanRequestMediatorService = new IbanRequestMediatorServiceImpl(1000, ibanRequestDTO2RewardIbanMapperMock, rewardIbanServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
+        ibanRequestMediatorService = new IbanRequestMediatorServiceImpl("appName",1000, ibanRequestDTO2RewardIbanMapperMock, rewardIbanServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
     }
 
     @Test
@@ -70,5 +72,24 @@ class IbanRequestMediatorServiceImplTest {
         Mockito.verify(rewardIbanServiceMock).save(Mockito.any());
         Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanRequest(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
         Mockito.verify(errorNotifierServiceMock).notifyRewardIbanRequest(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
+    }
+
+    @Test
+    void otherApplicationRetryTest(){
+        // Given
+        IbanRequestDTO ibanRequestDTO1 = IbanRequestDTOFaker.mockInstance(1);
+        IbanRequestDTO ibanRequestDTO2 = IbanRequestDTOFaker.mockInstance(2);
+
+        Flux<Message<String>> msgs = Flux.just(ibanRequestDTO1, ibanRequestDTO2)
+                .map(TestUtils::jsonSerializer)
+                .map(MessageBuilder::withPayload)
+                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .map(MessageBuilder::build);
+
+        // When
+        ibanRequestMediatorService.execute(msgs);
+
+        // Then
+        Mockito.verifyNoInteractions(ibanRequestDTO2RewardIbanMapperMock, rewardIbanServiceMock, errorNotifierServiceMock);
     }
 }

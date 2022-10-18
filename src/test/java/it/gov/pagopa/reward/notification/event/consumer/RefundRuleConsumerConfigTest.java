@@ -2,11 +2,13 @@ package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +50,7 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
         long timeStart=System.currentTimeMillis();
         initiativePayloads.forEach(i->publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
+        publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
         long countSaved = waitForInitiativeStored(validInitiatives);
@@ -73,7 +77,7 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicInitiative2StoreConsumer, groupIdInitiative2StoreConsumer, initiativePayloads.size());
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicInitiative2StoreConsumer, groupIdInitiative2StoreConsumer, initiativePayloads.size()+1); // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -122,6 +126,6 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(topicInitiative2StoreConsumer, errorMessage, errorDescription, expectedPayload,null);
+        checkErrorMessageHeaders(topicInitiative2StoreConsumer, groupIdInitiative2StoreConsumer, errorMessage, errorDescription, expectedPayload,null);
     }
 }

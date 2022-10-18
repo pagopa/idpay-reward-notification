@@ -256,14 +256,24 @@ public abstract class BaseIntegrationTest {
         }
     }
 
+    private int totaleMessageSentCounter =0;
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
-        final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes());
+        final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes(StandardCharsets.UTF_8));
+        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "idpay-reward-notification".getBytes(StandardCharsets.UTF_8));
+
+        final RecordHeader[] additionalHeaders;
+        if(totaleMessageSentCounter++%2 == 0){
+            additionalHeaders= new RecordHeader[]{retryHeader};
+        } else {
+            additionalHeaders= new RecordHeader[]{retryHeader, applicationNameHeader};
+        }
+
         if (headers == null) {
-            headers = new RecordHeaders(new RecordHeader[]{retryHeader});
+            headers = new RecordHeaders(additionalHeaders);
         } else {
             headers = Stream.concat(
                             StreamSupport.stream(headers.spliterator(), false),
-                            Stream.of(retryHeader))
+                            Arrays.stream(additionalHeaders))
                     .collect(Collectors.toList());
         }
         ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
@@ -350,10 +360,12 @@ public abstract class BaseIntegrationTest {
         checkPublishedOffsets(topicErrors,expectedErrorMessagesNumber);
     }
 
-    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
-        checkErrorMessageHeaders(srcTopic, errorMessage, errorDescription, expectedPayload, expectedKey, true);
+    protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
+        checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true);
     }
-    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader) {
+    protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader) {
+        Assertions.assertEquals("idpay-reward-notification", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+        Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));

@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 @Service
 @Slf4j
 public class ErrorNotifierServiceImpl implements ErrorNotifierService{
+    public static final String ERROR_MSG_HEADER_APPLICATION_NAME = "applicationName";
+    public static final String ERROR_MSG_HEADER_GROUP = "group";
     public static final String ERROR_MSG_HEADER_SRC_TYPE = "srcType";
     public static final String ERROR_MSG_HEADER_SRC_SERVER = "srcServer";
     public static final String ERROR_MSG_HEADER_SRC_TOPIC = "srcTopic";
@@ -22,84 +24,101 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     public static final String ERROR_MSG_HEADER_STACKTRACE = "stacktrace";
 
     private final StreamBridge streamBridge;
+    private final String applicationName;
 
     private final String refundRuleMessagingServiceType;
     private final String refundRuleServer;
     private final String refundRuleTopic;
+    private final String refundRuleGroup;
 
     private final String rewardResponseMessagingServiceType;
     private final String rewardResponseServer;
     private final String rewardResponseTopic;
+    private final String rewardResponseGroup;
 
     private final String rewardIbanRequestServiceType;
     private final String rewardIbanRequestServer;
     private final String rewardIbanRequestTopic;
+    private final String rewardIbanRequestGroup;
 
     private final String rewardIbanOutcomeServiceType;
     private final String rewardIbanOutcomeServer;
     private final String rewardIbanOutcomeTopic;
+    private final String rewardIbanOutcomeGroup;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
+                                    @Value("${spring.application.name}") String applicationName,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.type}") String refundRuleMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers}") String refundRuleServer,
                                     @Value("${spring.cloud.stream.bindings.refundRuleConsumer-in-0.destination}") String refundRuleTopic,
+                                    @Value("${spring.cloud.stream.bindings.refundRuleConsumer-in-0.group}") String refundRuleGroup,
 
                                     @Value("${spring.cloud.stream.binders.kafka-rewarded-transactions.type}") String rewardResponseMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardResponseServer,
                                     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}") String rewardResponseTopic,
+                                    @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.group}") String rewardResponseGroup,
 
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-request.type}") String rewardIbanRequestServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-request.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardIbanRequestServer,
                                     @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}") String rewardIbanRequestTopic,
+                                    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.group}") String rewardIbanRequestGroup,
 
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-outcome.type}") String rewardIbanOutcomeServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardIbanOutcomeServer,
-                                    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}") String rewardIbanOutcomeTopic) {
+                                    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}") String rewardIbanOutcomeTopic,
+                                    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}") String rewardIbanOutcomeGroup) {
         this.streamBridge = streamBridge;
+        this.applicationName = applicationName;
 
         this.refundRuleMessagingServiceType = refundRuleMessagingServiceType;
         this.refundRuleServer = refundRuleServer;
         this.refundRuleTopic = refundRuleTopic;
+        this.refundRuleGroup = refundRuleGroup;
 
         this.rewardResponseMessagingServiceType = rewardResponseMessagingServiceType;
         this.rewardResponseServer = rewardResponseServer;
         this.rewardResponseTopic = rewardResponseTopic;
+        this.rewardResponseGroup = rewardResponseGroup;
 
         this.rewardIbanRequestServiceType = rewardIbanRequestServiceType;
         this.rewardIbanRequestServer = rewardIbanRequestServer;
         this.rewardIbanRequestTopic = rewardIbanRequestTopic;
+        this.rewardIbanRequestGroup = rewardIbanRequestGroup;
 
         this.rewardIbanOutcomeServiceType = rewardIbanOutcomeServiceType;
         this.rewardIbanOutcomeServer = rewardIbanOutcomeServer;
         this.rewardIbanOutcomeTopic = rewardIbanOutcomeTopic;
+        this.rewardIbanOutcomeGroup = rewardIbanOutcomeGroup;
     }
 
     @Override
     public void notifyRewardNotifierRule(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(refundRuleMessagingServiceType, refundRuleServer, refundRuleTopic, message, description, retryable, exception);
+        notify(refundRuleMessagingServiceType, refundRuleServer, refundRuleTopic, refundRuleGroup, message, description, retryable, exception);
     }
 
     @Override
     public void notifyRewardResponse(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardResponseMessagingServiceType, rewardResponseServer, rewardResponseTopic, message, description, retryable, exception);
+        notify(rewardResponseMessagingServiceType, rewardResponseServer, rewardResponseTopic, rewardResponseGroup, message, description, retryable, exception);
     }
 
     @Override
     public void notifyRewardIbanRequest(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardIbanRequestServiceType, rewardIbanRequestServer, rewardIbanRequestTopic, message, description, retryable, exception);
+        notify(rewardIbanRequestServiceType, rewardIbanRequestServer, rewardIbanRequestTopic, rewardIbanRequestGroup, message, description, retryable, exception);
     }
 
     @Override
     public void notifyRewardIbanOutcome(Message<String> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, message, description, retryable, exception);
+        notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, rewardIbanOutcomeGroup, message, description, retryable, exception);
     }
 
     @Override
-    public void notify(String srcType, String srcServer, String srcTopic, Message<?> message, String description, boolean retryable, Throwable exception) {
+    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
+                .setHeader(ERROR_MSG_HEADER_APPLICATION_NAME, applicationName)
+                .setHeader(ERROR_MSG_HEADER_GROUP, group)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
                 .setHeader(ERROR_MSG_HEADER_SRC_SERVER, srcServer)
                 .setHeader(ERROR_MSG_HEADER_SRC_TOPIC, srcTopic)

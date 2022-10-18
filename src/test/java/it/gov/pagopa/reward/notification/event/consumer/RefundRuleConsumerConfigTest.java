@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
+public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;

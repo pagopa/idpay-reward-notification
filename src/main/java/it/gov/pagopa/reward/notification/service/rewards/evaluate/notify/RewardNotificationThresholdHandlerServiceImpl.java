@@ -22,6 +22,7 @@ public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNot
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
         return Mono.just(RewardsNotification.builder()
                 .id("%s_%s_THRESHOLD_NOTIFICATIONID".formatted(rule.getInitiativeId(), trx.getUserId()))
+                .userId(trx.getUserId())
                 .trxIds(List.of(trx.getId()))
                 .build()); //TODO
     }

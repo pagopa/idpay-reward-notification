@@ -124,7 +124,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         LocalDate result = service.calculateNotificationDate(LocalDate.now(), rule);
 
         // Then
-        Assertions.assertSame(rule.getEndDate(), result);
+        Assertions.assertSame(rule.getEndDate().plusDays(1), result);
     }
 
     @Test

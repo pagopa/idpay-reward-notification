@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +24,19 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.service.iban.request.RewardIbanServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.iban.RewardIbanServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.iban.request.IbanRequestMediatorServiceImpl=WARN",
 })
 @Slf4j
 class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
 
     @Autowired
     private RewardIbanRepository rewardIbanRepository;
+
+    @AfterEach
+    void cleanData(){
+        rewardIbanRepository.deleteAll().block();
+    }
 
     @Test
     void testRewardIbanPersistence(){
@@ -111,13 +118,13 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotExpected = "{\"userId\":\"USERID_0\",unexpectedStructureForIban:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
         String jsonNotValid = "{\"userId\":\"USERID_1\",invalidJsonForIban";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN] Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", jsonNotValid)
         ));
     }
 

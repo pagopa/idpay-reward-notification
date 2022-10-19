@@ -80,7 +80,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         Assertions.assertEquals(expectedStored, waitForRewardsStored(expectedStored));
         long timeEnd = System.currentTimeMillis();
 
-        Objects.requireNonNull(rewardsRepository.findAll().collectList().block())
+        Objects.requireNonNull(fetchNewRewardsStored())
                 .forEach(this::checkResponse);
 
         verifyDuplicateCheck();
@@ -169,8 +169,8 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
 
     private void checkResponse(Rewards reward) {
         if (RewardStatus.ACCEPTED.equals(reward.getStatus())) {
-            String trxId = reward.getUserId();
-            int biasRetrieve = Integer.parseInt(trxId.substring(6));
+            String userId = reward.getUserId();
+            int biasRetrieve = Integer.parseInt(userId.substring(6));
             if(biasRetrieve >= errorUseCases.size()){
                 useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
             }
@@ -296,20 +296,12 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(15))))
                                 .build();
-                        LocalDate expectedNotificationDate = null;
-//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-//                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1500L, DepositType.PARTIAL);
-                        // TODO mocked result, remove me after implementation
-                        expectedRewardNotifications.put(trx.getUserId(),
-                                RewardsNotification.builder()
-                                        .id("%s_%s_THRESHOLD_NOTIFICATIONID".formatted(initiativeId, trx.getUserId()))
-                                        .userId(trx.getUserId())
-                                        .trxIds(List.of(trx.getId()))
-                                        .build());
+                        String expectedNotificationId = "%s_%s_1".formatted(trx.getUserId(), initiativeId);
+                        updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, 1500L, DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
-                            , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
+                            , "%s_%s_1".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
                             , null, BigDecimal.valueOf(15), true)
             ),
 
@@ -320,49 +312,129 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(100))))
                                 .build();
-                        LocalDate expectedNotificationDate = TOMORROW;
-//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-//                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 10000L, DepositType.PARTIAL);
-                        // TODO mocked result, remove me after implementation
-                        expectedRewardNotifications.put(trx.getUserId(),
-                                RewardsNotification.builder()
-                                        .id("%s_%s_THRESHOLD_NOTIFICATIONID".formatted(initiativeId, trx.getUserId()))
-                                        .userId(trx.getUserId())
-                                        .trxIds(List.of(trx.getId()))
-                                        .build());
+                        String expectedNotificationId = "%s_%s_1".formatted(trx.getUserId(), initiativeId);
+                        updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, 10000L, DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
-                            , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
-                            , null // TODO , TOMORROW
+                            , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_THRESHOLD, 1L)
+                            , TOMORROW
                             , BigDecimal.valueOf(100), true)
             ),
-            // useCase 8: initiative threshold notified overflowed after new trx
+            // useCase 8: initiative threshold notified overflowed after new trx -> storing a previous reward and relative notification
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
                                 .build();
-//                        storeRewardNotification(trx, initiativeId, List.of(trx.getId()));
-                        LocalDate expectedNotificationDate = TOMORROW;
-//                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-//                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 10900L, DepositType.PARTIAL);
-                        // TODO mocked result, remove me after implementation
-                        expectedRewardNotifications.put(trx.getUserId(),
-                                RewardsNotification.builder()
-                                        .id("%s_%s_THRESHOLD_NOTIFICATIONID".formatted(initiativeId, trx.getUserId()))
-                                        .userId(trx.getUserId())
-                                        .trxIds(List.of(trx.getId()))
-                                        .build());
+
+                        RewardTransactionDTO previousTrx = trx.toBuilder()
+                                .id("ALREADY_PROCESSED_" + trx.getId())
+                                .build();
+                        storeRewardNotification(previousTrx, initiativeId, null, 9900L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, 10900L, DepositType.PARTIAL);
+                        expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
-                            , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
-                            , null // TODO, TOMORROW
-                            , BigDecimal.TEN, true)
+                            , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                            , TOMORROW
+                            , BigDecimal.TEN, false)
             ),
-            // useCase 9: initiative notified when initiative at budged exhausted, but not exhausted
+            // useCase 9: initiative threshold notified on new record even if future notification -> storing a previous reward and relative notification
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
+                                .build();
+
+                        RewardTransactionDTO previousTrx = trx.toBuilder()
+                                .id("ALREADY_PROCESSED_" + trx.getId())
+                                .build();
+                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, 9900L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        RewardsNotification previousNotification = updateExpectedRewardNotification("ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                                , null, previousTrx, initiativeId, 9900L, DepositType.PARTIAL);
+                        previousNotification.setNotificationDate(TOMORROW);
+
+                        String expectedNotificationId = "%s_%s_2".formatted(trx.getUserId(), initiativeId);
+                        updateExpectedRewardNotification(expectedNotificationId, null, trx, 2L, initiativeId, 1000L, DepositType.PARTIAL);
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "%s_%s_2".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                            , null
+                            , BigDecimal.TEN, false)
+            ),
+            // useCase 10: initiative threshold notified refunding a not overflowed threshold -> storing a previous reward and relative notification
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(-10))))
+                                .build();
+
+                        RewardTransactionDTO previousTrx = trx.toBuilder()
+                                .id("ALREADY_PROCESSED_" + trx.getId())
+                                .build();
+                        storeRewardNotification(previousTrx, initiativeId, null, 9900L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, 8900L, DepositType.PARTIAL);
+                        expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                            , null
+                            , BigDecimal.valueOf(-10), false)
+            ),
+            // useCase 11: initiative threshold notified refunding an already overflowed threshold -> storing a previous reward and relative notification
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(-1))))
+                                .build();
+
+                        RewardTransactionDTO previousTrx = trx.toBuilder()
+                                .id("ALREADY_PROCESSED_" + trx.getId())
+                                .build();
+                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, 10100L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, 10000L, DepositType.PARTIAL);
+                        expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                            , TOMORROW
+                            , BigDecimal.valueOf(-1), false)
+            ),
+            // useCase 12: initiative threshold notified refunding an already overflowed threshold next not more overflowed -> storing a previous reward and relative notification
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(-2))))
+                                .build();
+
+                        RewardTransactionDTO previousTrx = trx.toBuilder()
+                                .id("ALREADY_PROCESSED_" + trx.getId())
+                                .build();
+                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, 10100L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, 9900L, DepositType.PARTIAL);
+                        expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                            , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                            , null
+                            , BigDecimal.valueOf(-2), false)
+            ),
+            // useCase 13: initiative notified when initiative at budged exhausted, but not exhausted
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_EXHAUSTED;
@@ -377,6 +449,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 RewardsNotification.builder()
                                         .id("%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(initiativeId, trx.getUserId()))
                                         .userId(trx.getUserId())
+                                        .externalId("EXTERNALID")
                                         .trxIds(List.of(trx.getId()))
                                         .build());
                         return trx;
@@ -385,7 +458,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , "%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_EXHAUSTED, reward.getUserId())
                             , null, BigDecimal.TEN, true)
             ),
-            // useCase 10: initiative notified when budged exhausted, receiving exhausted
+            // useCase 14: initiative notified when budged exhausted, receiving exhausted
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_EXHAUSTED;
@@ -402,6 +475,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 RewardsNotification.builder()
                                         .id("%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(initiativeId, trx.getUserId()))
                                         .userId(trx.getUserId())
+                                        .externalId("EXTERNALID")
                                         .trxIds(List.of(trx.getId()))
                                         .build());
                         return trx;
@@ -412,7 +486,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , BigDecimal.TEN, true)
             ),
 
-            // useCase 11: initiative stored, but not processed -> thus new notification created
+            // useCase 15: initiative stored, but not processed -> thus new notification created
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_DAILY;
@@ -435,7 +509,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     }
             ),
 
-            // useCase 12: initiative stored, but rejected -> thus now ACCEPTED and processed
+            // useCase 16: initiative stored, but rejected -> thus now ACCEPTED and processed
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_DAILY;

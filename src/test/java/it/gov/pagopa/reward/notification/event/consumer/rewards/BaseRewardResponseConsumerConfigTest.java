@@ -15,6 +15,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
 import it.gov.pagopa.reward.notification.service.LockServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.AfterEach;
@@ -83,15 +84,21 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
 
     protected long waitForRewardsStored(int n) {
         long[] countSaved = {0};
-        //noinspection ConstantConditions
-        waitFor(() -> (countSaved[0] = rewardsRepository.count().block()) >= n, () -> "Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
+        waitFor(() -> (countSaved[0] = fetchNewRewardsStored().size()) >= n, () -> "Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
+    }
+
+    protected List<Rewards> fetchNewRewardsStored() {
+        return rewardsRepository.findAll().filter(r->!r.getTrxId().startsWith("ALREADY")).collectList().block();
     }
 
     protected List<RewardsNotification> prepare2Compare(Collection<RewardsNotification> values) {
         return values.stream()
                 .sorted(Comparator.comparing(RewardsNotification::getUserId).thenComparing(RewardsNotification::getId))
-                .peek(r -> r.setExternalId(r.getExternalId() != null ? r.getExternalId().substring(36) : null))
+                .peek(r -> {
+                    Assertions.assertFalse(StringUtils.isEmpty(r.getExternalId()), "Invalid null externalId on reward notification:" + r);
+                    r.setExternalId("");
+                })
                 .toList();
     }
 

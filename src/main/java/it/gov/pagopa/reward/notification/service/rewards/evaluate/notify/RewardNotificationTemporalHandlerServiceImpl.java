@@ -37,6 +37,9 @@ public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNoti
     }
 
     public LocalDate calculateNotificationDate(LocalDate startDate, RewardNotificationRule rule) {
+        if(rule.getTimeParameter().getTimeType() == null){
+            throw new IllegalArgumentException("[REWARD_NOTIFICATION] Invalid timeType configured for the rule: %s".formatted(rule));
+        }
         return switch (rule.getTimeParameter().getTimeType()){
             case DAILY -> startDate.plusDays(1);
             case WEEKLY -> startDate.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));

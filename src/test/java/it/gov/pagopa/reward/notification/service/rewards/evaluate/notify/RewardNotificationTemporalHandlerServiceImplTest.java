@@ -49,6 +49,21 @@ class RewardNotificationTemporalHandlerServiceImplTest {
     }
 
     @Test
+    void testCalculateNotificationDateNull(){
+        // Given
+        RewardNotificationRule rule = buildRule(null);
+        LocalDate today = LocalDate.now();
+
+        // When
+        try{
+            service.calculateNotificationDate(today, rule);
+            Assertions.fail("Expected exception");
+        } catch (IllegalArgumentException e){
+            Assertions.assertTrue(e.getMessage().startsWith("[REWARD_NOTIFICATION] Invalid timeType configured for the rule: "), "Invalid exception message: %s".formatted(rule.getTimeParameter()));
+        }
+    }
+
+    @Test
     void testCalculateNotificationDateDaily(){
         // Given
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);

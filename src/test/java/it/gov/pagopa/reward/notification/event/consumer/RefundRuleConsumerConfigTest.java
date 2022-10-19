@@ -10,10 +10,12 @@ import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +24,18 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
+@TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
+})
+class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;
+
+    @AfterEach
+    void cleanData(){
+        rewardNotificationRuleRepository.deleteAll().block();
+    }
 
     @Test
     void testRewardNotificationRulePersistence(){

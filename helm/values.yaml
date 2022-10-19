@@ -66,6 +66,8 @@ microservice-chart:
     idpay-eventhub-00:
       KAFKA_CHECKIBAN_REQUEST_BROKER: kafka_broker
       KAFKA_CHECKIBAN_REQUEST_TOPIC: idpay_checkiban_evaluation_topic
+      KAFKA_CHECKIBAN_OUTCOME_BROKER: kafka_broker
+      KAFKA_CHECKIBAN_OUTCOME_TOPIC: idpay_checkiban_outcome_topic
 
   envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
@@ -73,4 +75,5 @@ microservice-chart:
     KAFKA_REFUND_RULE_REQUEST_SASL_JAAS_CONFIG: evh-idpay-rule-update-idpay-rule-update-consumer-jaas-config-idpay-01
     REWARD_RESPONSE_SASL_JAAS_CONFIG: evh-idpay-transaction-idpay-transaction-consumer-jaas-config-idpay-01
     KAFKA_CHECKIBAN_REQUEST_SASL_JAAS_CONFIG: evh-idpay-checkiban-evaluation-idpay-checkiban-evaluation-consumer-jaas-config-idpay-00
+    KAFKA_CHECKIBAN_OUTCOME_SASL_JAAS_CONFIG: evh-idpay-checkiban-outcome-idpay-checkiban-outcome-consumer-jaas-config-idpay-00
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01

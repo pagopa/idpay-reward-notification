@@ -2,11 +2,12 @@ package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -21,27 +22,30 @@ import java.util.stream.IntStream;
 @Slf4j
 class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsumerConfigTest {
 
+    private final int initiativeRewardedNumber=6; // TODO 8
+
     @Test
     void testConsumer() {
-        int validTrx = 1000;
-        long maxWaitingMs = 30000;
+        int validTrx = 100;
+        int expectedRewardsNumber = validTrx * initiativeRewardedNumber;
 
         publishRewardRules();
 
-        List<String> trxs = new ArrayList<>(buildValidPayloads(validTrx));
+        List<RewardTransactionDTO> trxs = new ArrayList<>(buildValidPayloads(validTrx));
 
         long totalSendMessages = trxs.size();
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(p -> publishIntoEmbeddedKafka(topicRewardResponse, null, Utils.readUserId(p), p));
+        trxs.forEach(p -> publishIntoEmbeddedKafka(topicRewardResponse, null,p.getUserId(), p));
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeBeforeDbCheck = System.currentTimeMillis();
-        Assertions.assertEquals(validTrx, waitForRewardsStored(validTrx));
+
+        Assertions.assertEquals(expectedRewardsNumber, waitForRewardsStored(expectedRewardsNumber));
         long timeEnd = System.currentTimeMillis();
 
-        checkRewards(validTrx);
-        checkRewardsNotification(validTrx);
+        checkRewards(expectedRewardsNumber);
+        checkRewardsNotification(trxs);
 
         System.out.printf("""
                         ************************
@@ -58,10 +62,9 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
         );
     }
 
-    private List<String> buildValidPayloads(int validOnboardings) {
+    private List<RewardTransactionDTO> buildValidPayloads(int validOnboardings) {
         return IntStream.range(0, validOnboardings)
                 .mapToObj(i->mockInstance(i, validOnboardings))
-                .map(TestUtils::jsonSerializer)
                 .toList();
     }
 
@@ -87,36 +90,93 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
         return trx;
     }
 
-    private void checkRewards(int validTrx) {
+    private void checkRewards(int expectedRewardsNumber) {
         List<Rewards> rewards = rewardsRepository.findAll().collectList().block();
 
         Assertions.assertNotNull(rewards);
-        Assertions.assertEquals(validTrx*8, rewards.size());
+        Assertions.assertEquals(expectedRewardsNumber, rewards.size());
 
         rewards.forEach(r-> {
             switch (r.getInitiativeId()) {
                 case INITIATIVE_ID_NOTIFY_DAILY ->
-                        assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_DAILY_%s".formatted(TOMORROW.format(Utils.FORMATTER_DATE)), TOMORROW, BigDecimal.valueOf(1));
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_DAILY_%s".formatted(TOMORROW.format(Utils.FORMATTER_DATE)), TOMORROW, BigDecimal.valueOf(1), false);
                 case INITIATIVE_ID_NOTIFY_WEEKLY ->
-                        assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_WEEKLY_%s".formatted(NEXT_WEEK.format(Utils.FORMATTER_DATE)), NEXT_WEEK, BigDecimal.valueOf(2));
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_WEEKLY_%s".formatted(NEXT_WEEK.format(Utils.FORMATTER_DATE)), NEXT_WEEK, BigDecimal.valueOf(2), false);
                 case INITIATIVE_ID_NOTIFY_MONTHLY ->
-                        assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_MONTHLY_%s".formatted(NEXT_MONTH.format(Utils.FORMATTER_DATE)), NEXT_MONTH, BigDecimal.valueOf(3));
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_MONTHLY_%s".formatted(NEXT_MONTH.format(Utils.FORMATTER_DATE)), NEXT_MONTH, BigDecimal.valueOf(3), false);
                 case INITIATIVE_ID_NOTIFY_QUARTERLY ->
-                        assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_QUARTERLY_%s".formatted(NEXT_QUARTER.format(Utils.FORMATTER_DATE)), NEXT_QUARTER, BigDecimal.valueOf(4));
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_QUARTERLY_%s".formatted(NEXT_QUARTER.format(Utils.FORMATTER_DATE)), NEXT_QUARTER, BigDecimal.valueOf(4), false);
                 case INITIATIVE_ID_NOTIFY_CLOSED ->
-                        assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_CLOSED_%s".formatted(initiativeEndDate.plusDays(1).format(Utils.FORMATTER_DATE)), initiativeEndDate.plusDays(1), BigDecimal.valueOf(5));
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_CLOSED_%s".formatted(INITIATIVE_ENDDATE_NEXT_DAY.format(Utils.FORMATTER_DATE)), INITIATIVE_ENDDATE_NEXT_DAY, BigDecimal.valueOf(5), false);
                 case INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED ->
-                        assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_CLOSED_ALREADY_EXPIRED_%s", TOMORROW, BigDecimal.valueOf(6));
-    //  TODO          case INITIATIVE_ID_NOTIFY_THRESHOLD -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_THRESHOLD_%s", null, BigDecimal.valueOf(7));
-    //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8));
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_CLOSED_ALREADY_EXPIRED_%s".formatted(TOMORROW.format(Utils.FORMATTER_DATE)), TOMORROW, BigDecimal.valueOf(6), false);
+    //  TODO          case INITIATIVE_ID_NOTIFY_THRESHOLD -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_THRESHOLD_%s", null, BigDecimal.valueOf(7), false);
+    //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8), false);
                 default -> throw new IllegalArgumentException("Unexpected initiativeId: " + r);
             }
         });
     }
 
-    private void checkRewardsNotification(int validTrx) {
+    private void checkRewardsNotification(List<RewardTransactionDTO> trxs) {
         List<RewardsNotification> rewardsNotifications = Objects.requireNonNull(rewardsNotificationRepository.findAll().collectList().block());
-        //TODO
+
+        Assertions.assertNotNull(rewardsNotifications);
+        Assertions.assertEquals(initiativeRewardedNumber, rewardsNotifications.size());
+
+        rewardsNotifications.forEach(n-> {
+            final RewardsNotification expectedNotification =
+                    RewardsNotification.builder()
+                            .externalId(n.getExternalId())
+                            .initiativeId(n.getInitiativeId())
+                            .initiativeName("INITIATIVE_NAME_" + n.getInitiativeId())
+                            .organizationId("ORGANIZATION_ID_" + n.getInitiativeId())
+                            .organizationFiscalCode("ORGANIZATION_VAT_" + n.getInitiativeId())
+                            .userId("USERID")
+                            .progressive(1L)
+                            .trxIds(trxs.stream().map(TransactionDTO::getId).toList())
+                            .depositType(DepositType.PARTIAL)
+                            .startDepositDate(TODAY)
+                    .build();
+            switch (n.getInitiativeId()) {
+                case INITIATIVE_ID_NOTIFY_DAILY -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_DAILY_%s".formatted(TOMORROW.format(Utils.FORMATTER_DATE)));
+                    expectedNotification.setNotificationDate(TOMORROW);
+                    expectedNotification.setRewardCents(trxs.size()*100L);
+                }
+                case INITIATIVE_ID_NOTIFY_WEEKLY -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_WEEKLY_%s".formatted(NEXT_WEEK.format(Utils.FORMATTER_DATE)));
+                    expectedNotification.setNotificationDate(NEXT_WEEK);
+                    expectedNotification.setRewardCents(trxs.size()*200L);
+                }
+                case INITIATIVE_ID_NOTIFY_MONTHLY -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_MONTHLY_%s".formatted(NEXT_MONTH.format(Utils.FORMATTER_DATE)));
+                    expectedNotification.setNotificationDate(NEXT_MONTH);
+                    expectedNotification.setRewardCents(trxs.size()*300L);
+                }
+                case INITIATIVE_ID_NOTIFY_QUARTERLY -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_QUARTERLY_%s".formatted(NEXT_QUARTER.format(Utils.FORMATTER_DATE)));
+                    expectedNotification.setNotificationDate(NEXT_QUARTER);
+                    expectedNotification.setRewardCents(trxs.size()*400L);
+                }
+                case INITIATIVE_ID_NOTIFY_CLOSED -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_CLOSED_%s".formatted(INITIATIVE_ENDDATE_NEXT_DAY.format(Utils.FORMATTER_DATE)));
+                    expectedNotification.setNotificationDate(INITIATIVE_ENDDATE_NEXT_DAY);
+                    expectedNotification.setRewardCents(trxs.size()*500L);
+                    expectedNotification.setDepositType(DepositType.FINAL);
+                }
+                case INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_CLOSED_ALREADY_EXPIRED_%s".formatted(TOMORROW.format(Utils.FORMATTER_DATE)));
+                    expectedNotification.setNotificationDate(TOMORROW);
+                    expectedNotification.setRewardCents(trxs.size()*600L);
+                    expectedNotification.setDepositType(DepositType.FINAL);
+                }
+                //  TODO          case INITIATIVE_ID_NOTIFY_THRESHOLD -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_THRESHOLD_%s", null, BigDecimal.valueOf(7));
+                //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8));
+                default -> throw new IllegalArgumentException("Unexpected initiativeId: " + n);
+            }
+
+            Assertions.assertEquals(expectedNotification, n);
+        });
     }
 
 }

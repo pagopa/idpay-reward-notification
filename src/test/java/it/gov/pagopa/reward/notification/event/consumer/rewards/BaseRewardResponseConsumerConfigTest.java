@@ -96,7 +96,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     }
 
     // region initiative build
-    protected final LocalDate initiativeEndDate = TODAY.plusDays(10);
+    protected static final LocalDate INITIATIVE_ENDDATE = TODAY.plusDays(10);
+    protected static final LocalDate INITIATIVE_ENDDATE_NEXT_DAY = INITIATIVE_ENDDATE.plusDays(1);
 
     protected static final String INITIATIVE_ID_NOTIFY_DAILY = "INITIATIVEID_DAILY";
     protected static final String INITIATIVE_ID_NOTIFY_WEEKLY = "INITIATIVEID_WEEKLY";
@@ -111,10 +112,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
         List<InitiativeRefund2StoreDTO> rules = List.of(
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_DAILY)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_DAILY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_DAILY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_DAILY)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .accumulatedAmount(AccumulatedAmountDTO.builder() // ignored because configured as timed
@@ -128,10 +130,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .build(),
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_WEEKLY)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_WEEKLY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_WEEKLY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_WEEKLY)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .timeParameter(TimeParameterDTO.builder()
@@ -141,10 +144,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .build(),
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_MONTHLY)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_MONTHLY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_MONTHLY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_MONTHLY)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .timeParameter(TimeParameterDTO.builder()
@@ -154,10 +158,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .build(),
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_QUARTERLY)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .timeParameter(TimeParameterDTO.builder()
@@ -167,10 +172,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .build(),
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_CLOSED)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_CLOSED)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_CLOSED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_CLOSED)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .timeParameter(TimeParameterDTO.builder()
@@ -180,6 +186,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .build(),
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .general(InitiativeGeneralDTO.builder()
@@ -194,10 +201,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
 
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_THRESHOLD)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .accumulatedAmount(AccumulatedAmountDTO.builder() // ignored because configured as timed
@@ -208,10 +216,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .build(),
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_EXHAUSTED)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
                         .general(InitiativeGeneralDTO.builder()
-                                .endDate(initiativeEndDate)
+                                .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .accumulatedAmount(AccumulatedAmountDTO.builder() // ignored because configured as timed
@@ -243,16 +252,20 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
         );
     }
 
-    protected void assertRewardNotification(Rewards evaluation, String expectedInitiativeId, String notificationId, LocalDate expectedNotificationDate, BigDecimal expectedReward) {
-        String errorMsg = "Unexpected result verifying reward: " + evaluation;
+    protected void assertRewards(Rewards reward, String expectedInitiativeId, String notificationId, LocalDate expectedNotificationDate, BigDecimal expectedReward, boolean notifiedAlone) {
+        String errorMsg = "Unexpected result verifying reward: " + reward;
 
-        Assertions.assertEquals(evaluation.getInitiativeId(), expectedInitiativeId, errorMsg);
-        Assertions.assertEquals(evaluation.getNotificationId(), notificationId, errorMsg);
-        Assertions.assertEquals(evaluation.getReward(), expectedReward, errorMsg);
+        Assertions.assertEquals(expectedInitiativeId, reward.getInitiativeId(), errorMsg);
+        Assertions.assertEquals(notificationId, reward.getNotificationId(), errorMsg);
+        Assertions.assertEquals(expectedReward, reward.getReward(), errorMsg);
 
         RewardsNotification notification = rewardsNotificationRepository.findById(notificationId).block();
         Assertions.assertNotNull(notification, errorMsg);
-        Assertions.assertEquals(List.of(evaluation.getTrxId()), notification.getTrxIds(), errorMsg);
+        if(notifiedAlone){
+            Assertions.assertEquals(List.of(reward.getTrxId()), notification.getTrxIds(), errorMsg);
+        } else {
+            Assertions.assertTrue(notification.getTrxIds().contains(reward.getTrxId()), errorMsg);
+        }
         Assertions.assertEquals(expectedNotificationDate, notification.getNotificationDate(), errorMsg);
     }
 
@@ -260,6 +273,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
         if(n ==null){
             RewardNotificationRule rule = RewardNotificationRule.builder()
                     .initiativeId(initiativeId)
+                    .initiativeName("INITIATIVE_NAME_" + initiativeId)
                     .organizationId("ORGANIZATION_ID_" + initiativeId)
                     .organizationFiscalCode("ORGANIZATION_VAT_" + initiativeId)
                     .build();

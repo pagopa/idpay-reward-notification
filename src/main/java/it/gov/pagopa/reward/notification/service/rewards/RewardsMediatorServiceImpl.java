@@ -109,7 +109,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
 
         final Message<String> message = messageAndLockId.getKey();
 
-        final Consumer<? super Signal<Rewards>> lockReleaser = x -> {
+        final Consumer<? super Signal<List<Rewards>>> lockReleaser = x -> {
             int lockId = messageAndLockId.getValue();
             if (lockId > -1) {
                 lockService.releaseLock(lockId);
@@ -125,8 +125,8 @@ public class RewardsMediatorServiceImpl extends BaseKafkaConsumer<RewardTransact
                 .flatMapMany(this::readRewards)
                 .flatMap(this::checkDuplicateReward)
                 .flatMap(r -> retrieveInitiativeAndEvaluate(r, message))
-                .doOnEach(lockReleaser)
-                .collectList();
+                .collectList()
+                .doOnEach(lockReleaser);
     }
 
     @Override

@@ -198,7 +198,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     reward -> {
                         LocalDate expectedNotificationDate = TOMORROW;
                         String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN);
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
                     }
             ),
             // useCase 1: initiative weekly notified
@@ -213,10 +213,10 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1100L, DepositType.PARTIAL);
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_WEEKLY
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_WEEKLY
                             , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_WEEKLY, NEXT_WEEK.format(Utils.FORMATTER_DATE))
                             , NEXT_WEEK
-                            , BigDecimal.valueOf(11))
+                            , BigDecimal.valueOf(11), true)
             ),
             // useCase 2: initiative quarterly notified
             Pair.of(
@@ -230,10 +230,10 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1200L, DepositType.PARTIAL);
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_QUARTERLY
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_QUARTERLY
                             , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_QUARTERLY, NEXT_QUARTER.format(Utils.FORMATTER_DATE))
                             , NEXT_QUARTER
-                            , BigDecimal.valueOf(12))
+                            , BigDecimal.valueOf(12), true)
             ),
             // useCase 3: initiative closed notified
             Pair.of(
@@ -242,15 +242,15 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
                                 .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(13))))
                                 .build();
-                        LocalDate expectedNotificationDate = initiativeEndDate.plusDays(1);
+                        LocalDate expectedNotificationDate = INITIATIVE_ENDDATE_NEXT_DAY;
                         String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1300L, DepositType.FINAL);
                         return trx;
                     },
                     reward -> {
-                        LocalDate expectedNotificationDate = initiativeEndDate.plusDays(1);
+                        LocalDate expectedNotificationDate = INITIATIVE_ENDDATE_NEXT_DAY;
                         String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_CLOSED, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_CLOSED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(13));
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_CLOSED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(13), true);
                     }
             ),
             // useCase 4: initiative closed in past days notified
@@ -268,7 +268,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     reward -> {
                         LocalDate expectedNotificationDate = TOMORROW;
                         String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(14));
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(14), true);
                     }
             ),
 
@@ -291,9 +291,9 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
-                            , null, BigDecimal.valueOf(15))
+                            , null, BigDecimal.valueOf(15), true)
             ),
 
             // useCase 6: initiative threshold notified overflowed
@@ -315,10 +315,10 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
                             , null // TODO , TOMORROW
-                            , BigDecimal.valueOf(100))
+                            , BigDecimal.valueOf(100), true)
             ),
             // useCase 7: initiative threshold notified overflowed after new trx
             Pair.of(
@@ -340,10 +340,10 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "%s_%s_THRESHOLD_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_THRESHOLD, reward.getUserId())
                             , null // TODO, TOMORROW
-                            , BigDecimal.TEN)
+                            , BigDecimal.TEN, true)
             ),
             // useCase 8: initiative notified when initiative at budged exhausted, but not exhausted
             Pair.of(
@@ -364,9 +364,9 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
                             , "%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_EXHAUSTED, reward.getUserId())
-                            , null, BigDecimal.TEN)
+                            , null, BigDecimal.TEN, true)
             ),
             // useCase 9: initiative notified when budged exhausted, receiving exhausted
             Pair.of(
@@ -389,10 +389,10 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                         .build());
                         return trx;
                     },
-                    reward -> assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
                             , "%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_EXHAUSTED, reward.getUserId())
                             , null // TODO, TOMORROW
-                            , BigDecimal.TEN)
+                            , BigDecimal.TEN, true)
             ),
 
             // useCase 10: initiative stored, but not processed -> thus new notification created
@@ -414,7 +414,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     reward -> {
                         LocalDate expectedNotificationDate = TOMORROW;
                         String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN);
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
                     }
             ),
 
@@ -437,7 +437,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     reward -> {
                         LocalDate expectedNotificationDate = TOMORROW;
                         String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
-                        assertRewardNotification(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN);
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
                     }
             )
     );

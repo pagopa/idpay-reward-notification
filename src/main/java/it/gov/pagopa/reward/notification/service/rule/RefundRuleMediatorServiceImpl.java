@@ -24,7 +24,9 @@ import java.util.function.Consumer;
 public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeRefund2StoreDTO, RewardNotificationRule> implements RefundRuleMediatorService {
 
     private final Duration commitDelay;
+
     private final Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper;
+    private final RewardNotificationRuleValidatorService rewardNotificationRuleValidatorService;
     private final RewardNotificationRuleService rewardNotificationRuleService;
     private final ErrorNotifierService errorNotifierService;
 
@@ -34,11 +36,12 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
             @Value("${spring.cloud.stream.kafka.bindings.refundRuleConsumer-in-0.consumer.ackTime}")
             long commitMillis,
             Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper,
-            RewardNotificationRuleService rewardNotificationRuleService,
+            RewardNotificationRuleValidatorService rewardNotificationRuleValidatorService, RewardNotificationRuleService rewardNotificationRuleService,
 
             ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.initiative2RewardNotificationRuleMapper = initiative2RewardNotificationRuleMapper;
+        this.rewardNotificationRuleValidatorService = rewardNotificationRuleValidatorService;
         this.rewardNotificationRuleService = rewardNotificationRuleService;
         this.errorNotifierService = errorNotifierService;
 
@@ -76,6 +79,7 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     protected Mono<RewardNotificationRule> execute(InitiativeRefund2StoreDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
                 .map(initiative2RewardNotificationRuleMapper)
+                .doOnNext(rewardNotificationRuleValidatorService::validate)
                 .flatMap(rewardNotificationRuleService::save);
     }
 

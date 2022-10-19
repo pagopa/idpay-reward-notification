@@ -1,6 +1,9 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
+import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
+import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -24,7 +27,7 @@ import java.util.stream.IntStream;
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
 })
-class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
+public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;
@@ -118,6 +121,52 @@ class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] Unexpected JSON", jsonNotValid)
+        ));
+
+        RewardNotificationRule notValidRule = new RewardNotificationRule();
+        notValidRule.setInitiativeId("id_2");
+        String notValidRuleJson = TestUtils.jsonSerializer(notValidRule);
+        errorUseCases.add(Pair.of(
+                () -> notValidRuleJson,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidRuleJson)
+        ));
+
+        RewardNotificationRule notValidTimeRule = new RewardNotificationRule();
+        notValidTimeRule.setInitiativeId("id_3");
+        notValidTimeRule.setTimeParameter(new TimeParameterDTO());
+        String notValidTimeRuleJson = TestUtils.jsonSerializer(notValidTimeRule);
+        errorUseCases.add(Pair.of(
+                () -> notValidTimeRuleJson,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidTimeRuleJson)
+        ));
+
+        RewardNotificationRule notValidTimeClosedRule = new RewardNotificationRule();
+        notValidTimeClosedRule.setInitiativeId("id_4");
+        notValidTimeClosedRule.setTimeParameter(new TimeParameterDTO());
+        notValidTimeClosedRule.getTimeParameter().setTimeType(TimeParameterDTO.TimeTypeEnum.CLOSED);
+        String notValidTimeClosedRuleJson = TestUtils.jsonSerializer(notValidTimeClosedRule);
+        errorUseCases.add(Pair.of(
+                () -> notValidTimeClosedRuleJson,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidTimeClosedRuleJson)
+        ));
+
+        RewardNotificationRule notValidAccumulatedRule = new RewardNotificationRule();
+        notValidAccumulatedRule.setInitiativeId("id_5");
+        notValidAccumulatedRule.setAccumulatedAmount(new AccumulatedAmountDTO());
+        String notValidAccumulatedRuleJson = TestUtils.jsonSerializer(notValidAccumulatedRule);
+        errorUseCases.add(Pair.of(
+                () -> notValidAccumulatedRuleJson,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidAccumulatedRuleJson)
+        ));
+
+        RewardNotificationRule notValidThresholdRule = new RewardNotificationRule();
+        notValidThresholdRule.setInitiativeId("id_6");
+        notValidThresholdRule.setAccumulatedAmount(new AccumulatedAmountDTO());
+        notValidThresholdRule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED);
+        String notValidThresholdRuleJson = TestUtils.jsonSerializer(notValidThresholdRule);
+        errorUseCases.add(Pair.of(
+                () -> notValidThresholdRuleJson,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", notValidThresholdRuleJson)
         ));
     }
 

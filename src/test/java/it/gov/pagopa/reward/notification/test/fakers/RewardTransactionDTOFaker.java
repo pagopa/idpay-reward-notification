@@ -5,6 +5,7 @@ import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.OperationType;
+import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -67,7 +68,7 @@ public class RewardTransactionDTOFaker {
                 ZONEID.getRules().getOffset(trxDateTime)
         );
 
-        BigDecimal amount = BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE).setScale(2, RoundingMode.UNNECESSARY);
+        BigDecimal amount = TestUtils.bigDecimalValue(getRandomPositiveNumber(bias, 200));
 
         RewardTransactionDTO.RewardTransactionDTOBuilder<?, ?> out = RewardTransactionDTO.builder()
                 .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))

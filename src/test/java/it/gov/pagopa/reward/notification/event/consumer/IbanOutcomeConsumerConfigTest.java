@@ -13,7 +13,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
@@ -34,7 +35,8 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     private final String userId = "USERID_%s";
     private final String initiativeId = "INITIATIVEID_%s";
     private final String iban = "IBAN_%s";
-    @Autowired
+
+    @SpyBean
     private RewardIbanRepository rewardIbanRepository;
 
     @AfterEach
@@ -60,8 +62,8 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         ibanPayloads.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForIbanStoreChanged(unknownIban+notValidIban);
-        Assertions.assertEquals(countSaved, notValidIban+unknownIban);
+        long countSaved = waitForIbanStoreChanged(unknownIban);
+        Assertions.assertEquals(unknownIban, countSaved);
         long timeEnd=System.currentTimeMillis();
 
         checkStatusDB(notValidIban, unknownIban);
@@ -194,6 +196,21 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
                 () -> jsonNotValid,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_OUTCOME] Unexpected JSON", jsonNotValid)
         ));
+
+        final String failingUpdatingIban = "FAILING_UPDATING";
+        String failingUpdatingUseCase = TestUtils.jsonSerializer(
+                IbanOutcomeDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                        .userId("USERID_2")
+                        .iban(failingUpdatingIban)
+                        .build()
+        );
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(rewardIbanRepository).save(Mockito.argThat(i -> failingUpdatingIban.equals(i.getIban())));
+                    return failingUpdatingUseCase;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_OUTCOME] An error occurred evaluating iban", failingUpdatingUseCase)
+        ));
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
@@ -207,7 +224,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     public static long waitForIbanStoreChanged(int n, RewardIbanRepository rewardIbanRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardIbanRepository.count().block()) <= n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
+        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) >= n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 }

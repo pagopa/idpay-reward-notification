@@ -218,7 +218,24 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , NEXT_WEEK
                             , BigDecimal.valueOf(11), true)
             ),
-            // useCase 2: initiative quarterly notified
+            // useCase 2: initiative monthly notified
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_MONTHLY;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(12))))
+                                .build();
+                        LocalDate expectedNotificationDate = NEXT_MONTH;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1200L, DepositType.PARTIAL);
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_MONTHLY
+                            , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_MONTHLY, NEXT_MONTH.format(Utils.FORMATTER_DATE))
+                            , NEXT_MONTH
+                            , BigDecimal.valueOf(12), true)
+            ),
+            // useCase 3: initiative quarterly notified
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_QUARTERLY;
@@ -235,7 +252,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , NEXT_QUARTER
                             , BigDecimal.valueOf(12), true)
             ),
-            // useCase 3: initiative closed notified
+            // useCase 4: initiative closed notified
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_CLOSED;
@@ -253,7 +270,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         assertRewards(reward, INITIATIVE_ID_NOTIFY_CLOSED, expectedNotificationId, expectedNotificationDate, BigDecimal.valueOf(13), true);
                     }
             ),
-            // useCase 4: initiative closed in past days notified
+            // useCase 5: initiative closed in past days notified
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED;
@@ -272,7 +289,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     }
             ),
 
-            // useCase 5: initiative threshold notified not past
+            // useCase 6: initiative threshold notified not past
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
@@ -296,7 +313,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , null, BigDecimal.valueOf(15), true)
             ),
 
-            // useCase 6: initiative threshold notified overflowed
+            // useCase 7: initiative threshold notified overflowed
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
@@ -320,7 +337,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , null // TODO , TOMORROW
                             , BigDecimal.valueOf(100), true)
             ),
-            // useCase 7: initiative threshold notified overflowed after new trx
+            // useCase 8: initiative threshold notified overflowed after new trx
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
@@ -345,7 +362,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , null // TODO, TOMORROW
                             , BigDecimal.TEN, true)
             ),
-            // useCase 8: initiative notified when initiative at budged exhausted, but not exhausted
+            // useCase 9: initiative notified when initiative at budged exhausted, but not exhausted
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_EXHAUSTED;
@@ -368,7 +385,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , "%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(INITIATIVE_ID_NOTIFY_EXHAUSTED, reward.getUserId())
                             , null, BigDecimal.TEN, true)
             ),
-            // useCase 9: initiative notified when budged exhausted, receiving exhausted
+            // useCase 10: initiative notified when budged exhausted, receiving exhausted
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_EXHAUSTED;
@@ -395,7 +412,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , BigDecimal.TEN, true)
             ),
 
-            // useCase 10: initiative stored, but not processed -> thus new notification created
+            // useCase 11: initiative stored, but not processed -> thus new notification created
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_DAILY;
@@ -418,7 +435,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     }
             ),
 
-            // useCase 11: initiative stored, but rejected -> thus now ACCEPTED and processed
+            // useCase 12: initiative stored, but rejected -> thus now ACCEPTED and processed
             Pair.of(
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_DAILY;

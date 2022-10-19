@@ -67,7 +67,7 @@ public class InitiativeRefundDTOFaker {
         out.refundRule(initiativeRefundRule);
 
         TestUtils.checkNotNullFields(out);
-        TestUtils.checkNotNullFields(accumulatedAmount);
+        TestUtils.checkNotNullFields(accumulatedAmount, "refundThresholdCents");
         TestUtils.checkNotNullFields(timeParameter);
         return out;
     }

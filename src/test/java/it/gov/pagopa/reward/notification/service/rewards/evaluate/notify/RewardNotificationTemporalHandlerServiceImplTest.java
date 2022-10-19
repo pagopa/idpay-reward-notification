@@ -39,7 +39,6 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         service = new RewardNotificationTemporalHandlerServiceImpl(repositoryMock, mapperSpy);
     }
 
-// region test calculateNotificationDate method
     private static RewardNotificationRule buildRule(TimeParameterDTO.TimeTypeEnum type) {
         RewardNotificationRule rule = new RewardNotificationRule();
         rule.setInitiativeId("INITIATIVEID");
@@ -48,6 +47,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         return rule;
     }
 
+// region test calculateNotificationDate method
     @Test
     void testCalculateNotificationDateNull(){
         // Given
@@ -168,9 +168,9 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
         long expectedProgressive = 5L;
 
-        String notificationId = "USERID0_INITIATIVEID_%s".formatted(expectedNotificationDate.format(Utils.FORMATTER_DATE));
+        String expectedNotificationId = "USERID0_INITIATIVEID_%s".formatted(expectedNotificationDate.format(Utils.FORMATTER_DATE));
 
-        Mockito.when(repositoryMock.findById(notificationId)).thenReturn(Mono.empty());
+        Mockito.when(repositoryMock.findById(expectedNotificationId)).thenReturn(Mono.empty());
         Mockito.doAnswer(a ->{
                     expectedResult[0]=(RewardsNotification)a.callRealMethod();
                     return expectedResult[0];
@@ -189,6 +189,8 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertSame(expectedResult[0], result);
 
+        Assertions.assertEquals(expectedNotificationId, result.getId());
+        Assertions.assertEquals(expectedNotificationDate, result.getNotificationDate());
         Assertions.assertEquals(1000L, result.getRewardCents());
         Assertions.assertEquals(expectedProgressive, result.getProgressive());
         Assertions.assertEquals(List.of(trx.getId()), result.getTrxIds());
@@ -203,7 +205,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
             TestUtils.checkNullFields(query, "userId", "initiativeId");
             return true;
         }));
-        Mockito.verify(mapperSpy).apply(Mockito.eq(notificationId), Mockito.eq(expectedNotificationDate), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
+        Mockito.verify(mapperSpy).apply(Mockito.eq(expectedNotificationId), Mockito.eq(expectedNotificationDate), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
     }
@@ -240,6 +242,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         Assertions.assertEquals(expectedProgressive, result.getProgressive());
         Assertions.assertEquals(DepositType.FINAL, result.getDepositType());
         Assertions.assertEquals(List.of("TRXID", trx.getId()), result.getTrxIds());
+        Assertions.assertEquals(expectedNotificationDate, result.getNotificationDate());
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
         Mockito.verify(service).calculateNotificationDate(Mockito.eq(LocalDate.now()), Mockito.same(rule));

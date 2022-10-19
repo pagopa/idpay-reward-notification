@@ -30,6 +30,8 @@ class Initiative2RewardNotificationRuleMapperTest {
         Assertions.assertEquals(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter(),result.getTimeParameter());
         Assertions.assertEquals(initiativeRefund2StoreDTO.getOrganizationVat(), result.getOrganizationFiscalCode());
 
+        Assertions.assertEquals(10000L, result.getAccumulatedAmount().getRefundThresholdCents());
+
         TestUtils.checkNotNullFields(result);
         TestUtils.checkNotNullFields(result.getAccumulatedAmount());
         TestUtils.checkNotNullFields(result.getTimeParameter());

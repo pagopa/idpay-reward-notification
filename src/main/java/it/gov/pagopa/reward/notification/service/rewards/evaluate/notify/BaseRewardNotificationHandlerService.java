@@ -15,6 +15,7 @@ import java.time.LocalDate;
 
 public abstract class BaseRewardNotificationHandlerService implements RewardNotificationHandlerService {
 
+    public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100L);
     protected final RewardsNotificationRepository rewardsNotificationRepository;
     protected final RewardsNotificationMapper mapper;
 
@@ -35,7 +36,7 @@ public abstract class BaseRewardNotificationHandlerService implements RewardNoti
     }
 
     protected void updateReward(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward, RewardsNotification n) {
-        n.setRewardCents(n.getRewardCents() + reward.getAccruedReward().multiply(BigDecimal.valueOf(100L)).longValue());
+        n.setRewardCents(n.getRewardCents() + reward.getAccruedReward().multiply(ONE_HUNDRED).longValue());
         n.getTrxIds().add(trx.getId());
         n.setDepositType(calcDepositType(rule, reward));
     }

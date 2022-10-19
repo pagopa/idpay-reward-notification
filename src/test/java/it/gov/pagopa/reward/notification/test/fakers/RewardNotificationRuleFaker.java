@@ -32,6 +32,7 @@ public class RewardNotificationRuleFaker {
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)
                 .refundThreshold(new BigDecimal("100.00"))
+                .refundThresholdCents(10000L)
                 .build();
         out.accumulatedAmount(accumulatedAmount);
 

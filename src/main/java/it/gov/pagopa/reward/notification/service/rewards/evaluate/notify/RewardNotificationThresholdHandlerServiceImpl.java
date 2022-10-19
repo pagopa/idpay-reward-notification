@@ -6,11 +6,15 @@ import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
+@Slf4j
 @Service
 public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNotificationHandlerService implements RewardNotificationHandlerService {
 
@@ -20,11 +24,40 @@ public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNot
 
     @Override
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
-        return Mono.just(RewardsNotification.builder()
-                .id("%s_%s_THRESHOLD_NOTIFICATIONID".formatted(rule.getInitiativeId(), trx.getUserId()))
-                .userId(trx.getUserId())
-                .trxIds(List.of(trx.getId()))
-                .build()); //TODO
+        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDate(trx.getUserId(), rule.getInitiativeId(), null)
+                .switchIfEmpty(handleNoOpenNotification(trx, rule, reward))
+                .last()
+                .doOnNext(n -> {
+                    updateReward(trx, rule, reward, n);
+
+                    n.setNotificationDate(
+                            n.getRewardCents() >= rule.getAccumulatedAmount().getRefundThresholdCents()
+                                    ? LocalDate.now().plusDays(1)
+                                    : null);
+                });
+    }
+
+    private Mono<RewardsNotification> handleNoOpenNotification(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
+        Flux<RewardsNotification> findFutureIfRefund;
+        if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) < 0){
+            log.debug("[REWARD_NOTIFICATION] searching for future notification for userId {} and initiativeId {}", trx.getUserId(), rule.getInitiativeId());
+            findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThan(trx.getUserId(), rule.getInitiativeId(), LocalDate.now());
+        } else {
+            findFutureIfRefund = Flux.empty();
+        }
+        return findFutureIfRefund
+                .switchIfEmpty(
+                    createNewNotification(trx, rule, null, buildNotificationId(trx, rule))
+                    .doOnNext(n -> n.setId("%s_%d".formatted(n.getId(), n.getProgressive())))
+                )
+                .last();
+    }
+
+    private String buildNotificationId(RewardTransactionDTO trx, RewardNotificationRule rule) {
+        return "%s_%s".formatted(
+                trx.getUserId(),
+                rule.getInitiativeId()
+        );
     }
 
 }

@@ -60,8 +60,8 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         ibanPayloads.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForIbanStoreChanged(unknownIban+notValidIban);
-        Assertions.assertEquals(countSaved, notValidIban+unknownIban);
+        long countSaved = waitForIbanStoreChanged(unknownIban);
+        Assertions.assertEquals(unknownIban, countSaved);
         long timeEnd=System.currentTimeMillis();
 
         checkStatusDB(notValidIban, unknownIban);
@@ -207,7 +207,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     public static long waitForIbanStoreChanged(int n, RewardIbanRepository rewardIbanRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardIbanRepository.count().block()) <= n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
+        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) >= n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 }

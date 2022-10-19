@@ -11,7 +11,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
@@ -30,7 +31,7 @@ import java.util.stream.IntStream;
 @Slf4j
 class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
 
-    @Autowired
+    @SpyBean
     private RewardIbanRepository rewardIbanRepository;
 
     @AfterEach
@@ -125,6 +126,21 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_REQUEST] Unexpected JSON", jsonNotValid)
+        ));
+
+        final String failingUpdatingIban = "FAILING_UPDATING";
+        String failingUpdatingUseCase = TestUtils.jsonSerializer(
+                IbanRequestDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                        .userId("USERID_2")
+                        .iban(failingUpdatingIban)
+                        .build()
+        );
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(rewardIbanRepository).save(Mockito.argThat(i -> failingUpdatingIban.equals(i.getIban())));
+                    return failingUpdatingUseCase;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_IBAN_REQUEST] An error occurred evaluating iban", failingUpdatingUseCase)
         ));
     }
 

@@ -2,15 +2,14 @@ package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
+import it.gov.pagopa.reward.notification.service.utils.Utils;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.function.Function;
 
 @Service
 public class Initiative2RewardNotificationRuleMapper implements Function<InitiativeRefund2StoreDTO, RewardNotificationRule> {
 
-    public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
 
     @Override
     public RewardNotificationRule apply(InitiativeRefund2StoreDTO initiativeRefund2StoreDTO) {
@@ -24,7 +23,7 @@ public class Initiative2RewardNotificationRuleMapper implements Function<Initiat
                 .timeParameter(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter())
                 .build();
         if (out.getAccumulatedAmount() != null && out.getAccumulatedAmount().getRefundThreshold() != null) {
-            out.getAccumulatedAmount().setRefundThresholdCents(out.getAccumulatedAmount().getRefundThreshold().multiply(ONE_HUNDRED).longValue());
+            out.getAccumulatedAmount().setRefundThresholdCents(Utils.euro2Cents(out.getAccumulatedAmount().getRefundThreshold()));
         }
         return out;
     }

@@ -310,16 +310,16 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                     i -> {
                         String initiativeId = INITIATIVE_ID_NOTIFY_THRESHOLD;
                         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
-                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(100))))
+                                .rewards(Map.of(initiativeId, new Reward(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD)))
                                 .build();
                         String expectedNotificationId = "%s_%s_1".formatted(trx.getUserId(), initiativeId);
-                        updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, 10000L, DepositType.PARTIAL);
+                        updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, Utils.euro2Cents(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD), DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_THRESHOLD, 1L)
                             , TOMORROW
-                            , BigDecimal.valueOf(100), true)
+                            , INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD, true)
             ),
             // useCase 8: initiative threshold notified overflowed after new trx -> storing a previous reward and relative notification
             Pair.of(
@@ -332,9 +332,11 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO previousTrx = trx.toBuilder()
                                 .id("ALREADY_PROCESSED_" + trx.getId())
                                 .build();
-                        storeRewardNotification(previousTrx, initiativeId, null, 9900L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+
+                        Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE.negate());
+                        storeRewardNotification(previousTrx, initiativeId, null, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
-                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, 10900L, DepositType.PARTIAL);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, previousRewardCents + 1000L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },
@@ -354,10 +356,11 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO previousTrx = trx.toBuilder()
                                 .id("ALREADY_PROCESSED_" + trx.getId())
                                 .build();
-                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, 9900L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+
+                        Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE.negate());
+                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         RewardsNotification previousNotification = updateExpectedRewardNotification("ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
-                                , null, previousTrx, initiativeId, 9900L, DepositType.PARTIAL);
-                        previousNotification.setNotificationDate(TOMORROW);
+                                , TOMORROW, previousTrx, initiativeId, previousRewardCents, DepositType.PARTIAL);
 
                         String expectedNotificationId = "%s_%s_2".formatted(trx.getUserId(), initiativeId);
                         updateExpectedRewardNotification(expectedNotificationId, null, trx, 2L, initiativeId, 1000L, DepositType.PARTIAL);
@@ -379,9 +382,11 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO previousTrx = trx.toBuilder()
                                 .id("ALREADY_PROCESSED_" + trx.getId())
                                 .build();
-                        storeRewardNotification(previousTrx, initiativeId, null, 9900L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+
+                        Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE.negate());
+                        storeRewardNotification(previousTrx, initiativeId, null, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
-                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, 8900L, DepositType.PARTIAL);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, previousRewardCents - 1000L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },
@@ -401,9 +406,11 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO previousTrx = trx.toBuilder()
                                 .id("ALREADY_PROCESSED_" + trx.getId())
                                 .build();
-                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, 10100L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+
+                        Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE);
+                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
-                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, 10000L, DepositType.PARTIAL);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, previousRewardCents - 100L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },
@@ -423,9 +430,11 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         RewardTransactionDTO previousTrx = trx.toBuilder()
                                 .id("ALREADY_PROCESSED_" + trx.getId())
                                 .build();
-                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, 10100L, DepositType.PARTIAL, List.of(previousTrx.getId()));
+
+                        Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE);
+                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
-                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, 9900L, DepositType.PARTIAL);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, previousRewardCents - 200L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },

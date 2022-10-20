@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
 import it.gov.pagopa.reward.notification.service.LockServiceImpl;
+import it.gov.pagopa.reward.notification.service.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -103,9 +104,6 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     }
 
     // region initiative build
-    protected static final LocalDate INITIATIVE_ENDDATE = TODAY.plusDays(10);
-    protected static final LocalDate INITIATIVE_ENDDATE_NEXT_DAY = INITIATIVE_ENDDATE.plusDays(1);
-
     protected static final String INITIATIVE_ID_NOTIFY_DAILY = "INITIATIVEID_DAILY";
     protected static final String INITIATIVE_ID_NOTIFY_WEEKLY = "INITIATIVEID_WEEKLY";
     protected static final String INITIATIVE_ID_NOTIFY_MONTHLY = "INITIATIVEID_MONTHLY";
@@ -114,6 +112,11 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     protected static final String INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED = "INITIATIVEID_CLOSED_ALREADY_EXPIRED";
     protected static final String INITIATIVE_ID_NOTIFY_THRESHOLD = "INITIATIVEID_THRESHOLD";
     protected static final String INITIATIVE_ID_NOTIFY_EXHAUSTED = "INITIATIVEID_EXHAUSTED";
+
+    protected static final LocalDate INITIATIVE_ENDDATE = TODAY.plusDays(10);
+    protected static final LocalDate INITIATIVE_ENDDATE_NEXT_DAY = INITIATIVE_ENDDATE.plusDays(1);
+
+    public static final BigDecimal INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD = BigDecimal.valueOf(100);
 
     protected void publishRewardRules() {
         List<InitiativeRefund2StoreDTO> rules = List.of(
@@ -217,7 +220,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .refundRule(InitiativeRefundRuleDTO.builder()
                                 .accumulatedAmount(AccumulatedAmountDTO.builder() // ignored because configured as timed
                                         .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)
-                                        .refundThreshold(BigDecimal.valueOf(100))
+                                        .refundThreshold(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD)
                                         .build())
                                 .build())
                         .build(),
@@ -239,6 +242,14 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
         rules.forEach(i -> publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
 
         RefundRuleConsumerConfigTest.waitForInitiativeStored(rules.size(), ruleRepository);
+    }
+
+    protected BigDecimal add2InitiativeThreshold(BigDecimal value) {
+        return INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.add(value);
+    }
+
+    protected Long add2InitiativeThresholdCents(BigDecimal euro) {
+        return Utils.euro2Cents(add2InitiativeThreshold(euro));
     }
     //endregion
 

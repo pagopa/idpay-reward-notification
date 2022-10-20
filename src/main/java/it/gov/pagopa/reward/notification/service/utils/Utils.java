@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
@@ -13,6 +14,7 @@ public final class Utils {
     private Utils(){}
 
     public static final DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
+    public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
 
     /** It will try to deserialize a message, eventually notifying the error  */
     public static <T> T deserializeMessage(Message<String> message, ObjectReader objectReader, Consumer<Throwable> onError) {
@@ -34,5 +36,9 @@ public final class Utils {
             return afterUserId.substring(afterOpeningQuote, afterUserId.indexOf('"', afterOpeningQuote));
         }
         return null;
+    }
+
+    public static Long euro2Cents(BigDecimal euro){
+        return euro == null? null : euro.multiply(ONE_HUNDRED).longValue();
     }
 }

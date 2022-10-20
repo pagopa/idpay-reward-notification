@@ -7,12 +7,14 @@ import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
@@ -21,6 +23,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Consumer;
@@ -73,6 +76,8 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                 publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
         });
+        //to test applicationName header
+        publishIntoEmbeddedKafka(topicRewardResponse, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeBeforeDbCheck = System.currentTimeMillis();
@@ -112,7 +117,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                 timeEnd - timePublishOnboardingStart
         );
 
-        checkOffsets(totalSendMessages);
+        checkOffsets(totalSendMessages+1); // +1 due to other applicationName useCase
     }
 
     private RewardTransactionDTO storeTrxAlreadyProcessed() {
@@ -518,7 +523,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
-        checkErrorMessageHeaders(topicRewardResponse, errorMessage, errorDescription, expectedPayload, expectedKey);
+        checkErrorMessageHeaders(topicRewardResponse, groupIdRewardResponse, errorMessage, errorDescription, expectedPayload, expectedKey);
     }
     //endregion
 }

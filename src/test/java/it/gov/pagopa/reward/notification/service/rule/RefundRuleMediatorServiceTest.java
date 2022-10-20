@@ -63,8 +63,9 @@ class RefundRuleMediatorServiceTest {
         Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapperMock= Mockito.mock(Initiative2RewardNotificationRuleMapper.class);
         RewardNotificationRuleService rewardNotificationRuleServiceMock = Mockito.mock(RewardNotificationRuleService.class);
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
+        RewardNotificationRuleValidatorService rewardNotificationRuleValidatorServiceMock = Mockito.mock(RewardNotificationRuleValidatorService.class);
 
-        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl("appName", 1000,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleServiceMock,errorNotifierServiceMock, TestUtils.objectMapper);
+        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl("appName", 1000,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleValidatorServiceMock, rewardNotificationRuleServiceMock,errorNotifierServiceMock, TestUtils.objectMapper);
 
 
         RewardNotificationRule rewardNotificationRule1 = RewardNotificationRuleFaker.mockInstance(1);

@@ -63,6 +63,20 @@ class RewardNotificationThresholdHandlerServiceImplTest {
             // Do nothing
         }
 
+        try{
+            buildService("INVALID_CONFIG");
+            Assertions.fail("Expected exception");
+        } catch (IllegalArgumentException e){
+            // Do nothing
+        }
+
+        try{
+            buildService("NEXT_INVALID_DAY_OF_WEEK");
+            Assertions.fail("Expected exception");
+        } catch (IllegalArgumentException e){
+            // Do nothing
+        }
+
         Field fieldNotificateNextDay = ReflectionUtils.findField(RewardNotificationThresholdHandlerServiceImpl.class, "notificateNextDay");
         Field fieldNotificateNextDayOfWeek = ReflectionUtils.findField(RewardNotificationThresholdHandlerServiceImpl.class, "notificateNextDayOfWeek");
         Assertions.assertNotNull(fieldNotificateNextDay);

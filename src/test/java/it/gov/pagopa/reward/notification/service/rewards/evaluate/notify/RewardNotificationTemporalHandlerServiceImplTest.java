@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -36,7 +37,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
 
     @BeforeEach
     void init(){
-        service = new RewardNotificationTemporalHandlerServiceImpl(repositoryMock, mapperSpy);
+        service = new RewardNotificationTemporalHandlerServiceImpl(DayOfWeek.SUNDAY, repositoryMock, mapperSpy);
     }
 
     private static RewardNotificationRule buildRule(TimeParameterDTO.TimeTypeEnum type) {

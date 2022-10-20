@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +26,16 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
 
     private final int initiativeRewardedNumber=7; // TODO 8
 
+    private final int validTrx = 100;
+
     private final BigDecimal thresholdReward = BigDecimal.valueOf(7);
-    private final int TOTAL_THRESHOLD_NOTIFICATION=7;
-    private final long completedThresholdCents = 10500L; // TODO INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.divide(thresholdReward, RoundingMode.HALF_DOWN).setScale(0, RoundingMode.CEILING).longValue()*700L;
-    private final long lastThresholdCents = 10500L; // TODO INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.longValue() % completedThresholdCents
+    private final int trxNumberInThreshold = INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.divide(thresholdReward, 0, RoundingMode.CEILING).intValue();
+    private final int totalThresholdNotifications = (int)Math.ceil((double)validTrx/trxNumberInThreshold);
+    private final long completedThresholdCents = trxNumberInThreshold*Utils.euro2Cents(thresholdReward);
+    private final long lastThresholdCents = Utils.euro2Cents(thresholdReward)*validTrx % completedThresholdCents;
 
     @Test
     void testConsumer() {
-        int validTrx = 100;
         int expectedRewardsNumber = validTrx * initiativeRewardedNumber;
 
         publishRewardRules();
@@ -131,7 +134,7 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
         List<RewardsNotification> rewardsNotifications = Objects.requireNonNull(rewardsNotificationRepository.findAll().collectList().block());
 
         Assertions.assertNotNull(rewardsNotifications);
-        Assertions.assertEquals(initiativeRewardedNumber + TOTAL_THRESHOLD_NOTIFICATION - 1, rewardsNotifications.size());
+        Assertions.assertEquals(initiativeRewardedNumber + totalThresholdNotifications - 1, rewardsNotifications.size());
 
         rewardsNotifications.forEach(n-> {
             final RewardsNotification expectedNotification =
@@ -184,8 +187,12 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                     expectedNotification.setProgressive(n.getProgressive());
                     expectedNotification.setId("USERID_INITIATIVEID_THRESHOLD_%d".formatted(n.getProgressive()));
                     expectedNotification.setNotificationDate(getExpectedThresholdNotificationDate(n.getProgressive()));
-                    expectedNotification.setRewardCents(isLastThresholdNotification(n.getProgressive()) ? completedThresholdCents : lastThresholdCents);
+                    expectedNotification.setRewardCents(isLastThresholdNotification(n.getProgressive()) ? lastThresholdCents : completedThresholdCents);
                     expectedNotification.setDepositType(DepositType.PARTIAL);
+                    expectedNotification.setTrxIds(expectedNotification.getTrxIds().stream()
+                            .skip((n.getProgressive()-1)*trxNumberInThreshold)
+                            .limit(trxNumberInThreshold)
+                            .toList());
                 }
                 //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8));
                 default -> throw new IllegalArgumentException("Unexpected initiativeId: " + n);
@@ -196,11 +203,11 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
     }
 
     private LocalDate getExpectedThresholdNotificationDate(long progressive) {
-        return isLastThresholdNotification(progressive) ? null : TOMORROW;
+        return isLastThresholdNotification(progressive) ? null : NEXT_WEEK;
     }
 
     private boolean isLastThresholdNotification(long progressive) {
-        return progressive == TOTAL_THRESHOLD_NOTIFICATION;
+        return progressive == totalThresholdNotifications;
     }
 
 }

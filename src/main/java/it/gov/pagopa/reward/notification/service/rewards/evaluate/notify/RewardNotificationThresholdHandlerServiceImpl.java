@@ -7,19 +7,37 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 
 @Slf4j
 @Service
 public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNotificationHandlerService implements RewardNotificationHandlerService {
 
-    public RewardNotificationThresholdHandlerServiceImpl(RewardsNotificationRepository rewardsNotificationRepository, RewardsNotificationMapper mapper) {
+    private final boolean notificateNextDay;
+    private final DayOfWeek notificateNextDayOfWeek;
+
+    public RewardNotificationThresholdHandlerServiceImpl(
+            @Value("${app.rewards-notification.threshold-notification-day}") String notificationDay,
+            RewardsNotificationRepository rewardsNotificationRepository, RewardsNotificationMapper mapper) {
         super(rewardsNotificationRepository, mapper);
+
+        if("TOMORROW".equalsIgnoreCase(notificationDay)){
+            notificateNextDay=true;
+            notificateNextDayOfWeek=null;
+        } else if(notificationDay != null && notificationDay.startsWith("NEXT_")){
+            notificateNextDay=false;
+            notificateNextDayOfWeek=DayOfWeek.valueOf(notificationDay.substring(5).toUpperCase());
+        } else {
+            throw new IllegalArgumentException("Invalid notificationDay, allowed TOMORROW or 'NEXT_' followed by the day of week" + notificationDay);
+        }
     }
 
     @Override
@@ -32,9 +50,17 @@ public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNot
 
                     n.setNotificationDate(
                             n.getRewardCents() >= rule.getAccumulatedAmount().getRefundThresholdCents()
-                                    ? LocalDate.now().plusDays(1)
+                                    ? calculateNotificationDate()
                                     : null);
                 });
+    }
+
+    private LocalDate calculateNotificationDate() {
+        if(notificateNextDay){
+            return LocalDate.now().plusDays(1);
+        } else {
+            return LocalDate.now().with(TemporalAdjusters.next(notificateNextDayOfWeek));
+        }
     }
 
     private Mono<RewardsNotification> handleNoOpenNotification(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {

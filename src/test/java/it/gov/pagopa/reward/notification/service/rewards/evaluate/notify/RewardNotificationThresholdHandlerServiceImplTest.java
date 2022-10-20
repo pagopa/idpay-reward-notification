@@ -12,33 +12,38 @@ import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class RewardNotificationThresholdHandlerServiceImplTest {
+
+    public static final LocalDate TOMORROW = LocalDate.now().plusDays(1);
+    public static final LocalDate NEXT_SUNDAY = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+    public static final String NOTIFICATION_DAY_TOMORROW = "TOMORROW";
+    public static final String NOTIFICATION_DAY_NEXTDAYOFWEEK = "NEXT_SUNDAY";
 
     @Mock
     private RewardsNotificationRepository repositoryMock;
     @Spy
     private RewardsNotificationMapper mapperSpy;
 
-    private RewardNotificationThresholdHandlerServiceImpl service;
-
-    @BeforeEach
-    void init(){
-        service = new RewardNotificationThresholdHandlerServiceImpl(repositoryMock, mapperSpy);
+    private RewardNotificationThresholdHandlerServiceImpl buildService(String notificationDay){
+        return new RewardNotificationThresholdHandlerServiceImpl(notificationDay, repositoryMock, mapperSpy);
     }
 
     private static RewardNotificationRule buildRule() {
@@ -50,16 +55,41 @@ class RewardNotificationThresholdHandlerServiceImplTest {
     }
 
     @Test
-    void testHandleNewNotifyCharge(){
-        testHandleNewNotify(false);
+    void testNotificationDayConfiguration() throws IllegalAccessException {
+        try{
+            buildService(null);
+            Assertions.fail("Expected exception");
+        } catch (IllegalArgumentException e){
+            // Do nothing
+        }
+
+        Field fieldNotificateNextDay = ReflectionUtils.findField(RewardNotificationThresholdHandlerServiceImpl.class, "notificateNextDay");
+        Field fieldNotificateNextDayOfWeek = ReflectionUtils.findField(RewardNotificationThresholdHandlerServiceImpl.class, "notificateNextDayOfWeek");
+        Assertions.assertNotNull(fieldNotificateNextDay);
+        Assertions.assertNotNull(fieldNotificateNextDayOfWeek);
+        fieldNotificateNextDay.setAccessible(true);
+        fieldNotificateNextDayOfWeek.setAccessible(true);
+
+        RewardNotificationThresholdHandlerServiceImpl configurationTomorrow = buildService(NOTIFICATION_DAY_TOMORROW);
+        Assertions.assertTrue(fieldNotificateNextDay.getBoolean(configurationTomorrow));
+        Assertions.assertNull(fieldNotificateNextDayOfWeek.get(configurationTomorrow));
+
+        RewardNotificationThresholdHandlerServiceImpl configurationNextDayOfWeek = buildService(NOTIFICATION_DAY_NEXTDAYOFWEEK);
+        Assertions.assertFalse(fieldNotificateNextDay.getBoolean(configurationNextDayOfWeek));
+        Assertions.assertEquals(DayOfWeek.SUNDAY, fieldNotificateNextDayOfWeek.get(configurationNextDayOfWeek));
     }
 
-    @Test
-    void testHandleNewNotifyRefundNoFutureNotification(){
-        testHandleNewNotify(true);
-    }
-    void testHandleNewNotify(boolean isRefund){
+    @Test void testHandleNewNotifyCharge_TOMORROW(){testHandleNewNotify(false, NOTIFICATION_DAY_TOMORROW);}
+    @Test void testHandleNewNotifyCharge_NEXTDAYOFWEEK(){testHandleNewNotify(false, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+
+    @Test void testHandleNewNotifyRefundNoFutureNotification_TOMORROW(){testHandleNewNotify(true, NOTIFICATION_DAY_TOMORROW);}
+    @Test void testHandleNewNotifyRefundNoFutureNotification_NEXTDAYOFWEEK(){testHandleNewNotify(true, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+
+
+    void testHandleNewNotify(boolean isRefund, String notificationDay){
         // Given
+        RewardNotificationThresholdHandlerServiceImpl service = buildService(notificationDay);
+
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule();
         Reward reward = new Reward(BigDecimal.valueOf(isRefund? -3 : 3));
@@ -112,28 +142,28 @@ class RewardNotificationThresholdHandlerServiceImplTest {
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
     }
 
-    @Test
-    void testHandleNewNotifyRefundWithFutureNotificationNotOverflowing(){
-        testHandleNewNotifyRefundWithFutureNotification(false);
-    }
-    @Test
-    void testHandleNewNotifyRefundWithFutureNotificationStillOverflowing(){
-        testHandleNewNotifyRefundWithFutureNotification(true);
-    }
-    void testHandleNewNotifyRefundWithFutureNotification(boolean isStillOverflowing){
+    @Test void testHandleNewNotifyRefundWithFutureNotificationNotOverflowing_TOMORROW(){testHandleNewNotifyRefundWithFutureNotification(false, NOTIFICATION_DAY_TOMORROW);}
+    @Test void testHandleNewNotifyRefundWithFutureNotificationNotOverflowing_NEXTDAYOFWEEK(){testHandleNewNotifyRefundWithFutureNotification(false, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+
+    @Test void testHandleNewNotifyRefundWithFutureNotificationStillOverflowing_TOMORROW(){testHandleNewNotifyRefundWithFutureNotification(true, NOTIFICATION_DAY_TOMORROW);}
+    @Test void testHandleNewNotifyRefundWithFutureNotificationStillOverflowing_NEXTDAYOFWEEK(){testHandleNewNotifyRefundWithFutureNotification(true, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+
+    void testHandleNewNotifyRefundWithFutureNotification(boolean isStillOverflowing, String notificationDay){
         // Given
+        RewardNotificationThresholdHandlerServiceImpl service = buildService(notificationDay);
+
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
         Reward reward = new Reward(BigDecimal.valueOf(isStillOverflowing? -0.5 : -3));
 
-        LocalDate notificationDate = LocalDate.now().plusDays(1);
+        LocalDate notificationDate = NOTIFICATION_DAY_TOMORROW.equals(notificationDay) ? TOMORROW : NEXT_SUNDAY;
         long expectedProgressive = 5L;
         RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), notificationDate);
         expectedResult.setProgressive(expectedProgressive);
         expectedResult.setRewardCents(600L);
-        expectedResult.setNotificationDate(LocalDate.now().plusDays(1));
+        expectedResult.setNotificationDate(notificationDate);
         expectedResult.getTrxIds().add("TRXID");
 
         Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDate(trx.getUserId(), rule.getInitiativeId(), null)).thenReturn(Flux.empty());
@@ -164,13 +194,15 @@ class RewardNotificationThresholdHandlerServiceImplTest {
     @Test
     void testHandleUpdateNotifyOverflowingThreshold(){
         // Given
+        RewardNotificationThresholdHandlerServiceImpl service = buildService(NOTIFICATION_DAY_TOMORROW);
+
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
         Reward reward = new Reward(BigDecimal.valueOf(3));
 
-        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
+        LocalDate expectedNotificationDate = TOMORROW;
         long expectedProgressive = 5L;
         RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
         expectedResult.setProgressive(expectedProgressive);

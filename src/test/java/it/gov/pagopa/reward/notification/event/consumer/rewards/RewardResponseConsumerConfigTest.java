@@ -313,12 +313,12 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .rewards(Map.of(initiativeId, new Reward(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD)))
                                 .build();
                         String expectedNotificationId = "%s_%s_1".formatted(trx.getUserId(), initiativeId);
-                        updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, Utils.euro2Cents(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD), DepositType.PARTIAL);
+                        updateExpectedRewardNotification(expectedNotificationId, NEXT_WEEK, trx, initiativeId, Utils.euro2Cents(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD), DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_THRESHOLD, 1L)
-                            , TOMORROW
+                            , NEXT_WEEK
                             , INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD, true)
             ),
             // useCase 8: initiative threshold notified overflowed after new trx -> storing a previous reward and relative notification
@@ -336,13 +336,13 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE.negate());
                         storeRewardNotification(previousTrx, initiativeId, null, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
-                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, previousRewardCents + 1000L, DepositType.PARTIAL);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, NEXT_WEEK, trx, initiativeId, previousRewardCents + 1000L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
-                            , TOMORROW
+                            , NEXT_WEEK
                             , BigDecimal.TEN, false)
             ),
             // useCase 9: initiative threshold notified on new record even if future notification -> storing a previous reward and relative notification
@@ -358,9 +358,9 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .build();
 
                         Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE.negate());
-                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
-                        RewardsNotification previousNotification = updateExpectedRewardNotification("ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
-                                , TOMORROW, previousTrx, initiativeId, previousRewardCents, DepositType.PARTIAL);
+                        storeRewardNotification(previousTrx, initiativeId, NEXT_WEEK, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        updateExpectedRewardNotification("ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
+                                , NEXT_WEEK, previousTrx, initiativeId, previousRewardCents, DepositType.PARTIAL);
 
                         String expectedNotificationId = "%s_%s_2".formatted(trx.getUserId(), initiativeId);
                         updateExpectedRewardNotification(expectedNotificationId, null, trx, 2L, initiativeId, 1000L, DepositType.PARTIAL);
@@ -408,15 +408,15 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .build();
 
                         Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE);
-                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        storeRewardNotification(previousTrx, initiativeId, NEXT_WEEK, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
-                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, TOMORROW, trx, initiativeId, previousRewardCents - 100L, DepositType.PARTIAL);
+                        RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, NEXT_WEEK, trx, initiativeId, previousRewardCents - 100L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD
                             , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_THRESHOLD)
-                            , TOMORROW
+                            , NEXT_WEEK
                             , BigDecimal.valueOf(-1), false)
             ),
             // useCase 12: initiative threshold notified refunding an already overflowed threshold next not more overflowed -> storing a previous reward and relative notification
@@ -432,7 +432,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .build();
 
                         Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE);
-                        storeRewardNotification(previousTrx, initiativeId, TOMORROW, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
+                        storeRewardNotification(previousTrx, initiativeId, NEXT_WEEK, previousRewardCents, DepositType.PARTIAL, List.of(previousTrx.getId()));
                         String expectedNotificationId = "ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), initiativeId);
                         RewardsNotification expectedNotification = updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, previousRewardCents - 200L, DepositType.PARTIAL);
                         expectedNotification.setTrxIds(List.of(previousTrx.getId(), trx.getId()));

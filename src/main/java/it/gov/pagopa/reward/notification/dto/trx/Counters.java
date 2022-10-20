@@ -14,10 +14,12 @@ import java.math.RoundingMode;
 @NoArgsConstructor
 @SuperBuilder
 public class Counters {
+    public static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+
     @Builder.Default
     private Long trxNumber = 0L;
     @Builder.Default
-    private BigDecimal totalReward = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+    private BigDecimal totalReward = ZERO;
     @Builder.Default
-    private BigDecimal totalAmount = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+    private BigDecimal totalAmount = ZERO;
 }

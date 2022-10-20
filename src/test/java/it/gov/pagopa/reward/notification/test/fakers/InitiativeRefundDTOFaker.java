@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
-import it.gov.pagopa.reward.notification.dto.*;
 import it.gov.pagopa.reward.notification.dto.rule.*;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -53,11 +52,6 @@ public class InitiativeRefundDTOFaker {
                 .build();
 
         out.general(initiativeGeneral);
-
-        InitiativeAdditionalDTO initiativeAdditional = InitiativeAdditionalDTO.builder()
-                .serviceId("SERVICE_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")))
-                .build();
-        out.additionalInfo(initiativeAdditional);
 
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)

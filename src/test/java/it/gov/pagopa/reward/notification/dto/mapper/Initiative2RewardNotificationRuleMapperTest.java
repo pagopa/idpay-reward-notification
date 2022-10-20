@@ -26,7 +26,6 @@ class Initiative2RewardNotificationRuleMapperTest {
         Assertions.assertEquals(initiativeRefund2StoreDTO.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(initiativeRefund2StoreDTO.getGeneral().getEndDate(),result.getEndDate());
         Assertions.assertEquals(initiativeRefund2StoreDTO.getOrganizationId(), result.getOrganizationId());
-        Assertions.assertEquals(initiativeRefund2StoreDTO.getAdditionalInfo().getServiceId(),result.getServiceId());
         Assertions.assertEquals(initiativeRefund2StoreDTO.getRefundRule().getAccumulatedAmount(),result.getAccumulatedAmount());
         Assertions.assertEquals(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter(),result.getTimeParameter());
         Assertions.assertEquals(initiativeRefund2StoreDTO.getOrganizationVat(), result.getOrganizationFiscalCode());

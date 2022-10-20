@@ -6,11 +6,13 @@ import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
+import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 public final class Utils {
-
     private Utils(){}
+
+    public static final DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     /** It will try to deserialize a message, eventually notifying the error  */
     public static <T> T deserializeMessage(Message<String> message, ObjectReader objectReader, Consumer<Throwable> onError) {

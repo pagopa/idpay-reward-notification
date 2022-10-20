@@ -300,7 +300,7 @@ public abstract class BaseIntegrationTest {
         return checkCommittedOffsets(topic, groupId, expectedCommittedMessages, 10, 500);
     }
 
-    // Cannot use directly Awaitlity cause the Callable condition is performed on separate thread, which will go into conflict with the consumer Kafka access
+    // Cannot use directly Awaitility cause the Callable condition is performed on separate thread, which will go into conflict with the consumer Kafka access
     protected Map<TopicPartition, OffsetAndMetadata> checkCommittedOffsets(String topic, String groupId, long expectedCommittedMessages, int maxAttempts, int millisAttemptDelay){
         RuntimeException lastException = null;
         if(maxAttempts<=0){

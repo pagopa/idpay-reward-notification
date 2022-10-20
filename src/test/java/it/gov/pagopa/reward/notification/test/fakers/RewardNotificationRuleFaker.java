@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
-import it.gov.pagopa.reward.notification.dto.AccumulatedAmountDTO;
+import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -28,7 +28,6 @@ public class RewardNotificationRuleFaker {
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.endDate(LocalDate.now());
         out.organizationId("ORGANIZATION_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.serviceId("SERVICE_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
 
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)

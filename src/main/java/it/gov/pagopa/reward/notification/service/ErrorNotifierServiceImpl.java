@@ -95,29 +95,28 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
 
     @Override
     public void notifyRewardNotifierRule(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(refundRuleMessagingServiceType, refundRuleServer, refundRuleTopic, refundRuleGroup, message, description, retryable, exception);
+        notify(refundRuleMessagingServiceType, refundRuleServer, refundRuleTopic, refundRuleGroup, message, description, retryable, true, exception);
     }
 
     @Override
     public void notifyRewardResponse(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardResponseMessagingServiceType, rewardResponseServer, rewardResponseTopic, rewardResponseGroup, message, description, retryable, exception);
+        notify(rewardResponseMessagingServiceType, rewardResponseServer, rewardResponseTopic, rewardResponseGroup, message, description, retryable, true, exception);
     }
 
     @Override
     public void notifyRewardIbanRequest(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardIbanRequestServiceType, rewardIbanRequestServer, rewardIbanRequestTopic, rewardIbanRequestGroup, message, description, retryable, exception);
+        notify(rewardIbanRequestServiceType, rewardIbanRequestServer, rewardIbanRequestTopic, rewardIbanRequestGroup, message, description, retryable,true, exception);
     }
 
     @Override
     public void notifyRewardIbanOutcome(Message<String> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, rewardIbanOutcomeGroup, message, description, retryable, exception);
+        notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, rewardIbanOutcomeGroup, message, description, retryable, true, exception);
     }
 
     @Override
-    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable, Throwable exception) {
+    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
-                .setHeader(ERROR_MSG_HEADER_APPLICATION_NAME, applicationName)
                 .setHeader(ERROR_MSG_HEADER_GROUP, group)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
                 .setHeader(ERROR_MSG_HEADER_SRC_SERVER, srcServer)
@@ -132,6 +131,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
         byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_MESSAGE_KEY, byte[].class);
         if(receivedKey!=null){
             errorMessage.setHeader(KafkaHeaders.MESSAGE_KEY, new String(receivedKey, StandardCharsets.UTF_8));
+        }
+
+        if (resendApplication){
+            errorMessage.setHeader(ERROR_MSG_HEADER_APPLICATION_NAME, applicationName);
         }
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {

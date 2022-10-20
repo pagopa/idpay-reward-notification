@@ -11,7 +11,7 @@ import java.util.Map;
 @ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class RewardTransactionDTO extends TransactionDTO {
 

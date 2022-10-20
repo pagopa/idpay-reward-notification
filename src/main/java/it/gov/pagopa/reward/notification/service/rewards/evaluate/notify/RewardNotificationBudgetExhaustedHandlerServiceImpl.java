@@ -24,6 +24,7 @@ public class RewardNotificationBudgetExhaustedHandlerServiceImpl extends BaseRew
         return Mono.just(RewardsNotification.builder()
                 .id("%s_%s_BUDGET_EXHAUSTED_NOTIFICATIONID".formatted(rule.getInitiativeId(), trx.getUserId()))
                 .userId(trx.getUserId())
+                .externalId("EXTERNALID")
                 .trxIds(List.of(trx.getId()))
                 .build()); //TODO
     }

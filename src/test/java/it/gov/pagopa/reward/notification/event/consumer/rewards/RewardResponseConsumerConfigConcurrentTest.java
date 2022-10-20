@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +24,18 @@ import java.util.stream.IntStream;
 @Slf4j
 class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsumerConfigTest {
 
-    private final int initiativeRewardedNumber=6; // TODO 8
+    private final int initiativeRewardedNumber=7; // TODO 8
+
+    private final int validTrx = 100;
+
+    private final BigDecimal thresholdReward = BigDecimal.valueOf(7);
+    private final int trxNumberInThreshold = INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.divide(thresholdReward, 0, RoundingMode.CEILING).intValue();
+    private final int totalThresholdNotifications = (int)Math.ceil((double)validTrx/trxNumberInThreshold);
+    private final long completedThresholdCents = trxNumberInThreshold*Utils.euro2Cents(thresholdReward);
+    private final long lastThresholdCents = Utils.euro2Cents(thresholdReward)*validTrx % completedThresholdCents;
 
     @Test
     void testConsumer() {
-        int validTrx = 100;
         int expectedRewardsNumber = validTrx * initiativeRewardedNumber;
 
         publishRewardRules();
@@ -83,8 +92,8 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                 INITIATIVE_ID_NOTIFY_MONTHLY, new Reward(BigDecimal.valueOf(3)),
                 INITIATIVE_ID_NOTIFY_QUARTERLY, new Reward(BigDecimal.valueOf(4)),
                 INITIATIVE_ID_NOTIFY_CLOSED, new Reward(BigDecimal.valueOf(5)),
-                INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, new Reward(BigDecimal.valueOf(6))
-//  TODO              INITIATIVE_ID_NOTIFY_THRESHOLD, new Reward(BigDecimal.valueOf(7)),
+                INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, new Reward(BigDecimal.valueOf(6)),
+                INITIATIVE_ID_NOTIFY_THRESHOLD, new Reward(thresholdReward)
 //  TODO              INITIATIVE_ID_NOTIFY_EXHAUSTED, exhaustedReward
         ));
         return trx;
@@ -110,7 +119,11 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                         assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_CLOSED_%s".formatted(INITIATIVE_ENDDATE_NEXT_DAY.format(Utils.FORMATTER_DATE)), INITIATIVE_ENDDATE_NEXT_DAY, BigDecimal.valueOf(5), false);
                 case INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED ->
                         assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_CLOSED_ALREADY_EXPIRED_%s".formatted(TOMORROW.format(Utils.FORMATTER_DATE)), TOMORROW, BigDecimal.valueOf(6), false);
-    //  TODO          case INITIATIVE_ID_NOTIFY_THRESHOLD -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_THRESHOLD_%s", null, BigDecimal.valueOf(7), false);
+                case INITIATIVE_ID_NOTIFY_THRESHOLD -> {
+                    Assertions.assertTrue(r.getNotificationId().startsWith("USERID_INITIATIVEID_THRESHOLD_"), "Unexpected notificationId: " + r.getNotificationId());
+                    int progressive = Integer.parseInt(r.getNotificationId().substring(30));
+                    assertRewards(r, r.getInitiativeId(), r.getNotificationId(), getExpectedThresholdNotificationDate(progressive), thresholdReward, false);
+                }
     //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8), false);
                 default -> throw new IllegalArgumentException("Unexpected initiativeId: " + r);
             }
@@ -121,7 +134,7 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
         List<RewardsNotification> rewardsNotifications = Objects.requireNonNull(rewardsNotificationRepository.findAll().collectList().block());
 
         Assertions.assertNotNull(rewardsNotifications);
-        Assertions.assertEquals(initiativeRewardedNumber, rewardsNotifications.size());
+        Assertions.assertEquals(initiativeRewardedNumber + totalThresholdNotifications - 1, rewardsNotifications.size());
 
         rewardsNotifications.forEach(n-> {
             final RewardsNotification expectedNotification =
@@ -170,13 +183,31 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                     expectedNotification.setRewardCents(trxs.size()*600L);
                     expectedNotification.setDepositType(DepositType.FINAL);
                 }
-                //  TODO          case INITIATIVE_ID_NOTIFY_THRESHOLD -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_THRESHOLD_%s", null, BigDecimal.valueOf(7));
+                case INITIATIVE_ID_NOTIFY_THRESHOLD -> {
+                    expectedNotification.setProgressive(n.getProgressive());
+                    expectedNotification.setId("USERID_INITIATIVEID_THRESHOLD_%d".formatted(n.getProgressive()));
+                    expectedNotification.setNotificationDate(getExpectedThresholdNotificationDate(n.getProgressive()));
+                    expectedNotification.setRewardCents(isLastThresholdNotification(n.getProgressive()) ? lastThresholdCents : completedThresholdCents);
+                    expectedNotification.setDepositType(DepositType.PARTIAL);
+                    expectedNotification.setTrxIds(expectedNotification.getTrxIds().stream()
+                            .skip((n.getProgressive()-1)*trxNumberInThreshold)
+                            .limit(trxNumberInThreshold)
+                            .toList());
+                }
                 //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8));
                 default -> throw new IllegalArgumentException("Unexpected initiativeId: " + n);
             }
 
             Assertions.assertEquals(expectedNotification, n);
         });
+    }
+
+    private LocalDate getExpectedThresholdNotificationDate(long progressive) {
+        return isLastThresholdNotification(progressive) ? null : NEXT_WEEK;
+    }
+
+    private boolean isLastThresholdNotification(long progressive) {
+        return progressive == totalThresholdNotifications;
     }
 
 }

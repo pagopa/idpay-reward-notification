@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -22,8 +23,13 @@ import java.time.temporal.TemporalAdjusters;
 @Service
 public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNotificationHandlerService implements RewardNotificationHandlerService {
 
-    public RewardNotificationTemporalHandlerServiceImpl(RewardsNotificationRepository rewardsNotificationRepository, RewardsNotificationMapper mapper) {
+    private final DayOfWeek weeklyNotificationDay;
+
+    public RewardNotificationTemporalHandlerServiceImpl(
+            @Value("${app.rewards-notification.weekly-notification-day}") DayOfWeek weeklyNotificationDay,
+            RewardsNotificationRepository rewardsNotificationRepository, RewardsNotificationMapper mapper) {
         super(rewardsNotificationRepository, mapper);
+        this.weeklyNotificationDay=weeklyNotificationDay;
     }
 
     @Override
@@ -42,7 +48,7 @@ public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNoti
         }
         return switch (rule.getTimeParameter().getTimeType()){
             case DAILY -> startDate.plusDays(1);
-            case WEEKLY -> startDate.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+            case WEEKLY -> startDate.with(TemporalAdjusters.next(weeklyNotificationDay));
             case MONTHLY -> startDate.with(TemporalAdjusters.firstDayOfNextMonth());
             case QUARTERLY -> startDate.withDayOfMonth(1).withMonth((startDate.get(IsoFields.QUARTER_OF_YEAR)*3)).plusMonths(1);
             case CLOSED -> {

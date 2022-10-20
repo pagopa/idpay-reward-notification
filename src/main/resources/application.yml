@@ -198,4 +198,8 @@ app:
     timeout: ${TRX_LOCK_SECONDS_TIMEOUT:180}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
+  rewards-notification:
+    weekly-notification-day: ${REWARDS_NOTIFICATION_WEEKLY_NOTIFICATION_DAY:SUNDAY}
+    # TOMORROW or 'NEXT_' followed by the day of week
+    threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
 

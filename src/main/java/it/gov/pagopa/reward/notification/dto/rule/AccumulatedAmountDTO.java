@@ -19,6 +19,9 @@ public class AccumulatedAmountDTO {
     @JsonProperty("refundThreshold")
     private BigDecimal refundThreshold;
 
+    // calculated inside mapper
+    private Long refundThresholdCents;
+
     public enum AccumulatedTypeEnum {
         BUDGET_EXHAUSTED("BUDGET_EXHAUSTED"),
         THRESHOLD_REACHED("THRESHOLD_REACHED");

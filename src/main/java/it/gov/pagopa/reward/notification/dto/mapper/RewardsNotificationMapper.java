@@ -14,7 +14,7 @@ public class RewardsNotificationMapper {
     public RewardsNotification apply(String notificationId, LocalDate notificationDate, long progressive, RewardTransactionDTO trx, RewardNotificationRule rule) {
         return RewardsNotification.builder()
                 .id(notificationId)
-                .externalId("%s_%s".formatted(UUID.randomUUID(), notificationDate.format(Utils.FORMATTER_DATE)))
+                .externalId("%s_%s".formatted(UUID.randomUUID(), notificationDate!=null? notificationDate.format(Utils.FORMATTER_DATE) : (notificationId.hashCode() + progressive)))
                 .initiativeId(rule.getInitiativeId())
                 .initiativeName(rule.getInitiativeName())
                 .organizationId(rule.getOrganizationId())

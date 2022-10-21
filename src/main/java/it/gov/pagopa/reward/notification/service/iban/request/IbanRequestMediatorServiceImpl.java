@@ -32,12 +32,14 @@ public class IbanRequestMediatorServiceImpl extends BaseKafkaConsumer<IbanReques
     private final ObjectReader objectReader;
 
     public IbanRequestMediatorServiceImpl(
+            @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.ibanRequestConsumer-in-0.consumer.ackTime}")
             long commitMillis,
 
             IbanRequestDTO2RewardIbanMapper ibanRequestDTO2RewardIbanMapper,
 
             RewardIbanService rewardIbanService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+        super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.ibanRequestDTO2RewardIbanMapper = ibanRequestDTO2RewardIbanMapper;
         this.rewardIbanService = rewardIbanService;

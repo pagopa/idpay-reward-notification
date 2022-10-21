@@ -33,12 +33,14 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     private final ObjectReader objectReader;
 
     public RefundRuleMediatorServiceImpl(
+            @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.refundRuleConsumer-in-0.consumer.ackTime}")
             long commitMillis,
             Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper,
             RewardNotificationRuleValidatorService rewardNotificationRuleValidatorService, RewardNotificationRuleService rewardNotificationRuleService,
 
             ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+        super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.initiative2RewardNotificationRuleMapper = initiative2RewardNotificationRuleMapper;
         this.rewardNotificationRuleValidatorService = rewardNotificationRuleValidatorService;

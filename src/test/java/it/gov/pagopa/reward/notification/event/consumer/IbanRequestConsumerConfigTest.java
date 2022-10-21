@@ -2,12 +2,14 @@ package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.IbanRequestDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +55,8 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
 
         long timeStart=System.currentTimeMillis();
         ibanPayloads.forEach(i->publishIntoEmbeddedKafka(topicIbanRequest, null, null, i));
+        publishIntoEmbeddedKafka(topicIbanRequest, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+
         long timePublishingEnd=System.currentTimeMillis();
 
         long countSaved = waitForIbanStored(validIban);
@@ -77,7 +82,7 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicIbanRequest, groupIdIbanRequestConsumer, ibanPayloads.size());
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicIbanRequest, groupIdIbanRequestConsumer, ibanPayloads.size()+1); // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -145,6 +150,6 @@ class IbanRequestConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(topicIbanRequest, errorMessage, errorDescription, expectedPayload,null);
+        checkErrorMessageHeaders(topicIbanRequest, groupIdIbanRequestConsumer, errorMessage, errorDescription, expectedPayload,null);
     }
 }

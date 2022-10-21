@@ -2,10 +2,13 @@ package it.gov.pagopa.reward.notification.service.iban.outcome;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
+import it.gov.pagopa.reward.notification.dto.iban.IbanRequestDTO;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
+import it.gov.pagopa.reward.notification.test.fakers.IbanRequestDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +37,7 @@ class IbanOutcomeMediatorServiceImplTest {
     @BeforeEach
     void setUp() {
             ibanOutcomeMediatorService = new IbanOutcomeMediatorServiceImpl(
+                    "appName",
                     1000,
                     ibanOutcomeOperationsServiceMock,
                     errorNotifierServiceMock,
@@ -87,5 +92,24 @@ class IbanOutcomeMediatorServiceImplTest {
         Mockito.verify(ibanOutcomeOperationsServiceMock, Mockito.times(3)).execute(Mockito.any());
         Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
         Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
+    }
+
+    @Test
+    void otherApplicationRetryTest(){
+        // Given
+        IbanOutcomeDTO ibanOutcomeDTO1 = IbanOutcomeDTOFaker.mockInstance(1);
+        IbanOutcomeDTO ibanOutcomeDTO2 = IbanOutcomeDTOFaker.mockInstance(2);
+
+        Flux<Message<String>> msgs = Flux.just(ibanOutcomeDTO1, ibanOutcomeDTO2)
+                .map(TestUtils::jsonSerializer)
+                .map(MessageBuilder::withPayload)
+                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .map(MessageBuilder::build);
+
+        // When
+        ibanOutcomeMediatorService.execute(msgs);
+
+        // Then
+        Mockito.verifyNoInteractions(ibanOutcomeOperationsServiceMock, errorNotifierServiceMock);
     }
 }

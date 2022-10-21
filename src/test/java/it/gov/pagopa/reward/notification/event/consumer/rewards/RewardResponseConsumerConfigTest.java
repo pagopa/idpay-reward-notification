@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
-import it.gov.pagopa.reward.notification.dto.trx.RewardCounters;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardStatus;
@@ -579,6 +578,32 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , "ALREADY_STORED_ALREADY_PROCESSED_%s_%s_NOTIFICATIONID".formatted(reward.getTrxId(), INITIATIVE_ID_NOTIFY_EXHAUSTED)
                             , null
                             , BigDecimal.valueOf(-2), false)
+            ),
+            // useCase 19: initiative at budged exhaustion notified refunding an already notified past record -> storing a previous reward and relative notification
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_EXHAUSTED;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.ONE.negate())))
+                                .build();
+
+                        RewardTransactionDTO previousTrx = trx.toBuilder()
+                                .id("ALREADY_PROCESSED_" + trx.getId())
+                                .build();
+
+                        Long previousRewardCents = add2InitiativeThresholdCents(BigDecimal.ONE.negate());
+                        storeRewardNotification(previousTrx, initiativeId, TODAY, previousRewardCents, DepositType.FINAL, List.of(previousTrx.getId()));
+                        updateExpectedRewardNotification("ALREADY_STORED_%s_%s_NOTIFICATIONID".formatted(previousTrx.getId(), INITIATIVE_ID_NOTIFY_EXHAUSTED)
+                                , TODAY, previousTrx, initiativeId, previousRewardCents, DepositType.FINAL);
+
+                        String expectedNotificationId = "%s_%s_2".formatted(trx.getUserId(), initiativeId);
+                        updateExpectedRewardNotification(expectedNotificationId, null, trx, 2L, initiativeId, -100L, DepositType.FINAL);
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_EXHAUSTED
+                            , "%s_%s_2".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_EXHAUSTED)
+                            , null
+                            , BigDecimal.ONE.negate(), false)
             ),
 
             // useCase 19: initiative stored, but not processed -> thus new notification created

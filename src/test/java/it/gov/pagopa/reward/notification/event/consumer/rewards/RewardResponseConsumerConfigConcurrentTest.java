@@ -24,7 +24,7 @@ import java.util.stream.IntStream;
 @Slf4j
 class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsumerConfigTest {
 
-    private final int initiativeRewardedNumber=7; // TODO 8
+    private final int initiativeRewardedNumber = 8;
 
     private final int validTrx = 100;
 
@@ -73,7 +73,7 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
 
     private List<RewardTransactionDTO> buildValidPayloads(int validOnboardings) {
         return IntStream.range(0, validOnboardings)
-                .mapToObj(i->mockInstance(i, validOnboardings))
+                .mapToObj(i->mockInstance(i, validOnboardings-1))
                 .toList();
     }
 
@@ -93,8 +93,8 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                 INITIATIVE_ID_NOTIFY_QUARTERLY, new Reward(BigDecimal.valueOf(4)),
                 INITIATIVE_ID_NOTIFY_CLOSED, new Reward(BigDecimal.valueOf(5)),
                 INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED, new Reward(BigDecimal.valueOf(6)),
-                INITIATIVE_ID_NOTIFY_THRESHOLD, new Reward(thresholdReward)
-//  TODO              INITIATIVE_ID_NOTIFY_EXHAUSTED, exhaustedReward
+                INITIATIVE_ID_NOTIFY_THRESHOLD, new Reward(thresholdReward),
+                INITIATIVE_ID_NOTIFY_EXHAUSTED, exhaustedReward
         ));
         return trx;
     }
@@ -124,7 +124,8 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                     int progressive = Integer.parseInt(r.getNotificationId().substring(30));
                     assertRewards(r, r.getInitiativeId(), r.getNotificationId(), getExpectedThresholdNotificationDate(progressive), thresholdReward, false);
                 }
-    //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8), false);
+                case INITIATIVE_ID_NOTIFY_EXHAUSTED ->
+                        assertRewards(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_1", NEXT_WEEK, BigDecimal.valueOf(8), false);
                 default -> throw new IllegalArgumentException("Unexpected initiativeId: " + r);
             }
         });
@@ -194,7 +195,12 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                             .limit(trxNumberInThreshold)
                             .toList());
                 }
-                //  TODO          case INITIATIVE_ID_NOTIFY_EXHAUSTED -> assertRewardNotification(r, r.getInitiativeId(), "USERID_INITIATIVEID_EXHAUSTED_%s", TOMORROW, BigDecimal.valueOf(8));
+                case INITIATIVE_ID_NOTIFY_EXHAUSTED -> {
+                    expectedNotification.setId("USERID_INITIATIVEID_EXHAUSTED_1");
+                    expectedNotification.setNotificationDate(NEXT_WEEK);
+                    expectedNotification.setRewardCents(trxs.size()*800L);
+                    expectedNotification.setDepositType(DepositType.FINAL);
+                }
                 default -> throw new IllegalArgumentException("Unexpected initiativeId: " + n);
             }
 

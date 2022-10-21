@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 
 import java.math.BigDecimal;
 
-class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends RewardNotificationThresholdHandlerServiceImplTest {
+class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends BaseRewardNotificationThresholdHandlerTest {
 
     @Override
     protected RewardNotificationBudgetExhaustedHandlerServiceImpl buildService(String notificationDay){

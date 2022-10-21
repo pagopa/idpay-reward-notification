@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RewardNotificationBudgetExhaustedHandlerServiceImpl extends RewardNotificationThresholdHandlerServiceImpl implements RewardNotificationHandlerService {
+public class RewardNotificationBudgetExhaustedHandlerServiceImpl extends BaseRewardNotificationThresholdBasedHandler implements RewardNotificationHandlerService {
 
     public RewardNotificationBudgetExhaustedHandlerServiceImpl(
             @Value("${app.rewards-notification.threshold-notification-day}") String notificationDay,

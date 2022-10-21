@@ -49,10 +49,14 @@ public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNot
                     updateReward(trx, rule, reward, n);
 
                     n.setNotificationDate(
-                            n.getRewardCents() >= rule.getAccumulatedAmount().getRefundThresholdCents()
+                            isThresholdReached(rule, n, reward)
                                     ? calculateNotificationDate()
                                     : null);
                 });
+    }
+
+    protected boolean isThresholdReached(RewardNotificationRule rule, RewardsNotification n, Reward reward) {
+        return n.getRewardCents() >= rule.getAccumulatedAmount().getRefundThresholdCents();
     }
 
     private LocalDate calculateNotificationDate() {
@@ -65,7 +69,7 @@ public class RewardNotificationThresholdHandlerServiceImpl extends BaseRewardNot
 
     private Mono<RewardsNotification> handleNoOpenNotification(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
         Flux<RewardsNotification> findFutureIfRefund;
-        if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) < 0){
+        if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) <= 0){
             log.debug("[REWARD_NOTIFICATION] searching for future notification for userId {} and initiativeId {}", trx.getUserId(), rule.getInitiativeId());
             findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThan(trx.getUserId(), rule.getInitiativeId(), LocalDate.now());
         } else {

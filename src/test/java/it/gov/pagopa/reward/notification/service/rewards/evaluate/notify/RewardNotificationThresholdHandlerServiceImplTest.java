@@ -38,20 +38,25 @@ class RewardNotificationThresholdHandlerServiceImplTest {
     public static final String NOTIFICATION_DAY_NEXTDAYOFWEEK = "NEXT_SUNDAY";
 
     @Mock
-    private RewardsNotificationRepository repositoryMock;
+    protected RewardsNotificationRepository repositoryMock;
     @Spy
-    private RewardsNotificationMapper mapperSpy;
+    protected RewardsNotificationMapper mapperSpy;
 
-    private RewardNotificationThresholdHandlerServiceImpl buildService(String notificationDay){
+    protected RewardNotificationThresholdHandlerServiceImpl buildService(String notificationDay){
         return new RewardNotificationThresholdHandlerServiceImpl(notificationDay, repositoryMock, mapperSpy);
     }
 
-    private static RewardNotificationRule buildRule() {
+    protected RewardNotificationRule buildRule() {
         RewardNotificationRule rule = new RewardNotificationRule();
         rule.setInitiativeId("INITIATIVEID");
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());
+        rule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED);
         rule.getAccumulatedAmount().setRefundThresholdCents(500L);
         return rule;
+    }
+
+    protected DepositType getExpectedDepositType() {
+        return DepositType.PARTIAL;
     }
 
     @Test
@@ -93,14 +98,18 @@ class RewardNotificationThresholdHandlerServiceImplTest {
         Assertions.assertEquals(DayOfWeek.SUNDAY, fieldNotificateNextDayOfWeek.get(configurationNextDayOfWeek));
     }
 
-    @Test void testHandleNewNotifyCharge_TOMORROW(){testHandleNewNotify(false, NOTIFICATION_DAY_TOMORROW);}
-    @Test void testHandleNewNotifyCharge_NEXTDAYOFWEEK(){testHandleNewNotify(false, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+    @Test void testHandleNewNotifyCharge_TOMORROW(){
+        testHandleNewNotifyNotOverflowing(false, NOTIFICATION_DAY_TOMORROW);}
+    @Test void testHandleNewNotifyCharge_NEXTDAYOFWEEK(){
+        testHandleNewNotifyNotOverflowing(false, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
 
-    @Test void testHandleNewNotifyRefundNoFutureNotification_TOMORROW(){testHandleNewNotify(true, NOTIFICATION_DAY_TOMORROW);}
-    @Test void testHandleNewNotifyRefundNoFutureNotification_NEXTDAYOFWEEK(){testHandleNewNotify(true, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+    @Test void testHandleNewNotifyRefundNoFutureNotification_TOMORROW(){
+        testHandleNewNotifyNotOverflowing(true, NOTIFICATION_DAY_TOMORROW);}
+    @Test void testHandleNewNotifyRefundNoFutureNotification_NEXTDAYOFWEEK(){
+        testHandleNewNotifyNotOverflowing(true, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
 
 
-    void testHandleNewNotify(boolean isRefund, String notificationDay){
+    void testHandleNewNotifyNotOverflowing(boolean isRefund, String notificationDay){
         // Given
         RewardNotificationThresholdHandlerServiceImpl service = buildService(notificationDay);
 
@@ -141,7 +150,7 @@ class RewardNotificationThresholdHandlerServiceImplTest {
         Assertions.assertEquals(isRefund? -300L : 300L, result.getRewardCents());
         Assertions.assertEquals(expectedProgressive, result.getProgressive());
         Assertions.assertEquals(List.of(trx.getId()), result.getTrxIds());
-        Assertions.assertEquals(DepositType.PARTIAL, result.getDepositType());
+        Assertions.assertEquals(getExpectedDepositType(), result.getDepositType());
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
         Mockito.verify(repositoryMock).count(Mockito.argThat(i->{
@@ -170,7 +179,7 @@ class RewardNotificationThresholdHandlerServiceImplTest {
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
-        Reward reward = new Reward(BigDecimal.valueOf(isStillOverflowing? -0.5 : -3));
+        Reward reward = testHandleNewNotifyRefundWithFutureNotification_buildOverFlowingReward(isStillOverflowing);
 
         LocalDate notificationDate = NOTIFICATION_DAY_TOMORROW.equals(notificationDay) ? TOMORROW : NEXT_SUNDAY;
         long expectedProgressive = 5L;
@@ -194,15 +203,23 @@ class RewardNotificationThresholdHandlerServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertSame(expectedResult, result);
 
-        Assertions.assertEquals(isStillOverflowing? 550L : 300L, result.getRewardCents());
+        Assertions.assertEquals(testHandleNewNotifyRefundWithFutureNotification_expectedReward(isStillOverflowing), result.getRewardCents());
         Assertions.assertEquals(expectedProgressive, result.getProgressive());
-        Assertions.assertEquals(DepositType.FINAL, result.getDepositType());
+        Assertions.assertEquals(DepositType.FINAL, result.getDepositType()); // because the rule end today
         Assertions.assertEquals(List.of("TRXID", trx.getId()), result.getTrxIds());
         Assertions.assertEquals(isStillOverflowing? notificationDate : null, result.getNotificationDate());
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
+    }
+
+    protected Reward testHandleNewNotifyRefundWithFutureNotification_buildOverFlowingReward(boolean isStillOverflowing) {
+        return new Reward(BigDecimal.valueOf(isStillOverflowing ? -0.5 : -3));
+    }
+
+    protected long testHandleNewNotifyRefundWithFutureNotification_expectedReward(boolean isStillOverflowing) {
+        return isStillOverflowing ? 550L : 300L;
     }
 
     @Test
@@ -213,8 +230,8 @@ class RewardNotificationThresholdHandlerServiceImplTest {
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeId("INITIATIVEID");
-        rule.setEndDate(LocalDate.now());
-        Reward reward = new Reward(BigDecimal.valueOf(3));
+        rule.setEndDate(LocalDate.now().plusDays(1));
+        Reward reward = testHandleUpdateNotifyOverflowingThreshold_buildOverFlowingReward();
 
         LocalDate expectedNotificationDate = TOMORROW;
         long expectedProgressive = 5L;
@@ -237,12 +254,16 @@ class RewardNotificationThresholdHandlerServiceImplTest {
 
         Assertions.assertEquals(500L, result.getRewardCents());
         Assertions.assertEquals(expectedProgressive, result.getProgressive());
-        Assertions.assertEquals(DepositType.FINAL, result.getDepositType());
+        Assertions.assertEquals(getExpectedDepositType(), result.getDepositType());
         Assertions.assertEquals(List.of("TRXID", trx.getId()), result.getTrxIds());
         Assertions.assertEquals(expectedNotificationDate, result.getNotificationDate());
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
+    }
+
+    protected Reward testHandleUpdateNotifyOverflowingThreshold_buildOverFlowingReward() {
+        return new Reward(BigDecimal.valueOf(3));
     }
 }

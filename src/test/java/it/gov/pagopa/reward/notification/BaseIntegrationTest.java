@@ -2,12 +2,16 @@ package it.gov.pagopa.reward.notification;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
+import it.gov.pagopa.reward.notification.test.utils.RestTestUtils;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -24,6 +28,7 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
@@ -58,6 +63,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
@@ -97,6 +103,11 @@ import static org.awaitility.Awaitility.await;
                 "logging.level.org.mongodb.driver=WARN",
                 "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
                 "spring.mongodb.embedded.version=4.0.21",
+                //endregion
+
+                //region wiremock
+                "app.pdv.base-url=localhost:8081",
+                "app.pdv.headers.x-api-key=x-apy-key",
                 //endregion
         })
 @AutoConfigureDataMongo
@@ -389,4 +400,9 @@ public abstract class BaseIntegrationTest {
         Assertions.assertEquals(expectedPayload, errorMessage.value());
         Assertions.assertEquals(expectedKey, errorMessage.key());
     }
+
+    @RegisterExtension
+    static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
+            .options(RestTestUtils.getWireMockConfiguration(8081, "localhost","stubs/user-info/mappings"))
+            .build();
 }

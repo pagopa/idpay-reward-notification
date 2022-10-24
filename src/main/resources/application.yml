@@ -202,4 +202,8 @@ app:
     weekly-notification-day: ${REWARDS_NOTIFICATION_WEEKLY_NOTIFICATION_DAY:SUNDAY}
     # TOMORROW or 'NEXT_' followed by the day of week
     threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
+  pdv:
+    base-url: ${PDV_BASE_URL:}
+    headers:
+      x-api-key: ${PDV_DECRYPT_API_KEY:}
 

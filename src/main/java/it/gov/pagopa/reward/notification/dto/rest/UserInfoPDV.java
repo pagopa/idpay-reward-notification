@@ -1,5 +1,4 @@
-package it.gov.pagopa.reward.notification.model;
-
+package it.gov.pagopa.reward.notification.dto.rest;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,9 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class User {
-    private String fiscalCode;
+public class UserInfoPDV {
+    private String pii;
 }

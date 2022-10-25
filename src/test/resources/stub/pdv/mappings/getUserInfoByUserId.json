@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/tokens/(USERID_OK_[0-1]+)/pii"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "pii": "fiscalCode"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

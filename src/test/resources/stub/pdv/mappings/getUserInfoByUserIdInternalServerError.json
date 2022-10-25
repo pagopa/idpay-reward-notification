@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/tokens/(USERID_INTERNALSERVERERROR_[0-1]+)/pii"
+  },
+  "response": {
+    "status": "500",
+    "jsonBody": {
+      "another": "fiscalCode"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

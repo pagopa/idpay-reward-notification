@@ -8,6 +8,6 @@ public class RestTestUtils {
     public static WireMockConfiguration getWireMockConfiguration(int port, String host, String stubPath){
         return wireMockConfig().port(port)
                 .bindAddress(host)
-                .usingFilesUnderDirectory(stubPath);
+                .usingFilesUnderClasspath("src/test/resources"+stubPath);
     }
 }

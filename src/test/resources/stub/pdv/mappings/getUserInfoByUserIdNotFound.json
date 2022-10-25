@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/tokens/(USERID_NOTFOUND_[0-1]+)/pii"
+  },
+  "response": {
+    "status": "404",
+    "jsonBody": {
+      "another": "fiscalCode"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

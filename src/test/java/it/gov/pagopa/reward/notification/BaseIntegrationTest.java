@@ -2,8 +2,6 @@ package it.gov.pagopa.reward.notification;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
@@ -63,7 +61,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
@@ -106,7 +103,7 @@ import static org.awaitility.Awaitility.await;
                 //endregion
 
                 //region wiremock
-                "app.pdv.base-url=localhost:8081",
+                "app.pdv.base-url=http://localhost:8081",
                 "app.pdv.headers.x-api-key=x-apy-key",
                 //endregion
         })
@@ -153,6 +150,10 @@ public abstract class BaseIntegrationTest {
     protected String groupIdIbanRequestConsumer;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
+
+    @Value("${app.pdv.base-url}")
+    private String pdvBaseUrlString;
+
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
@@ -403,6 +404,6 @@ public abstract class BaseIntegrationTest {
 
     @RegisterExtension
     static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
-            .options(RestTestUtils.getWireMockConfiguration(8081, "localhost","stubs/user-info/mappings"))
+            .options(RestTestUtils.getWireMockConfiguration(8081, "localhost","/stub/pdv"))
             .build();
 }

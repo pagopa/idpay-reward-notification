@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService{
         }else {
             return Mono.just(userId)
                     .flatMap(userRestClient::retrieveUserInfo)
-                    .map(s -> User.builder().cf(s).build())
+                    .map(s -> User.builder().fiscalCode(s.getPii()).build())
                     .doOnNext(u -> {
                         putUserToCache(userId,u);
                         log.info("Added into map user info with userId: {}", userId);

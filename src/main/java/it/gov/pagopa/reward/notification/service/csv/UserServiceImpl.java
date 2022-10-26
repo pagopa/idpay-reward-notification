@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service;
+package it.gov.pagopa.reward.notification.service.csv;
 
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.rest.UserRestClient;
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService{
-    private static final Map<String, User> USER_CACHE = new ConcurrentHashMap<>();
+    private final Map<String, User> userCache = new ConcurrentHashMap<>();
     private final UserRestClient userRestClient;
 
     public UserServiceImpl(UserRestClient userRestClient) {
@@ -20,26 +20,15 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public User getUserFromCache(String key) {
-        return USER_CACHE.get(key);
-    }
-
-    @Override
-    public void putUserToCache(String key, User value) {
-        USER_CACHE.put(key, value);
-    }
-
-    @Override
     public Mono<User> getUserInfo(String userId) {
-        User userFromCache = getUserFromCache(userId);
+        User userFromCache = userCache.get(userId);
         if(userFromCache != null){
             return Mono.just(userFromCache);
         }else {
-            return Mono.just(userId)
-                    .flatMap(userRestClient::retrieveUserInfo)
+            return userRestClient.retrieveUserInfo(userId)
                     .map(s -> User.builder().fiscalCode(s.getPii()).build())
                     .doOnNext(u -> {
-                        putUserToCache(userId,u);
+                        userCache.put(userId,u);
                         log.info("Added into map user info with userId: {}", userId);
                     });
         }

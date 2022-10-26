@@ -103,8 +103,8 @@ import static org.awaitility.Awaitility.await;
                 //endregion
 
                 //region wiremock
-                "app.pdv.base-url=http://localhost:8081",
-                "app.pdv.headers.x-api-key=x-apy-key",
+                "app.pdv.base-url=http://localhost:8081", //TODO try to randomize port
+                "app.pdv.headers.x-api-key=x_api_key",
                 //endregion
         })
 @AutoConfigureDataMongo
@@ -150,10 +150,6 @@ public abstract class BaseIntegrationTest {
     protected String groupIdIbanRequestConsumer;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
-
-    @Value("${app.pdv.base-url}")
-    private String pdvBaseUrlString;
-
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {

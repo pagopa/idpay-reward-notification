@@ -14,34 +14,37 @@ import java.util.Map;
 
 @Service
 public class UserRestClientImpl implements UserRestClient {
-    private final String pdvBaseUrl;
-    private final String apiKeyValue;
+    private static final String API_KEY_HEADER = "x-api-key";
+    private static final String URI = "/tokens/{token}/pii";
+    private final int pdvRetryDelay;
+    private final WebClient webClient;
 
     public UserRestClientImpl(@Value("${app.pdv.base-url}") String pdvBaseUrl,
-                              @Value("${app.pdv.headers.x-api-key}") String apiKeyValue) {
-        this.pdvBaseUrl = pdvBaseUrl;
-        this.apiKeyValue = apiKeyValue;
+                              @Value("${app.pdv.headers.x-api-key}") String apiKeyValue,
+                              @Value("${app.pdv.retry.delay-millis}") int pdvRetryDelay,
+                              WebClient.Builder webClientBuilder) {
+        this.pdvRetryDelay = pdvRetryDelay;
+        this.webClient = webClientBuilder.clone()
+                .baseUrl(pdvBaseUrl)
+                .defaultHeader(API_KEY_HEADER,apiKeyValue).build();
     }
 
     @Override
-    public Mono<UserInfoPDV> retrieveUserInfo(String token){
-        String apiKeyHeader = "x-api-key";
-        String uri = "/tokens/{token}/pii";
+    public Mono<UserInfoPDV> retrieveUserInfo(String userId){
 
         Map<String, String> params = new HashMap<>();
-        params.put("token", token);
+        params.put("token", userId);
 
-        return WebClient.create(pdvBaseUrl)
+        return  webClient
                 .method(HttpMethod.GET)
-                .uri(uri, params)
-                .header(apiKeyHeader, apiKeyValue)
+                .uri(URI, params)
                 .retrieve()
                 .onStatus(
                         httpStatus -> httpStatus==HttpStatus.NOT_FOUND || httpStatus==HttpStatus.BAD_REQUEST || httpStatus==HttpStatus.INTERNAL_SERVER_ERROR,
                         clientResponse -> {
                             HttpStatus httpStatus = clientResponse.statusCode();
-                            return Mono.error(new HttpClientErrorException("An error occurred when call PDV with userId %s: %s".formatted(token, httpStatus.name()), httpStatus, httpStatus.name(), null, null, null));
-                        })
-              .bodyToMono(UserInfoPDV.class);
+                            return Mono.error(new HttpClientErrorException("An error occurred when call PDV with userId %s: %s".formatted(userId, httpStatus.name()), httpStatus, httpStatus.name(), null, null, null));
+                        })//TODO handle 429 HTTP_STATUS retry the invocation (reactive delay)
+                .bodyToMono(UserInfoPDV.class);
     }
 }

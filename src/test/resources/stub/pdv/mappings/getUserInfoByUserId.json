@@ -1,7 +1,12 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/tokens/(USERID_OK_[0-1]+)/pii"
+    "urlPathPattern": "/tokens/(USERID_OK_[0-9]+)/pii",
+    "headers": {
+      "x-api-key": {
+        "matches": "x_api_key([0-9]?)+"
+      }
+    }
   },
   "response": {
     "status": "200",

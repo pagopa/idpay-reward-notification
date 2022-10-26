@@ -1,19 +1,14 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/tokens/(USERID_NOTFOUND_[0-9]+)/pii",
-    "headers": {
-      "x-api-key": {
-        "matches": "x_api_key([0-9]?)+"
-      }
-    }
+    "urlPathPattern": "/tokens/(USERID_BADREQUEST_[0-9]+)/pii"
   },
   "response": {
-    "status": "404",
+    "status": "400",
     "jsonBody": {
       "type": "type",
-      "title": "Not found",
-      "status": "404",
+      "title": "Bad request",
+      "status": "400",
       "details": "details",
       "instance": "instance"
     },

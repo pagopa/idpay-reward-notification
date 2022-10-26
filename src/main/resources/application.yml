@@ -206,4 +206,11 @@ app:
     base-url: ${PDV_BASE_URL:}
     headers:
       x-api-key: ${PDV_DECRYPT_API_KEY:}
+    retry.delay-millis: ${PDV_RETRY_DELAY_MILLIS:10000}
+  web-client:
+    connect.timeout.millis: ${CONNECT_TIMEOUT_MILLIS:10000}
+    response.timeout: ${RESPONSE_TIMEOUT:60000}
+    read.handler.timeout: ${READ_TIMEOUT_HANDLER:60000}
+    write.handler.timeout: ${WRITE_TIMEOUT_HANDLER:60000}
+
 

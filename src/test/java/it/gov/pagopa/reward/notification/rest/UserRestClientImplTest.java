@@ -55,4 +55,17 @@ class UserRestClientImplTest extends BaseIntegrationTest {
             Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.INTERNAL_SERVER_ERROR.name()), e.getMessage());
         }
     }
+
+    @Test
+    void retrieveUserInfoBadRequest() { //TODO da rivedere
+        // Given
+        String userId = "USERID_BADREQUEST_1";
+
+        try{
+            userRestClient.retrieveUserInfo(userId).block();
+        }catch (Throwable e){
+            Assertions.assertEquals(HttpClientErrorException.class, e.getClass());
+            Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.BAD_REQUEST.name()), e.getMessage());
+        }
+    }
 }

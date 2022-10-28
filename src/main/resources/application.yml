@@ -206,7 +206,9 @@ app:
     base-url: ${PDV_BASE_URL:}
     headers:
       x-api-key: ${PDV_DECRYPT_API_KEY:}
-    retry.delay-millis: ${PDV_RETRY_DELAY_MILLIS:10000}
+    retry:
+      delay-millis: ${PDV_RETRY_DELAY_MILLIS:10000}
+      max-attempts: ${PDV_RETRY_MAX_ATTEMPTS:${RETRY_MAX_ATTEMPTS:10}}
   web-client:
     connect.timeout.millis: ${CONNECT_TIMEOUT_MILLIS:10000}
     response.timeout: ${RESPONSE_TIMEOUT:60000}

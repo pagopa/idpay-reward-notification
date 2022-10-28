@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.notification.test.utils.RestTestUtils;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -33,13 +34,17 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
@@ -102,11 +107,13 @@ import static org.awaitility.Awaitility.await;
                 "spring.mongodb.embedded.version=4.0.21",
                 //endregion
 
-                //region wiremock
-                "app.pdv.base-url=http://localhost:8081", //TODO try to randomize port
+                //region pdv
                 "app.pdv.headers.x-api-key=x_api_key",
+                "app.pdv.retry.delay-millis=5000",
+                "app.pdv.retry.max-attempts=3",
                 //endregion
         })
+@ContextConfiguration(initializers = BaseIntegrationTest.RandomPortInitializer.class)
 @AutoConfigureDataMongo
 public abstract class BaseIntegrationTest {
     @Autowired
@@ -398,8 +405,18 @@ public abstract class BaseIntegrationTest {
         Assertions.assertEquals(expectedKey, errorMessage.key());
     }
 
+    //Setting WireMock
     @RegisterExtension
     static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
-            .options(RestTestUtils.getWireMockConfiguration(8081, "localhost","/stub/pdv"))
+            .options(RestTestUtils.getWireMockConfiguration("/stub/pdv"))
             .build();
+    public static class RandomPortInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @SneakyThrows
+        @Override
+        public void initialize(ConfigurableApplicationContext applicationContext) {
+            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
+                    String.format("app.pdv.base-url=%s", pdvWireMock.getRuntimeInfo().getHttpBaseUrl())
+            );
+        }
+    }
 }

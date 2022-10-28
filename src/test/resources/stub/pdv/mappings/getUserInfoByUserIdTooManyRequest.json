@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/tokens/(USERID_HTTPNOTHANDLER_FORBIDEN_[0-9]+)/pii"
+  },
+  "response": {
+    "status": "403",
+    "jsonBody": {
+      "type": "type",
+      "title": "Too many request",
+      "status": "403",
+      "details": "details",
+      "instance": "instance"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

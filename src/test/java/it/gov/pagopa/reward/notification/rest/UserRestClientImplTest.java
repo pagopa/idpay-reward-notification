@@ -6,66 +6,90 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.HttpClientErrorException;
-import reactor.core.publisher.Mono;
+import org.springframework.web.reactive.function.client.WebClientException;
+import reactor.core.Exceptions;
 
+@TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.notification.rest.UserRestClientImpl=WARN",
+})
 class UserRestClientImplTest extends BaseIntegrationTest {
 
     @Autowired
     private UserRestClient userRestClient;
 
+
     @Test
     void retrieveUserInfoOk() {
-        // Given
         String userId = "USERID_OK_1";
 
-        // When
         UserInfoPDV result = userRestClient.retrieveUserInfo(userId).block();
 
-        //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals("fiscalCode",result.getPii());
     }
 
     @Test
     void retrieveUserInfoNotFound() {
-        // Given
         String userId = "USERID_NOTFOUND_1";
-
-        // When
-        Mono<UserInfoPDV> result = userRestClient.retrieveUserInfo(userId);
 
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
-            Assertions.assertEquals(HttpClientErrorException.class, e.getClass());
+            Assertions.assertTrue(e instanceof HttpClientErrorException);
+            Assertions.assertEquals(HttpClientErrorException.NotFound.class, e.getClass());
             Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.NOT_FOUND.name()), e.getMessage());
         }
     }
 
     @Test
     void retrieveUserInfoInternalServerError() {
-        // Given
         String userId = "USERID_INTERNALSERVERERROR_1";
 
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
+            Assertions.assertTrue(e instanceof HttpClientErrorException);
             Assertions.assertEquals(HttpClientErrorException.class, e.getClass());
             Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.INTERNAL_SERVER_ERROR.name()), e.getMessage());
         }
     }
 
     @Test
-    void retrieveUserInfoBadRequest() { //TODO da rivedere
-        // Given
+    void retrieveUserInfoBadRequest() {
         String userId = "USERID_BADREQUEST_1";
 
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
-            Assertions.assertEquals(HttpClientErrorException.class, e.getClass());
+            Assertions.assertTrue(e instanceof HttpClientErrorException);
+            Assertions.assertEquals(HttpClientErrorException.BadRequest.class, e.getClass());
             Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.BAD_REQUEST.name()), e.getMessage());
         }
     }
+
+    @Test
+    void retrieveUserInfoTooManyRequest() {
+        String userId = "USERID_TOOMANYREQUEST_1";
+
+        try{
+            userRestClient.retrieveUserInfo(userId).block();
+        }catch (Throwable e){
+            Assertions.assertTrue(Exceptions.isRetryExhausted(e));
+        }
+    }
+
+    @Test
+    void retrieveUserInfoHttpNotHandler() {
+        String userId = "USERID_HTTPNOTHANDLER_FORBIDEN_1";
+
+        try{
+            userRestClient.retrieveUserInfo(userId).block();
+        }catch (Throwable e){
+            e.printStackTrace();
+            Assertions.assertTrue(e instanceof WebClientException);
+        }
+    }
+
 }

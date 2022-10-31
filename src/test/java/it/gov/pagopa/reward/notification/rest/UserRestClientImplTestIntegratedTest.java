@@ -14,8 +14,8 @@ import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-@ContextConfiguration(initializers = UserRestClientImplTestIntegrated.AddPDVProperties.class)
-class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
+@ContextConfiguration(initializers = UserRestClientImplTestIntegratedTest.AddPDVProperties.class)
+class UserRestClientImplTestIntegratedTest extends BaseIntegrationTest {
 
     @Autowired
     private UserRestClient userRestClient;

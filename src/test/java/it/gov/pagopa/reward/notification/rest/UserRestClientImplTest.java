@@ -5,10 +5,9 @@ import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Exceptions;
 
 @TestPropertySource(properties = {
@@ -37,9 +36,8 @@ class UserRestClientImplTest extends BaseIntegrationTest {
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
-            Assertions.assertTrue(e instanceof HttpClientErrorException);
-            Assertions.assertEquals(HttpClientErrorException.NotFound.class, e.getClass());
-            Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.NOT_FOUND.name()), e.getMessage());
+            Assertions.assertTrue(e instanceof WebClientException);
+            Assertions.assertEquals(WebClientResponseException.NotFound.class,e.getClass());
         }
     }
 
@@ -50,9 +48,8 @@ class UserRestClientImplTest extends BaseIntegrationTest {
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
-            Assertions.assertTrue(e instanceof HttpClientErrorException);
-            Assertions.assertEquals(HttpClientErrorException.class, e.getClass());
-            Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.INTERNAL_SERVER_ERROR.name()), e.getMessage());
+            Assertions.assertTrue(e instanceof WebClientException);
+            Assertions.assertEquals(WebClientResponseException.InternalServerError.class,e.getClass());
         }
     }
 
@@ -63,9 +60,8 @@ class UserRestClientImplTest extends BaseIntegrationTest {
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
-            Assertions.assertTrue(e instanceof HttpClientErrorException);
-            Assertions.assertEquals(HttpClientErrorException.BadRequest.class, e.getClass());
-            Assertions.assertEquals("An error occurred when call PDV with userId %s: %s".formatted(userId, HttpStatus.BAD_REQUEST.name()), e.getMessage());
+            Assertions.assertTrue(e instanceof WebClientException);
+            Assertions.assertEquals(WebClientResponseException.BadRequest.class,e.getClass());
         }
     }
 
@@ -81,14 +77,15 @@ class UserRestClientImplTest extends BaseIntegrationTest {
     }
 
     @Test
-    void retrieveUserInfoHttpNotHandler() {
-        String userId = "USERID_HTTPNOTHANDLER_FORBIDEN_1";
+    void retrieveUserInfoHttpForbidden() {
+        String userId = "USERID_FORBIDDEN_1";
 
         try{
             userRestClient.retrieveUserInfo(userId).block();
         }catch (Throwable e){
             e.printStackTrace();
             Assertions.assertTrue(e instanceof WebClientException);
+            Assertions.assertEquals(WebClientResponseException.Forbidden.class,e.getClass());
         }
     }
 

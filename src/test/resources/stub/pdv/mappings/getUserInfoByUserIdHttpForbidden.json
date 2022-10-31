@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/tokens/(USERID_TOOMANYREQUEST_[0-9]+)/pii",
+    "urlPathPattern": "/tokens/(USERID_FORBIDDEN_[0-9]+)/pii",
     "headers": {
       "x-api-key": {
         "matches": "x_api_key([0-9]?)+"
@@ -9,11 +9,11 @@
     }
   },
   "response": {
-    "status": "429",
+    "status": "403",
     "jsonBody": {
       "type": "type",
-      "title": "Too many request",
-      "status": "429",
+      "title": "Forbidden",
+      "status": "403",
       "details": "details",
       "instance": "instance"
     },

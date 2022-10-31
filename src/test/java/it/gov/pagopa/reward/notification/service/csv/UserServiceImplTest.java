@@ -26,7 +26,7 @@ class UserServiceImplTest {
 
     private UserService userService;
 
-    private int initialSizeCache = 2;
+    private final int initialSizeCache = 2;
     private Field userCacheField;
 
     @BeforeEach
@@ -50,7 +50,7 @@ class UserServiceImplTest {
         Mockito.when(userRestClientMock.retrieveUserInfo(userIdTest)).thenReturn(Mono.just(UserInfoPDV.builder().pii("FISCALCODE_RETRIEVED").build()));
 
         // When
-        Map<String, User> inspectCache = (Map<String, User>) retrieveCache();
+        Map<String, User> inspectCache = retrieveCache();
         Assertions.assertNull(inspectCache.get(userIdTest));
         Assertions.assertEquals(initialSizeCache,inspectCache.size());
 
@@ -68,19 +68,13 @@ class UserServiceImplTest {
         Mockito.verify(userRestClientMock).retrieveUserInfo(userIdTest);
     }
 
-    private Object retrieveCache() {
-        Object cacheBefore = ReflectionUtils.getField(userCacheField, userService);
-        Assertions.assertNotNull(cacheBefore);
-        return cacheBefore;
-    }
-
     @Test
     void getUserInfoInCache(){
         // Given
         String userIdTest = "USERID_0";
 
         // When
-        Map<String, User> inspectCache = (Map<String, User>) retrieveCache();
+        Map<String, User> inspectCache = retrieveCache();
         Assertions.assertNotNull(inspectCache.get(userIdTest));
         Assertions.assertEquals(initialSizeCache,inspectCache.size());
 
@@ -94,5 +88,11 @@ class UserServiceImplTest {
         Assertions.assertEquals(initialSizeCache,inspectCache.size());
 
         Mockito.verify(userRestClientMock, Mockito.never()).retrieveUserInfo(userIdTest);
+    }
+
+    private Map<String, User> retrieveCache() {
+        Object cacheBefore = ReflectionUtils.getField(userCacheField, userService);
+        Assertions.assertNotNull(cacheBefore);
+        return (Map<String, User>) cacheBefore;
     }
 }

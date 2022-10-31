@@ -1,8 +1,7 @@
 package it.gov.pagopa.reward.notification.service.iban;
 
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
-import it.gov.pagopa.reward.notification.dto.iban.IbanRequestDTO;
-import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
+import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
@@ -54,11 +53,11 @@ class RewardIbanServiceImplTest {
                 .status(IbanConstants.STATUS_KO)
                 .build();
 
-        String id1 = IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO1);
-        String id2 = IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO2);
+        String id1 = IbanOutcomeDTO2RewardIbanMapper.buildId(ibanOutcomeDTO1);
+        String id2 = IbanOutcomeDTO2RewardIbanMapper.buildId(ibanOutcomeDTO2);
 
         RewardIban rewardIban1 = RewardIban.builder()
-                .id(IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO1))
+                .id(IbanOutcomeDTO2RewardIbanMapper.buildId(ibanOutcomeDTO1))
                 .userId(ibanOutcomeDTO1.getUserId())
                 .initiativeId(ibanOutcomeDTO1.getInitiativeId())
                 .iban(ibanOutcomeDTO1.getIban())

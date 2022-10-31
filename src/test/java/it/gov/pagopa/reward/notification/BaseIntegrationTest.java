@@ -64,7 +64,6 @@ import static org.awaitility.Awaitility.await;
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.refundRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}",
-        "${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
 }, controlledShutdown = true)
@@ -88,7 +87,6 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
-                "spring.cloud.stream.binders.kafka-checkiban-request.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
@@ -127,8 +125,6 @@ public abstract class BaseIntegrationTest {
     protected String topicInitiative2StoreConsumer;
     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}")
     protected String topicRewardResponse;
-    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}")
-    protected String topicIbanRequest;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}")
     protected String topicIbanOutcome;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
@@ -138,8 +134,6 @@ public abstract class BaseIntegrationTest {
     protected String groupIdInitiative2StoreConsumer;
     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.group}")
     protected String groupIdRewardResponse;
-    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.group}")
-    protected String groupIdIbanRequestConsumer;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
 
@@ -376,8 +370,8 @@ public abstract class BaseIntegrationTest {
     protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
         if(expectedAppNameHeader) {
             Assertions.assertEquals("idpay-reward-notification", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+            Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         }
-        Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));

@@ -36,11 +36,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     private final String rewardResponseTopic;
     private final String rewardResponseGroup;
 
-    private final String rewardIbanRequestServiceType;
-    private final String rewardIbanRequestServer;
-    private final String rewardIbanRequestTopic;
-    private final String rewardIbanRequestGroup;
-
     private final String rewardIbanOutcomeServiceType;
     private final String rewardIbanOutcomeServer;
     private final String rewardIbanOutcomeTopic;
@@ -60,11 +55,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
                                     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}") String rewardResponseTopic,
                                     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.group}") String rewardResponseGroup,
 
-                                    @Value("${spring.cloud.stream.binders.kafka-checkiban-request.type}") String rewardIbanRequestServiceType,
-                                    @Value("${spring.cloud.stream.binders.kafka-checkiban-request.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardIbanRequestServer,
-                                    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}") String rewardIbanRequestTopic,
-                                    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.group}") String rewardIbanRequestGroup,
-
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-outcome.type}") String rewardIbanOutcomeServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardIbanOutcomeServer,
                                     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}") String rewardIbanOutcomeTopic,
@@ -81,11 +71,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
         this.rewardResponseServer = rewardResponseServer;
         this.rewardResponseTopic = rewardResponseTopic;
         this.rewardResponseGroup = rewardResponseGroup;
-
-        this.rewardIbanRequestServiceType = rewardIbanRequestServiceType;
-        this.rewardIbanRequestServer = rewardIbanRequestServer;
-        this.rewardIbanRequestTopic = rewardIbanRequestTopic;
-        this.rewardIbanRequestGroup = rewardIbanRequestGroup;
 
         this.rewardIbanOutcomeServiceType = rewardIbanOutcomeServiceType;
         this.rewardIbanOutcomeServer = rewardIbanOutcomeServer;
@@ -104,11 +89,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     }
 
     @Override
-    public void notifyRewardIbanRequest(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardIbanRequestServiceType, rewardIbanRequestServer, rewardIbanRequestTopic, rewardIbanRequestGroup, message, description, retryable,true, exception);
-    }
-
-    @Override
     public void notifyRewardIbanOutcome(Message<String> message, String description, boolean retryable, Throwable exception) {
         notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, rewardIbanOutcomeGroup, message, description, retryable, true, exception);
     }
@@ -117,7 +97,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
-                .setHeader(ERROR_MSG_HEADER_GROUP, group)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
                 .setHeader(ERROR_MSG_HEADER_SRC_SERVER, srcServer)
                 .setHeader(ERROR_MSG_HEADER_SRC_TOPIC, srcTopic)
@@ -135,6 +114,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
 
         if (resendApplication){
             errorMessage.setHeader(ERROR_MSG_HEADER_APPLICATION_NAME, applicationName);
+            errorMessage.setHeader(ERROR_MSG_HEADER_GROUP, group);
         }
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {

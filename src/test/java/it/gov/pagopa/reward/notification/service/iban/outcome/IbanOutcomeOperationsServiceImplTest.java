@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service.iban.outcome;
 
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
-import it.gov.pagopa.reward.notification.dto.mapper.IbanRequestDTO2RewardIbanMapper;
+import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
@@ -22,11 +22,13 @@ import java.util.Optional;
 class IbanOutcomeOperationsServiceImplTest {
     @Mock
     private RewardIbanService rewardIbanServiceMock;
+    @Mock
+    private IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapperMock;
     private IbanOutcomeOperationsService ibanOutcomeOperationsService;
 
     @BeforeEach
     void setUp() {
-        ibanOutcomeOperationsService = new IbanOutcomeOperationsServiceImpl(rewardIbanServiceMock);
+        ibanOutcomeOperationsService = new IbanOutcomeOperationsServiceImpl(rewardIbanServiceMock, ibanOutcomeDTO2RewardIbanMapperMock);
     }
 
     @Test
@@ -44,33 +46,49 @@ class IbanOutcomeOperationsServiceImplTest {
         Assertions.assertTrue(result.isEmpty());
 
         Mockito.verify(rewardIbanServiceMock).deleteIban(ibanOutcomeDTO);
-        Mockito.verify(rewardIbanServiceMock, Mockito.never()).updateStatus(Mockito.any());
+        Mockito.verify(rewardIbanServiceMock, Mockito.never()).save(Mockito.any());
     }
 
     @Test
     void executeNotStatusKO() {
         // Given
-        IbanOutcomeDTO ibanOutcomeDTO = IbanOutcomeDTOFaker.mockInstance(1);
-        ibanOutcomeDTO.setStatus(IbanConstants.STATUS_UNKNOWN_PSP);
+        IbanOutcomeDTO ibanOutcomeUnknownDTO = IbanOutcomeDTOFaker.mockInstance(1);
+        ibanOutcomeUnknownDTO.setStatus(IbanConstants.STATUS_UNKNOWN_PSP);
 
-        RewardIban rewardIban = RewardIban.builder()
-                .id(IbanRequestDTO2RewardIbanMapper.buildId(ibanOutcomeDTO))
-                .userId(ibanOutcomeDTO.getUserId())
-                .initiativeId(ibanOutcomeDTO.getInitiativeId())
-                .iban(ibanOutcomeDTO.getIban())
-                .checkIbanOutcome(ibanOutcomeDTO.getStatus())
+        RewardIban rewardIbanUnknown = RewardIban.builder()
+                .id(IbanOutcomeDTO2RewardIbanMapper.buildId(ibanOutcomeUnknownDTO))
+                .userId(ibanOutcomeUnknownDTO.getUserId())
+                .initiativeId(ibanOutcomeUnknownDTO.getInitiativeId())
+                .iban(ibanOutcomeUnknownDTO.getIban())
+                .checkIbanOutcome(ibanOutcomeUnknownDTO.getStatus())
                 .timestamp(LocalDateTime.now()).build();
+        Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeUnknownDTO)).thenReturn(rewardIbanUnknown);
 
-        Mockito.when(rewardIbanServiceMock.updateStatus(ibanOutcomeDTO)).thenReturn(Mono.just(rewardIban));
+        IbanOutcomeDTO ibanOutcomeOkDTO = IbanOutcomeDTOFaker.mockInstance(1);
+        ibanOutcomeOkDTO.setStatus(IbanConstants.STATUS_OK);
+        RewardIban rewardIbanOk = RewardIban.builder()
+                .id(IbanOutcomeDTO2RewardIbanMapper.buildId(ibanOutcomeOkDTO))
+                .userId(ibanOutcomeOkDTO.getUserId())
+                .initiativeId(ibanOutcomeOkDTO.getInitiativeId())
+                .iban(ibanOutcomeOkDTO.getIban())
+                .checkIbanOutcome(ibanOutcomeOkDTO.getStatus())
+                .timestamp(LocalDateTime.now()).build();
+        Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeOkDTO)).thenReturn(rewardIbanOk);
+
+        Mockito.when(rewardIbanServiceMock.save(Mockito.any(RewardIban.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
         // When
-        RewardIban result = ibanOutcomeOperationsService.execute(ibanOutcomeDTO).block();
+        RewardIban resultUnknown = ibanOutcomeOperationsService.execute(ibanOutcomeUnknownDTO).block();
+        RewardIban resultOk = ibanOutcomeOperationsService.execute(ibanOutcomeOkDTO).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(rewardIban, result);
+        Assertions.assertNotNull(resultUnknown);
+        Assertions.assertEquals(rewardIbanUnknown, resultUnknown);
 
-        Mockito.verify(rewardIbanServiceMock).updateStatus(ibanOutcomeDTO);
+        Assertions.assertNotNull(resultOk);
+        Assertions.assertEquals(rewardIbanOk, resultOk);
+
+        Mockito.verify(rewardIbanServiceMock, Mockito.times(2)).save(Mockito.any());
         Mockito.verify(rewardIbanServiceMock, Mockito.never()).deleteIban(Mockito.any());
     }
 }

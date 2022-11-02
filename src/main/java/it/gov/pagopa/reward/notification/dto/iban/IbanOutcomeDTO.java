@@ -1,16 +1,22 @@
 package it.gov.pagopa.reward.notification.dto.iban;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
-@EqualsAndHashCode(callSuper = true)
-public class IbanOutcomeDTO extends IbanRequestDTO {
+@Builder
+public class IbanOutcomeDTO{
+    @JsonProperty("userId")
+    String userId;
+    @JsonProperty("initiativeId")
+    String initiativeId;
+    @JsonProperty("iban")
+    String iban;
     @JsonProperty("status")
     private String status;
 }

@@ -6,7 +6,6 @@ import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
-import it.gov.pagopa.reward.notification.test.fakers.IbanRequestDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -30,6 +29,7 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.notification.service.rewards.*=OFF",
         "logging.level.it.gov.pagopa.reward.notification.service.iban.RewardIbanServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.IbanOutcomeMediatorServiceImpl=WARN",
 })
@@ -49,28 +49,31 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
     @Test
     void ibanOutcomeConsumer(){
-        int ibanNumber = 1000;
+        int ibanOkAndUnknown = 1000;
         int notValidIban = errorUseCases.size();
-        int unknownIban = 100;
+        int ibanKO = 500;
         long maxWaitingMs = 30000;
 
-        initializingDB(ibanNumber);
-
-        List<String> ibanPayloads = new ArrayList<>(ibanNumber+notValidIban+unknownIban);
-        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban+unknownIban, notValidIban+unknownIban+ibanNumber, true));
+        List<String> ibanPayloads = new ArrayList<>(notValidIban+ibanOkAndUnknown);
         ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
-        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+unknownIban, false));
+        ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+ibanOkAndUnknown, false));
+
+        List<String> ibanPayloadsKO = buildCheckIbanOutcome(notValidIban, notValidIban+ibanKO, true);
 
         long timeStart=System.currentTimeMillis();
         ibanPayloads.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
+        long timePublishingOKAndUnknownEnd=System.currentTimeMillis();
+        waitForIbanStoreChanged(ibanOkAndUnknown);
+
+        long timePublishingKoStart=System.currentTimeMillis();
+        ibanPayloadsKO.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
         publishIntoEmbeddedKafka(topicIbanOutcome, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForIbanStoreChanged(unknownIban);
-        Assertions.assertEquals(unknownIban, countSaved);
+        waitForIbanStoreChanged(ibanOkAndUnknown-ibanKO);
         long timeEnd=System.currentTimeMillis();
 
-        checkStatusDB(notValidIban, unknownIban);
+        checkStatusDB(notValidIban, ibanOkAndUnknown, ibanKO);
         checkErrorsPublished(notValidIban, maxWaitingMs, errorUseCases);
 
         System.out.printf("""
@@ -81,17 +84,17 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
             Test Completed in %d millis
             ************************
             """,
-                ibanNumber + notValidIban  + unknownIban,
-                ibanNumber,
+                notValidIban  + ibanOkAndUnknown + ibanKO +1,
                 notValidIban,
-                unknownIban,
-                timePublishingEnd-timeStart,
+                ibanOkAndUnknown,
+                ibanKO,
+                (timePublishingOKAndUnknownEnd - timeStart) + (timePublishingEnd - timePublishingKoStart),
                 timeEnd-timePublishingEnd,
                 timeEnd-timeStart
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicIbanOutcome, groupIdIbanOutcomeConsumer, ibanPayloads.size()+1); // +1 due to other applicationName useCase
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicIbanOutcome, groupIdIbanOutcomeConsumer, ibanPayloads.size()+ibanPayloadsKO.size()+1); // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -107,20 +110,14 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
     }
 
-    private void checkStatusDB(int errorCaseNumber, int unknownNumber) {
-        checkIdErrors(errorCaseNumber);
-
-        checkIdUnknown(errorCaseNumber, unknownNumber);
-    }
-
-    private void checkIdUnknown(int startNumber, int unknownNumber) {
-        List<RewardIban> ibansInfo = IntStream.range(startNumber, startNumber+unknownNumber)
+    private void checkStatusDB(int errorCaseNumber, int ibanOkAndUnknown, int ibanKO) {
+        List<RewardIban> ibansInfo = IntStream.range(errorCaseNumber+ibanKO, errorCaseNumber+ibanOkAndUnknown)
                 .mapToObj(i -> RewardIban.builder()
                         .id(userId.concat(initiativeId).formatted(i,i))
                         .userId(userId.formatted(i))
                         .initiativeId(initiativeId.formatted(i))
                         .iban(iban.formatted(i))
-                        .checkIbanOutcome(IbanConstants.STATUS_UNKNOWN_PSP)
+                        .checkIbanOutcome(i%2==0? IbanConstants.STATUS_OK : IbanConstants.STATUS_UNKNOWN_PSP)
                         .build())
                 .toList();
         ibansInfo.forEach(m -> {
@@ -136,52 +133,28 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         });
     }
 
-    private void checkIdErrors(int errorCaseNumber) {
-        List<RewardIban> ibansInfo = IntStream.range(0, errorCaseNumber)
-                .mapToObj(i -> RewardIban.builder()
-                        .id(userId.concat(initiativeId).formatted(i,i))
-                        .userId(userId.formatted(i))
-                        .initiativeId(initiativeId.formatted(i))
-                        .iban(iban.formatted(i))
-                        .build())
-                .toList();
-        ibansInfo.forEach(m -> {
-            RewardIban result = rewardIbanRepository.findById(m.getId()).block();
-            Assertions.assertNotNull(result);
-            TestUtils.checkNotNullFields(result, "checkIbanOutcome");
-            Assertions.assertEquals(m.getUserId(), result.getUserId());
-            Assertions.assertEquals(m.getInitiativeId(), result.getInitiativeId());
-            Assertions.assertEquals(m.getId(), result.getId());
-            Assertions.assertEquals(m.getIban(), result.getIban());
-        });
-    }
     private List<String> buildCheckIbanOutcome(int bias, int n, boolean isKO) {
         return IntStream.range(bias, n)
-                .mapToObj(i -> IbanOutcomeDTOFaker.mockInstanceBuilder(i)
-                        .userId(userId.formatted(i))
-                        .initiativeId(initiativeId.formatted(i))
-                        .iban(iban.formatted(i))
-                        .status(isKO ? IbanConstants.STATUS_KO : IbanConstants.STATUS_UNKNOWN_PSP)
-                        .build())
+                .mapToObj(i -> {
+                    String status;
+                    if(isKO){
+                        status = IbanConstants.STATUS_KO;
+                    } else if(i%2==0){
+                        status = IbanConstants.STATUS_OK;
+                    }else {
+                        status = IbanConstants.STATUS_UNKNOWN_PSP;
+                    }
+
+                    return IbanOutcomeDTOFaker.mockInstanceBuilder(i)
+                            .userId(userId.formatted(i))
+                            .initiativeId(initiativeId.formatted(i))
+                            .iban(iban.formatted(i))
+                            .status(status)
+                            .build();
+                })
                 .map(TestUtils::jsonSerializer)
                 .toList();
     }
-
-    private void initializingDB(int ibansIntoDB) {
-        List<String> messagesIbanRequest = IntStream.range(0, ibansIntoDB)
-                .mapToObj(i -> IbanRequestDTOFaker.mockInstanceBuilder(i)
-                        .userId(userId.formatted(i))
-                        .initiativeId(initiativeId.formatted(i))
-                        .iban(iban.formatted(i))
-                        .build())
-                .map(TestUtils::jsonSerializer)
-                .toList();
-
-        messagesIbanRequest.forEach(m -> publishIntoEmbeddedKafka(topicIbanRequest,null, null, m));
-
-        IbanRequestConsumerConfigTest.waitForIbanStored(ibansIntoDB,rewardIbanRepository);
-    }
-
 
     protected Pattern getErrorUseCaseIdPatternMatch() {
         return Pattern.compile("\"userId\":\"USERID_([0-9]+)\"");
@@ -228,7 +201,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     public static long waitForIbanStoreChanged(int n, RewardIbanRepository rewardIbanRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) >= n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
+        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) == n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 }

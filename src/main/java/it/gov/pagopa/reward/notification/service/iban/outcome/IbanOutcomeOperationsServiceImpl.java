@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.iban.outcome;
 
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
+import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
 import it.gov.pagopa.reward.notification.service.utils.IbanConstants;
@@ -12,9 +13,11 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class IbanOutcomeOperationsServiceImpl implements IbanOutcomeOperationsService{
     private final RewardIbanService rewardIbanService;
+    private final IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapper;
 
-    public IbanOutcomeOperationsServiceImpl(RewardIbanService rewardIbanService) {
+    public IbanOutcomeOperationsServiceImpl(RewardIbanService rewardIbanService, IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapper) {
         this.rewardIbanService = rewardIbanService;
+        this.ibanOutcomeDTO2RewardIbanMapper = ibanOutcomeDTO2RewardIbanMapper;
     }
 
     @Override
@@ -22,6 +25,7 @@ public class IbanOutcomeOperationsServiceImpl implements IbanOutcomeOperationsSe
         if (IbanConstants.STATUS_KO.equals(ibanOutcomeDTO.getStatus())) {
             return rewardIbanService.deleteIban(ibanOutcomeDTO);
         }
-        return rewardIbanService.updateStatus(ibanOutcomeDTO);
+        return Mono.just(ibanOutcomeDTO2RewardIbanMapper.apply(ibanOutcomeDTO))
+                        .flatMap(rewardIbanService::save);
     }
 }

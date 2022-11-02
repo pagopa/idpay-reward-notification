@@ -7,5 +7,4 @@ import reactor.core.publisher.Mono;
 public interface RewardIbanService {
     Mono<RewardIban> save(RewardIban rewardIban);
     Mono<RewardIban> deleteIban(IbanOutcomeDTO ibanOutcomeDTO);
-    Mono<RewardIban> updateStatus(IbanOutcomeDTO ibanOutcomeDTO);
 }

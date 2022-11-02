@@ -31,8 +31,8 @@ public class IbanOutcomeDTOFaker {
     }
 
     /** It will return an example of builder to obtain a {@link IbanOutcomeDTO}. Providing a bias, it will return a pseudo-casual object */
-    public static IbanOutcomeDTO.IbanOutcomeDTOBuilder<?, ?> mockInstanceBuilder(Integer bias){
-        IbanOutcomeDTO.IbanOutcomeDTOBuilder<?, ?> out = IbanOutcomeDTO.builder();
+    public static IbanOutcomeDTO.IbanOutcomeDTOBuilder mockInstanceBuilder(Integer bias){
+        IbanOutcomeDTO.IbanOutcomeDTOBuilder out = IbanOutcomeDTO.builder();
 
         bias = ObjectUtils.firstNonNull(bias, getRandomPositiveNumber(null));
 

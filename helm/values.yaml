@@ -52,7 +52,6 @@ microservice-chart:
     APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED: "false"
     KAFKA_REFUND_RULE_REQUEST_GROUP_ID: "idpay-rewards-notification-rule-consumer-group"
     KAFKA_REWARD_RESPONSE_GROUP_ID: "idpay-rewards-notification-transaction-group"
-    KAFKA_CHECKIBAN_REQUEST_GROUP_ID: "idpay-rewards-notification-checkiban-req-group"
     KAFKA_CHECKIBAN_OUTCOME_GROUP_ID: "idpay-rewards-notification-checkiban-out-group"
 
   envConfigMapExternals:
@@ -68,8 +67,6 @@ microservice-chart:
       KAFKA_ERRORS_BROKER: kafka_broker
       KAFKA_ERRORS_TOPIC: idpay_error_topic
     idpay-eventhub-00:
-      KAFKA_CHECKIBAN_REQUEST_BROKER: kafka_broker
-      KAFKA_CHECKIBAN_REQUEST_TOPIC: idpay_checkiban_evaluation_topic
       KAFKA_CHECKIBAN_OUTCOME_BROKER: kafka_broker
       KAFKA_CHECKIBAN_OUTCOME_TOPIC: idpay_checkiban_outcome_topic
 
@@ -78,7 +75,6 @@ microservice-chart:
     MONGODB_URI: mongodb-connection-string
     KAFKA_REFUND_RULE_REQUEST_SASL_JAAS_CONFIG: evh-idpay-rule-update-idpay-rule-update-consumer-jaas-config-idpay-01
     REWARD_RESPONSE_SASL_JAAS_CONFIG: evh-idpay-transaction-idpay-transaction-consumer-jaas-config-idpay-01
-    KAFKA_CHECKIBAN_REQUEST_SASL_JAAS_CONFIG: evh-idpay-checkiban-evaluation-idpay-checkiban-evaluation-consumer-jaas-config-idpay-00
     KAFKA_CHECKIBAN_OUTCOME_SASL_JAAS_CONFIG: evh-idpay-checkiban-outcome-idpay-checkiban-outcome-consumer-jaas-config-idpay-00
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
     PDV_DECRYPT_API_KEY: pdv-api-key

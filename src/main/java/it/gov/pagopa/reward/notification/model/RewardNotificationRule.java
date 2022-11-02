@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -22,4 +23,5 @@ public class RewardNotificationRule {
     private AccumulatedAmountDTO accumulatedAmount;
     private TimeParameterDTO timeParameter;
     private String organizationFiscalCode;
+    private LocalDateTime updateDate;
 }

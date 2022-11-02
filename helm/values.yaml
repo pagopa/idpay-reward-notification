@@ -70,7 +70,7 @@ microservice-chart:
       KAFKA_CHECKIBAN_OUTCOME_BROKER: kafka_broker
       KAFKA_CHECKIBAN_OUTCOME_TOPIC: idpay_checkiban_outcome_topic
     rest-client:
-      PDV_ENCRYPT_BASE_URL: pdv_decrypt_base_url
+      PDV_BASE_URL: pdv_decrypt_base_url
 
   envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key

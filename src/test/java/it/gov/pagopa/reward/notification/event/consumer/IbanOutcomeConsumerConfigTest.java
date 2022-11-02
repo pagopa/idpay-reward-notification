@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.notification.service.rewards.*=OFF",
         "logging.level.it.gov.pagopa.reward.notification.service.iban.RewardIbanServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.IbanOutcomeMediatorServiceImpl=WARN",
 })
@@ -69,8 +70,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         publishIntoEmbeddedKafka(topicIbanOutcome, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForIbanStoreChanged(ibanOkAndUnknown-ibanKO);
-        Assertions.assertEquals(ibanOkAndUnknown-ibanKO, countSaved);
+        waitForIbanStoreChanged(ibanOkAndUnknown-ibanKO);
         long timeEnd=System.currentTimeMillis();
 
         checkStatusDB(notValidIban, ibanOkAndUnknown, ibanKO);
@@ -201,7 +201,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     public static long waitForIbanStoreChanged(int n, RewardIbanRepository rewardIbanRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) >= n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
+        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) == n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 }

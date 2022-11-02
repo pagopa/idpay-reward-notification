@@ -9,6 +9,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class RewardNotificationRuleFaker {
     /** It will return an example of {@link RewardNotificationRule}. Providing a bias, it will return a pseudo-casual object */
@@ -28,6 +29,7 @@ public class RewardNotificationRuleFaker {
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.endDate(LocalDate.now());
         out.organizationId("ORGANIZATION_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+        out.updateDate(LocalDateTime.now());
 
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)

@@ -21,11 +21,11 @@ class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
     @Autowired
     private UserRestClient userRestClient;
 
-    @Value("${app.pdv.userIdOk}")
+    @Value("${app.pdv.userIdOk:02105b50-9a81-4cd2-8e17-6573ebb09196}")
     private String userIdOK;
-    @Value("${app.pdv.userFiscalCodeExpected}")
+    @Value("${app.pdv.userFiscalCodeExpected:125}")
     private String fiscalCodeOKExpected;
-    @Value("${app.pdv.userIdNotFound}")
+    @Value("${app.pdv.userIdNotFound:02105b50-9a81-4cd2-8e17-6573ebb09195}")
     private String userIdNotFound;
 
     @Test

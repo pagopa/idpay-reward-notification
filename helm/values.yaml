@@ -78,3 +78,4 @@ microservice-chart:
     KAFKA_CHECKIBAN_OUTCOME_SASL_JAAS_CONFIG: evh-idpay-checkiban-outcome-idpay-checkiban-outcome-consumer-jaas-config-idpay-00
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
     PDV_DECRYPT_API_KEY: pdv-api-key
+    PDV_ENCRYPT_BASE_URL: pdv_decrypt_base_url

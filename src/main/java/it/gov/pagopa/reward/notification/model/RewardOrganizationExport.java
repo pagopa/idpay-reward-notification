@@ -28,13 +28,4 @@ public class RewardOrganizationExport {
     private BigDecimal rewardsResults;
     private LocalDateTime feedbackDate;
     private String status;
-
-    // region export's status
-    public static final String STATUS_TODO = "TODO";
-    public static final String STATUS_IN_PROGRESS = "IN PROGRESS";
-    public static final String STATUS_EXPORTED = "EXPORTED";
-    public static final String STATUS_READ = "READ";
-    public static final String STATUS_PARTIAL = "PARTIAL";
-    public static final String STATUS_COMPLETE = "COMPLETE";
-    // endregion
 }

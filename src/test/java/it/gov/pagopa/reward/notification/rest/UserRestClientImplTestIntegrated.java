@@ -2,20 +2,20 @@ package it.gov.pagopa.reward.notification.rest;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.support.TestPropertySourceUtils;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @SuppressWarnings("squid:S3577") // suppressing class name not match alert
-@ContextConfiguration(initializers = UserRestClientImplTestIntegrated.AddPDVProperties.class)
+@TestPropertySource(locations = {
+        "classpath:/secrets/appPdv.properties"
+})
+@ContextConfiguration(inheritInitializers = false)
 class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
 
     @Autowired
@@ -44,14 +44,6 @@ class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
         }catch (Throwable e){
             Assertions.assertTrue(e instanceof WebClientException);
             Assertions.assertEquals(WebClientResponseException.NotFound.class,e.getClass());
-        }
-    }
-
-    public static class AddPDVProperties implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        @SneakyThrows
-        @Override
-        public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertySourceUtils.addPropertiesFilesToEnvironment(applicationContext,"classpath:/secrets/appPdv.properties");
         }
     }
 }

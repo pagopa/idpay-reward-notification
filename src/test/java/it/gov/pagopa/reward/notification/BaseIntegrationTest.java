@@ -108,12 +108,11 @@ import static org.awaitility.Awaitility.await;
                 //endregion
 
                 //region pdv
-                "app.pdv.headers.x-api-key=x_api_key",
                 "app.pdv.retry.delay-millis=5000",
                 "app.pdv.retry.max-attempts=3",
                 //endregion
         })
-@ContextConfiguration(initializers = BaseIntegrationTest.RandomPortInitializer.class)
+@ContextConfiguration(initializers = BaseIntegrationTest.PdvInitializer.class)
 @AutoConfigureDataMongo
 public abstract class BaseIntegrationTest {
     @Autowired
@@ -410,12 +409,15 @@ public abstract class BaseIntegrationTest {
     static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
             .options(RestTestUtils.getWireMockConfiguration("/stub/pdv"))
             .build();
-    public static class RandomPortInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    public static class PdvInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @SneakyThrows
         @Override
         public void initialize(ConfigurableApplicationContext applicationContext) {
             TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
                     String.format("app.pdv.base-url=%s", pdvWireMock.getRuntimeInfo().getHttpBaseUrl())
+            );
+            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
+                    String.format("app.pdv.headers.x-api-key=%s", "x_api_key")
             );
         }
     }

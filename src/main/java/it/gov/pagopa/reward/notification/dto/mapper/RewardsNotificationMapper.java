@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
@@ -24,6 +25,7 @@ public class RewardsNotificationMapper {
                 .startDepositDate(LocalDate.now())
                 .notificationDate(notificationDate)
                 .rewardCents(0L)
+                .status(RewardNotificationStatus.TO_SEND)
                 .build();
     }
 

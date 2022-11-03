@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
@@ -39,7 +40,6 @@ class RewardsNotificationMapperTest {
                 "exportId",
                 "iban",
                 "checkIbanResult",
-                "status",
                 "rejectionCode",
                 "rejectionReason",
                 "feedbackDate",
@@ -62,5 +62,6 @@ class RewardsNotificationMapperTest {
         Assertions.assertEquals(notificationDate, result.getNotificationDate());
         Assertions.assertEquals(0L, result.getRewardCents());
         Assertions.assertNotNull(result.getExternalId());
+        Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getStatus());
     }
 }

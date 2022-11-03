@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv;
+package it.gov.pagopa.reward.notification.service;
 
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import it.gov.pagopa.reward.notification.model.User;

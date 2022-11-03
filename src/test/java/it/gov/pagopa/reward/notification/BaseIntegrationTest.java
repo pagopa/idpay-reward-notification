@@ -2,13 +2,16 @@ package it.gov.pagopa.reward.notification;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
+import it.gov.pagopa.reward.notification.test.utils.RestTestUtils;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -24,19 +27,24 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
@@ -64,7 +72,6 @@ import static org.awaitility.Awaitility.await;
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.refundRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}",
-        "${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
 }, controlledShutdown = true)
@@ -88,7 +95,6 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
-                "spring.cloud.stream.binders.kafka-checkiban-request.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
@@ -98,7 +104,13 @@ import static org.awaitility.Awaitility.await;
                 "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
                 "spring.mongodb.embedded.version=4.0.21",
                 //endregion
+
+                //region pdv
+                "app.pdv.retry.delay-millis=5000",
+                "app.pdv.retry.max-attempts=3",
+                //endregion
         })
+@ContextConfiguration(initializers = BaseIntegrationTest.PdvInitializer.class)
 @AutoConfigureDataMongo
 public abstract class BaseIntegrationTest {
     @Autowired
@@ -127,8 +139,6 @@ public abstract class BaseIntegrationTest {
     protected String topicInitiative2StoreConsumer;
     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}")
     protected String topicRewardResponse;
-    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.destination}")
-    protected String topicIbanRequest;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}")
     protected String topicIbanOutcome;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
@@ -138,8 +148,6 @@ public abstract class BaseIntegrationTest {
     protected String groupIdInitiative2StoreConsumer;
     @Value("${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.group}")
     protected String groupIdRewardResponse;
-    @Value("${spring.cloud.stream.bindings.ibanRequestConsumer-in-0.group}")
-    protected String groupIdIbanRequestConsumer;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
 
@@ -376,8 +384,8 @@ public abstract class BaseIntegrationTest {
     protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
         if(expectedAppNameHeader) {
             Assertions.assertEquals("idpay-reward-notification", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+            Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         }
-        Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
@@ -388,5 +396,23 @@ public abstract class BaseIntegrationTest {
         }
         Assertions.assertEquals(expectedPayload, errorMessage.value());
         Assertions.assertEquals(expectedKey, errorMessage.key());
+    }
+
+    //Setting WireMock
+    @RegisterExtension
+    static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
+            .options(RestTestUtils.getWireMockConfiguration("/stub/pdv"))
+            .build();
+    public static class PdvInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @SneakyThrows
+        @Override
+        public void initialize(ConfigurableApplicationContext applicationContext) {
+            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
+                    String.format("app.pdv.base-url=%s", pdvWireMock.getRuntimeInfo().getHttpBaseUrl())
+            );
+            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
+                    String.format("app.pdv.headers.x-api-key=%s", "x_api_key")
+            );
+        }
     }
 }

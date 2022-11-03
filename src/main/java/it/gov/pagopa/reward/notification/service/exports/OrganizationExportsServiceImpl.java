@@ -3,17 +3,17 @@ package it.gov.pagopa.reward.notification.service.exports;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2ExportsDTOMapper;
-import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepositoryExtended;
+import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import org.springframework.data.domain.Page;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class OrganizationExportsServiceImpl implements OrganizationExportsService {
 
-    private final RewardOrganizationExportsRepositoryExtended rewardOrganizationExportsRepository;
+    private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
     private final RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper;
 
-    public OrganizationExportsServiceImpl(RewardOrganizationExportsRepositoryExtended rewardOrganizationExportsRepository, RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper) {
+    public OrganizationExportsServiceImpl(RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper) {
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
         this.rewardOrganizationExports2ExportsDTOMapper = rewardOrganizationExports2ExportsDTOMapper;
     }

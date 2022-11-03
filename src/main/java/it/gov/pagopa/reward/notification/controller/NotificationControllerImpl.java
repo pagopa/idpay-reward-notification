@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2ExportsDTOMapper;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
-import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepositoryExtended;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,10 +15,10 @@ import reactor.core.publisher.Mono;
 @RestController
 public class NotificationControllerImpl implements NotificationController{
 
-    private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
+    private final RewardOrganizationExportsRepositoryExtended rewardOrganizationExportsRepository;
     private final RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper;
 
-    public NotificationControllerImpl(RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper) {
+    public NotificationControllerImpl(RewardOrganizationExportsRepositoryExtended rewardOrganizationExportsRepository, RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper) {
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
         this.rewardOrganizationExports2ExportsDTOMapper = rewardOrganizationExports2ExportsDTOMapper;
     }

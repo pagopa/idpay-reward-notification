@@ -9,11 +9,11 @@ import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class RewardOrganizationExportsRepositoryImpl implements RewardOrganizationExportsRepository {
+public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended {
 
     private final ReactiveMongoTemplate mongoTemplate;
 
-    public RewardOrganizationExportsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
+    public RewardOrganizationExportsRepositoryExtendedImpl(ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 

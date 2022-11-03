@@ -1,13 +1,18 @@
 package it.gov.pagopa.reward.notification.controller;
 
+import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2ExportsDTOMapper;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@RestController
 public class NotificationControllerImpl implements NotificationController{
 
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
@@ -19,8 +24,7 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Flux<RewardExportsDTO> getExports(String organizationId, String initiativeId) {
-        // TODO Pageable
+    public Flux<RewardExportsDTO> getExports(String organizationId, String initiativeId, Pageable pageable, ExportFilter optionalFilters) {
         return rewardOrganizationExportsRepository
                 .findAllByOrganizationIdAndInitiativeId(organizationId, initiativeId)
                 .map(rewardOrganizationExports2ExportsDTOMapper)
@@ -28,9 +32,14 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<Long> getExportsCount(String organizationId, String initiativeId) {
+    public Mono<Long> getExportsCount(String organizationId, String initiativeId, ExportFilter optionalFilters) {
         return rewardOrganizationExportsRepository
                 .findAllByOrganizationIdAndInitiativeId(organizationId, initiativeId).count()
                 .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
+    }
+
+    @Override
+    public Mono<Page<RewardExportsDTO>> getExportsPaged(String organizationId, String initiativeId, Pageable pageable, ExportFilter optionalFilters) {
+        return null;
     }
 }

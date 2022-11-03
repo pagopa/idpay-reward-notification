@@ -1,12 +1,12 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
-import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
-import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
 
+@Service
 public class RewardOrganizationExports2ExportsDTOMapper implements Function<RewardOrganizationExport, RewardExportsDTO> {
 
     @Override
@@ -22,6 +22,8 @@ public class RewardOrganizationExports2ExportsDTOMapper implements Function<Rewa
                 .rewardsResults(rewardOrganizationExport.getRewardsResults())
                 .feedbackDate(rewardOrganizationExport.getFeedbackDate())
                 .status(rewardOrganizationExport.getStatus())
+                .rewardNotified(rewardOrganizationExport.getRewardNotified())
+                .rewardsResulted(rewardOrganizationExport.getRewardsResulted())
                 .build();
     }
 }

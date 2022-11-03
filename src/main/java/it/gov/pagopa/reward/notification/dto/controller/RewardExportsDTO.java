@@ -31,6 +31,10 @@ public class RewardExportsDTO {
     private BigDecimal rewardsExported;
     @JsonProperty("rewardsResults")
     private BigDecimal rewardsResults;
+    @JsonProperty("rewardsNotified")
+    private BigDecimal rewardNotified;
+    @JsonProperty("rewardsResulted")
+    private BigDecimal rewardsResulted;
     @JsonProperty("feedbackDate")
     private LocalDateTime feedbackDate;
     @JsonProperty("status")

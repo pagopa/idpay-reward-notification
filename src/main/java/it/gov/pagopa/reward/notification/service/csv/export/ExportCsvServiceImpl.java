@@ -1,20 +1,22 @@
 package it.gov.pagopa.reward.notification.service.csv.export;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
 public class ExportCsvServiceImpl implements ExportCsvService {
 
     private final Initiative2ExportRetrieverService initiative2ExportRetrieverService;
+    private final ExportInitiativeRewardsService exportInitiativeRewardsService;
 
-    public ExportCsvServiceImpl(Initiative2ExportRetrieverService initiative2ExportRetrieverService) {
+    public ExportCsvServiceImpl(Initiative2ExportRetrieverService initiative2ExportRetrieverService, ExportInitiativeRewardsService exportInitiativeRewardsService) {
         this.initiative2ExportRetrieverService = initiative2ExportRetrieverService;
+        this.exportInitiativeRewardsService = exportInitiativeRewardsService;
     }
 
     @Scheduled(cron = "${app.csv.export.schedule}")
@@ -29,16 +31,9 @@ public class ExportCsvServiceImpl implements ExportCsvService {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting reward notifications export to CSV");
         long startTime = System.currentTimeMillis();
 
-        long[] initiativeExportStartTime = new long[]{0L};
-
-        Mono<RewardOrganizationExport> singleInitiativeExport =
+        Flux<RewardOrganizationExport> singleInitiativeExport =
                 initiative2ExportRetrieverService.retrieve()
-                        .doOnNext(export -> {
-                            log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting export of reward notification related to initiative {}", export.getInitiativeId());
-                            initiativeExportStartTime[0] = System.currentTimeMillis();
-                        })
-
-                        .doOnNext(export -> log.info("[PERFORMANCE_LOG][REWARD_NOTIFICATION_EXPORT_CSV] Completed export of reward notification related to initiative: {}ms, initiative {}", System.currentTimeMillis() - initiativeExportStartTime[0], export.getInitiativeId()));
+                        .flatMapMany(exportInitiativeRewardsService::performExport);
 
         // repeat until not more initiatives
         return singleInitiativeExport

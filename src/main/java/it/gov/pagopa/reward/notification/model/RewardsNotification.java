@@ -37,11 +37,10 @@ public class RewardsNotification {
     private List<String> trxIds=new ArrayList<>();
     private DepositType depositType;
     private LocalDate startDepositDate;
-    private LocalDate endDepositDate;
     /** The notification date searched */
     private LocalDate notificationDate;
     /** The export creation date  */
-    private LocalDateTime sendDate;
+    private LocalDateTime exportDate;
     private String exportId;
     private String iban;
     private String checkIbanResult;

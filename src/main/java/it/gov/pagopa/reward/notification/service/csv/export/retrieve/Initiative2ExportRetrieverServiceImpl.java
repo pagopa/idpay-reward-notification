@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv.export;
+package it.gov.pagopa.reward.notification.service.csv.export.retrieve;
 
 import com.mongodb.DuplicateKeyException;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
@@ -94,6 +94,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 .initiativeName(rule.getInitiativeName())
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
+                .progressive(progressive)
                 .status(ExportStatus.TODO)
 
                 .rewardsExportedCents(0L)

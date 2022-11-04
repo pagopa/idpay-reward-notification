@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv.export;
+package it.gov.pagopa.reward.notification.service.csv.export.retrieve;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import reactor.core.publisher.Mono;

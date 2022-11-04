@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv.export;
+package it.gov.pagopa.reward.notification.service.csv.export.retrieve;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ServerAddress;
@@ -190,6 +190,7 @@ class Initiative2ExportRetrieverServiceTest {
                 .initiativeName(rule.getInitiativeName())
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
+                .progressive(progressive)
                 .status(ExportStatus.TODO)
 
                 .rewardsExportedCents(0L)

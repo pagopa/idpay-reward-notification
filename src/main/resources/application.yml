@@ -181,6 +181,10 @@ app:
       schedule: ${SCHEDULE_EXPORT_CSV:0 1 * * ?} # each day at 01:00AM
       # days before current to search rewardNotification to export
       day-before: ${EXPORT_CSV_DAY_BEFORE:7}
+      # column separator to use when exporting csv
+      separator: ${EXPORT_CSV_SEPARATOR:CSV_SEPARATOR:;}
+      # The maximum number of rows to store in each csv
+      split-size: ${EXPORT_CSV_SPLIT_SIZE:50000}
       storage:
         base-path: ${EXPORT_BASE_PATH:/rewards/notifications/export}
   pdv:

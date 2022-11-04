@@ -43,6 +43,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                         .setOnInsert(RewardOrganizationExport.Fields.initiativeName, newExport.getInitiativeName())
                         .setOnInsert(RewardOrganizationExport.Fields.organizationId, newExport.getOrganizationId())
                         .setOnInsert(RewardOrganizationExport.Fields.notificationDate, newExport.getNotificationDate())
+                        .setOnInsert(RewardOrganizationExport.Fields.progressive, newExport.getProgressive())
                         .setOnInsert(RewardOrganizationExport.Fields.status, newExport.getStatus())
 
                         .setOnInsert(RewardOrganizationExport.Fields.rewardsExportedCents, newExport.getRewardsExportedCents())

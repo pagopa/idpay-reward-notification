@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
-import it.gov.pagopa.reward.notification.service.csv.export.Initiative2ExportRetrieverServiceImpl;
+import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -71,7 +71,6 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport result = repository.reserveExport().block();
         Assertions.assertNotNull(result);
         Assertions.assertEquals("ID2", result.getId());
-
 
         List<RewardOrganizationExport> todoAfter = repository.findAll(Example.of(RewardOrganizationExport.builder().status(ExportStatus.TODO).build())).collectList().block();
         Assertions.assertNotNull(todoAfter);

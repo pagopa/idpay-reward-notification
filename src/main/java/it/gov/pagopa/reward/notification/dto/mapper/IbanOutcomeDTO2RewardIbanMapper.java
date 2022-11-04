@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.model.RewardIban;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,5 +25,10 @@ public class IbanOutcomeDTO2RewardIbanMapper implements Function<IbanOutcomeDTO,
     public static String buildId(IbanOutcomeDTO ibanOutcomeDTO) {
         return ibanOutcomeDTO.getUserId()
                 .concat(ibanOutcomeDTO.getInitiativeId());
+    }
+
+    public static String buildId(RewardsNotification rewardsNotification) {
+        return rewardsNotification.getUserId()
+                .concat(rewardsNotification.getInitiativeId());
     }
 }

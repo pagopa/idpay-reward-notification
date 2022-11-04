@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.export;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,14 +18,15 @@ import java.util.stream.IntStream;
 
 @ExtendWith(MockitoExtension.class)
 class ExportCsvServiceTest {
-    @Mock
-    private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
+
+    @Mock private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
+    @Mock private ExportInitiativeRewardsService exportInitiativeRewardsMock;
 
     private ExportCsvServiceImpl service;
 
     @BeforeEach
     void init() {
-        service = Mockito.spy(new ExportCsvServiceImpl(initiative2ExportRetrieverServiceMock));
+        service = Mockito.spy(new ExportCsvServiceImpl(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsMock));
     }
 
     @Test
@@ -41,6 +43,7 @@ class ExportCsvServiceTest {
         // Given
         AtomicInteger times = new AtomicInteger(0);
         int N = 5;
+        List<String> expectedInitiativeExported = IntStream.range(0, N).mapToObj("INITIATIVEID%d"::formatted).toList();
 
         Mockito.doAnswer(i ->
                         Mono.defer(() -> {
@@ -51,15 +54,25 @@ class ExportCsvServiceTest {
                         }))
                 .when(initiative2ExportRetrieverServiceMock).retrieve();
 
+        Mockito.doAnswer(i->Mono.just(i.getArgument(0,RewardOrganizationExport.class)))
+                .when(exportInitiativeRewardsMock)
+                .performExport(Mockito.any());
+
         // When
         List<RewardOrganizationExport> result = service.execute().collectList().block();
         Assertions.assertNotNull(result);
+
         Assertions.assertEquals(
-                IntStream.range(0, N).mapToObj("INITIATIVEID%d"::formatted).toList(),
+                expectedInitiativeExported,
                 result.stream().map(RewardOrganizationExport::getInitiativeId).toList());
 
         Assertions.assertEquals(N+1, times.get());
 
-        Mockito.verifyNoMoreInteractions(initiative2ExportRetrieverServiceMock);
+        Assertions.assertEquals(
+                expectedInitiativeExported,
+                Mockito.mockingDetails(exportInitiativeRewardsMock).getInvocations().stream().map(i->i.getArgument(0, RewardOrganizationExport.class).getInitiativeId()).toList()
+        );
+
+        Mockito.verifyNoMoreInteractions(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsMock);
     }
 }

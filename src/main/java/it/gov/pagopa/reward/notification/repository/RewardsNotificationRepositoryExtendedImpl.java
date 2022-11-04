@@ -43,4 +43,19 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
                 String.class
         );
     }
+
+    @Override
+    public Flux<RewardsNotification> findRewards2Notify(String initiativeId) {
+        return mongoTemplate.find(
+                Query.query(Criteria
+                        .where(FIELD_STATUS).is(RewardNotificationStatus.TO_SEND)
+                        .and(FIELD_INITIATIVE_ID).is(initiativeId)
+                        .andOperator(
+                                Criteria.where(FIELD_NOTIFICATION_DATE).gte(LocalDate.now().minusDays(dayBeforeToSearch)),
+                                Criteria.where(FIELD_NOTIFICATION_DATE).lte(LocalDate.now())
+                        )
+                ),
+                RewardsNotification.class
+        );
+    }
 }

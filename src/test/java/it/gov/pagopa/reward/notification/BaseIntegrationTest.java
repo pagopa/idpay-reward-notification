@@ -81,6 +81,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.jmx.enabled=true",
 
                 //region common feature disabled
+                "app.csv.export.schedule=-",
                 "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
                 //endregion

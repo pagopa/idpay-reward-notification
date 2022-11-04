@@ -176,6 +176,13 @@ app:
     weekly-notification-day: ${REWARDS_NOTIFICATION_WEEKLY_NOTIFICATION_DAY:SUNDAY}
     # TOMORROW or 'NEXT_' followed by the day of week
     threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
+  csv:
+    export:
+      schedule: ${SCHEDULE_EXPORT_CSV:0 1 * * ?} # each day at 01:00AM
+      # days before current to search rewardNotification to export
+      day-before: ${EXPORT_CSV_DAY_BEFORE:7}
+      storage:
+        base-path: ${EXPORT_BASE_PATH:/rewards/notifications/export}
   pdv:
     base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:

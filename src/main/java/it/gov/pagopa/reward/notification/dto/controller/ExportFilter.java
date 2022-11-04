@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ExportFilter {
 
-    private String iban;
     private String status;
     private LocalDateTime notificationDateFrom;
     private LocalDateTime notificationDateTo;

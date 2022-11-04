@@ -9,6 +9,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended {
 
     private final ReactiveMongoTemplate mongoTemplate;
@@ -30,12 +33,16 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
 
     @Override
     public Flux<RewardOrganizationExport> findAllWithFilters(String organizationId, String initiativeId, ExportFilter filters) {
-        // TODO Filters
+
+        List<Criteria> filtersCriteria = new ArrayList<>();
+
+
         return mongoTemplate
                 .find(
                         Query.query(
                                 Criteria.where(RewardOrganizationExport.Fields.organizationId).is(organizationId)
                                         .and(RewardOrganizationExport.Fields.initiativeId).is(initiativeId)
+
                         ), RewardOrganizationExport.class
                 );
     }

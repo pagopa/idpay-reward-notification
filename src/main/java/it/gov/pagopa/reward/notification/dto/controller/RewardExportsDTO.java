@@ -1,12 +1,14 @@
 package it.gov.pagopa.reward.notification.dto.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -26,26 +28,29 @@ public class RewardExportsDTO {
     @JsonProperty("filePath")
     private String filePath;
     @JsonProperty("notificationDate")
-    private LocalDateTime notificationDate;
+    private LocalDate notificationDate;
+
     @JsonProperty("rewardsExported")
-    private BigDecimal rewardsExported;
+    private String rewardsExported;
     @JsonProperty("rewardsResults")
-    private BigDecimal rewardsResults;
+    private String rewardsResults;
+
     @JsonProperty("rewardsNotified")
-    private BigDecimal rewardNotified;
+    private Long rewardNotified;
     @JsonProperty("rewardsResulted")
-    private BigDecimal rewardsResulted;
+    private Long rewardsResulted;
+    @JsonProperty("rewardsResultedOk")
+    private Long rewardsResultedOk;
+
+    @JsonProperty("percentageResulted")
+    private String percentageResulted;
+    @JsonProperty("percentageResultedOk")
+    private String percentageResultedOk;
+    @JsonProperty("percentageResults")
+    private String percentageResults;
+
     @JsonProperty("feedbackDate")
     private LocalDateTime feedbackDate;
     @JsonProperty("status")
-    private String status;
-
-    // region export's status
-    public static final String STATUS_TODO = "TODO";
-    public static final String STATUS_IN_PROGRESS = "IN PROGRESS";
-    public static final String STATUS_EXPORTED = "EXPORTED";
-    public static final String STATUS_READ = "READ";
-    public static final String STATUS_PARTIAL = "PARTIAL";
-    public static final String STATUS_COMPLETE = "COMPLETE";
-    // endregion
+    private ExportStatus status;
 }

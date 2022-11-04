@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +44,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
     }
 
     @AfterEach
-    void cleanData(){
+    void cleanData() {
         deleteByUserId(TEST_USERID);
         deleteByUserId(TEST_USERID2);
     }
@@ -112,5 +114,26 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 expectedId,
                 result.get(0).getId()
         );
+    }
+
+    @Test
+    void testUpdateExportStatus() {
+        // Given
+        String id = "%s_%s_%s".formatted(TEST_USERID, TEST_INITIATIVEID, Utils.FORMATTER_DATE.format(TODAY));
+
+        // When
+        UpdateResult updateResult = rewardsNotificationRepository.updateExportStatus(id, "IBAN", "CHECKIBANRESULT", "EXPORTID").block();
+        Assertions.assertNotNull(updateResult);
+        Assertions.assertEquals(1, updateResult.getModifiedCount());
+
+        // Then
+        RewardsNotification result = rewardsNotificationRepository.findById(id).block();
+        Assertions.assertNotNull(result);
+
+        Assertions.assertEquals("IBAN", result.getIban());
+        Assertions.assertEquals("CHECKIBANRESULT", result.getCheckIbanResult());
+        Assertions.assertEquals("EXPORTID", result.getExportId());
+        Assertions.assertEquals(RewardNotificationStatus.EXPORTED, result.getStatus());
+        Assertions.assertNotNull(result.getExportDate());
     }
 }

@@ -11,6 +11,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverService {
@@ -31,6 +33,7 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
 
                     reward.setStatus(RewardNotificationStatus.ERROR);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
+                    reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
                                     .then(Mono.empty());
                 }))

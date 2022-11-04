@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverService {
@@ -29,6 +31,7 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find iban related to user {} and initiative {}", reward.getUserId(), reward.getInitiativeId());
                     reward.setStatus(RewardNotificationStatus.ERROR);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
+                    reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
                                     .then(Mono.empty());
                 }))

@@ -47,6 +47,7 @@ class User2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.ERROR, reward.getStatus());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getRejectionReason());
+        Assertions.assertNotNull(reward.getExportDate());
 
         Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock);
     }

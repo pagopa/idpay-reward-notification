@@ -41,8 +41,10 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
         addFindInitiatives2NotifyUseCase("INITIATIVEIDNOTIFIEDTWICE", RewardNotificationStatus.TO_SEND, 0);
         // 5: useCase TO_SEND today on same initiativeId
         addFindInitiatives2NotifyUseCase("INITIATIVEIDNOTIFIEDTWICE", RewardNotificationStatus.TO_SEND, 0);
-        // 5: useCase EXPORTED with expected notificationDate
+        // 6: useCase EXPORTED with expected notificationDate
         addFindInitiatives2NotifyUseCase(RewardNotificationStatus.EXPORTED, dayBefore);
+        // 7: useCase TO_SEND with expected notificationDate, but excluded by parameters
+        addFindInitiatives2NotifyUseCase("INITIATIVEEXCLUDED", RewardNotificationStatus.TO_SEND, dayBefore);
 
         repository.saveAll(testData).collectList().block();
     }
@@ -71,7 +73,7 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
     void findInitiatives2NotifyTest(){
         Assertions.assertEquals(
                 List.of("INITIATIVEID3", "INITIATIVEIDNOTIFIEDTWICE"),
-                repository.findInitiatives2Notify().collectList().block()
+                repository.findInitiatives2Notify(List.of("INITIATIVEEXCLUDED")).collectList().block()
         );
     }
 }

@@ -1,7 +1,8 @@
 package it.gov.pagopa.reward.notification.service.csv.export;
 
-import reactor.core.publisher.Mono;
+import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import reactor.core.publisher.Flux;
 
 public interface ExportCsvService {
-    Mono<?> execute();
+    Flux<RewardOrganizationExport> execute();
 }

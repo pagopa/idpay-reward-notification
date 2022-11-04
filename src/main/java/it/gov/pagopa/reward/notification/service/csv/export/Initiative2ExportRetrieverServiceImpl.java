@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
+@Slf4j
 @Service
 public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportRetrieverService {
 
@@ -33,40 +35,52 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
         this.exportBasePath = exportBasePath;
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
     }
-//TODO put some logs
+
     @Override
     public Mono<RewardOrganizationExport> retrieve() {
         return rewardOrganizationExportsRepository.reserveExport()
-                .switchIfEmpty(retrieveNewExports());
+                .switchIfEmpty(retrieveNewExports())
+                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {}", reservation.getInitiativeId(), reservation.getFilePath()));
     }
 
     private Mono<RewardOrganizationExport> retrieveNewExports() {
-        return rewardsNotificationRepository.findInitiatives2Notify()
+        log.info("[REWARD_NOTIFICATION_EXPORT_CSV] searching for rewards to notify");
+
+        return rewardOrganizationExportsRepository.findPendingAndTodayExports()
+                .map(RewardOrganizationExport::getInitiativeId)
+                .collectList()
+                .doOnNext(excludes -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] excluding pending exports on initiatives: {}", excludes))
+                .flatMapMany(rewardsNotificationRepository::findInitiatives2Notify)
                 .flatMap(this::configureExport)
                 .collectList()
+                .doOnNext(newExports -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] new exports configured on initiatives: {}", newExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
                 .flatMap(x -> rewardOrganizationExportsRepository.reserveExport());
     }
 
     private Mono<RewardOrganizationExport> configureExport(String initiativeId) {
+        log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] trying to configure export on initiative: {}", initiativeId);
         LocalDate now = LocalDate.now();
 
         return rewardNotificationRuleRepository.findById(initiativeId)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] configured a reward to notify on not existent initiative {}", initiativeId);
+                    return Mono.empty();
+                }))
                 .flatMap(rule -> rewardOrganizationExportsRepository.count(Example.of(RewardOrganizationExport.builder()
                                 .initiativeId(initiativeId)
                                 .notificationDate(now)
                                 .build()))
                         .defaultIfEmpty(0L)
-                        .map(progressive -> buildNewRewardOrganizationExportEntity(rule, now, progressive+1)))
-                .flatMap(e-> {
-                    try{
-                        return rewardOrganizationExportsRepository.configureNewExport(e);
-                    } catch (DuplicateKeyException duplicateKeyException){
-                        return Mono.empty();// TODO test this
-                    }
-                });
+                        .map(progressive -> buildNewRewardOrganizationExportEntity(rule, now, progressive + 1)))
+                .flatMap(e ->
+                        rewardOrganizationExportsRepository.configureNewExport(e)
+                                .onErrorResume(DuplicateKeyException.class, ex -> Mono.empty())
+                );
     }
 
-    protected RewardOrganizationExport buildNewRewardOrganizationExportEntity(RewardNotificationRule rule, LocalDate now, long progressive) {
+    public RewardOrganizationExport buildNewRewardOrganizationExportEntity(RewardNotificationRule rule, LocalDate now, long progressive) {
+        log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] trying to configure export on existing initiative: {}", rule.getInitiativeId());
+
         String nowFormatted = Utils.FORMATTER_DATE.format(now);
         return RewardOrganizationExport.builder()
                 .id("%s_%s.%d".formatted(rule.getInitiativeId(), nowFormatted, progressive))
@@ -81,10 +95,18 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
                 .status(ExportStatus.TODO)
+
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)
+
                 .rewardNotified(0L)
                 .rewardsResulted(0L)
+                .rewardsResultedOk(0L)
+
+                .percentageResults(0L)
+                .percentageResulted(0L)
+                .percentageResultedOk(0L)
+
                 .build();
     }
 

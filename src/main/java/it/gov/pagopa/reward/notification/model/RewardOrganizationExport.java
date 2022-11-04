@@ -27,10 +27,26 @@ public class RewardOrganizationExport {
     private String organizationId;
     private String filePath;
     private LocalDate notificationDate;
+
+    /** Total reward notified in cents */
     private Long rewardsExportedCents;
+    /** Total reward having result OK in cents  */
     private Long rewardsResultsCents;
+
+    /** Total number of rewards notified */
     private Long rewardNotified;
+    /** Total number of rewards having a result (both OK and KO) */
     private Long rewardsResulted;
+    /** Total number of rewards having result OK */
+    private Long rewardsResultedOk;
+
+    /**  The percentage of {@link #rewardsResulted} compared to {@link #rewardNotified}.<br /> Expressed as an integer in cents: 1% → 100, 100% → 10000 */
+    private Long percentageResulted;
+    /**  The percentage of {@link #rewardsResultedOk} compared to {@link #rewardNotified}.<br /> Expressed as an integer in cents: 1% → 100, 100% → 10000 */
+    private Long percentageResultedOk;
+    /**  The percentage of {@link #rewardsResultsCents} compared to {@link #rewardsExportedCents}.<br /> Expressed as an integer in cents: 1% → 100, 100% → 10000 */
+    private Long percentageResults;
+
     private LocalDateTime feedbackDate;
     private ExportStatus status;
 }

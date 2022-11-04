@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotificationRepositoryExtended {
 
@@ -27,10 +28,11 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Flux<String> findInitiatives2Notify() {
+    public Flux<String> findInitiatives2Notify(Collection<String> initiativeIds2Exclude) {
         return mongoTemplate.findDistinct(
                 Query.query(Criteria
                         .where(FIELD_STATUS).is(RewardNotificationStatus.TO_SEND)
+                        .and(FIELD_INITIATIVE_ID).nin(initiativeIds2Exclude)
                         .andOperator(
                                 Criteria.where(FIELD_NOTIFICATION_DATE).gte(LocalDate.now().minusDays(dayBeforeToSearch)),
                                 Criteria.where(FIELD_NOTIFICATION_DATE).lte(LocalDate.now())

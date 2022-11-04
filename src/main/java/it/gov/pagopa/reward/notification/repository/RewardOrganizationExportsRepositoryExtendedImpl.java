@@ -44,10 +44,19 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                         .setOnInsert(RewardOrganizationExport.Fields.organizationId, newExport.getOrganizationId())
                         .setOnInsert(RewardOrganizationExport.Fields.notificationDate, newExport.getNotificationDate())
                         .setOnInsert(RewardOrganizationExport.Fields.status, newExport.getStatus())
+
                         .setOnInsert(RewardOrganizationExport.Fields.rewardsExportedCents, newExport.getRewardsExportedCents())
                         .setOnInsert(RewardOrganizationExport.Fields.rewardsResultsCents, newExport.getRewardsResultsCents())
+
                         .setOnInsert(RewardOrganizationExport.Fields.rewardNotified, newExport.getRewardNotified())
-                        .setOnInsert(RewardOrganizationExport.Fields.rewardsResulted, newExport.getRewardsResulted()),
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardsResulted, newExport.getRewardsResulted())
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardsResultedOk, newExport.getRewardsResultedOk())
+
+                        .setOnInsert(RewardOrganizationExport.Fields.percentageResults, newExport.getPercentageResults())
+                        .setOnInsert(RewardOrganizationExport.Fields.percentageResulted, newExport.getPercentageResulted())
+                        .setOnInsert(RewardOrganizationExport.Fields.percentageResultedOk, newExport.getPercentageResultedOk())
+
+                        ,
                 RewardOrganizationExport.class
         ).flatMap(r->{
             if(r.getMatchedCount()>0) {

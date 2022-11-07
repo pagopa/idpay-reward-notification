@@ -20,13 +20,13 @@ import java.util.stream.IntStream;
 class ExportCsvServiceTest {
 
     @Mock private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
-    @Mock private ExportInitiativeRewardsService exportInitiativeRewardsMock;
+    @Mock private ExportInitiativeRewardsService exportInitiativeRewardsServiceMock;
 
     private ExportCsvServiceImpl service;
 
     @BeforeEach
     void init() {
-        service = Mockito.spy(new ExportCsvServiceImpl(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsMock));
+        service = Mockito.spy(new ExportCsvServiceImpl(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsServiceMock));
     }
 
     @Test
@@ -54,8 +54,8 @@ class ExportCsvServiceTest {
                         }))
                 .when(initiative2ExportRetrieverServiceMock).retrieve();
 
-        Mockito.doAnswer(i->Mono.just(i.getArgument(0,RewardOrganizationExport.class)))
-                .when(exportInitiativeRewardsMock)
+        Mockito.doAnswer(i->Flux.just(i.getArgument(0,RewardOrganizationExport.class)))
+                .when(exportInitiativeRewardsServiceMock)
                 .performExport(Mockito.any());
 
         // When
@@ -70,9 +70,9 @@ class ExportCsvServiceTest {
 
         Assertions.assertEquals(
                 expectedInitiativeExported,
-                Mockito.mockingDetails(exportInitiativeRewardsMock).getInvocations().stream().map(i->i.getArgument(0, RewardOrganizationExport.class).getInitiativeId()).toList()
+                Mockito.mockingDetails(exportInitiativeRewardsServiceMock).getInvocations().stream().map(i->i.getArgument(0, RewardOrganizationExport.class).getInitiativeId()).toList()
         );
 
-        Mockito.verifyNoMoreInteractions(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsMock);
+        Mockito.verifyNoMoreInteractions(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsServiceMock);
     }
 }

@@ -9,9 +9,9 @@ import reactor.core.publisher.Mono;
 
 public interface OrganizationExportsService {
 
-    Flux<RewardExportsDTO> findAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
+    Flux<RewardExportsDTO> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
 
     Mono<Long> countAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
 
-    Mono<Page<RewardExportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable);
+    Mono<Page<RewardExportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
 }

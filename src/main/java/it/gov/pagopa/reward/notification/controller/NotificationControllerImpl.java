@@ -7,7 +7,6 @@ import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServ
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,7 +23,7 @@ public class NotificationControllerImpl implements NotificationController{
     @Override
     public Flux<RewardExportsDTO> getExports(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
            return organizationExportsService
-                   .findAll(organizationId, initiativeId, pageable, filters)
+                   .findAllBy(organizationId, initiativeId, pageable, filters)
                    .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
     }
 
@@ -37,6 +36,8 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Mono<Page<RewardExportsDTO>> getExportsPaged(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
-        return null;
+        return organizationExportsService
+                .findAllPaged(organizationId, initiativeId, pageable, filters)
+                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
     }
 }

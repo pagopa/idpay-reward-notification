@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2Ex
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -24,9 +25,9 @@ public class OrganizationExportsServiceImpl implements OrganizationExportsServic
     }
 
     @Override
-    public Flux<RewardExportsDTO> findAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+    public Flux<RewardExportsDTO> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
         return rewardOrganizationExportsRepository
-                .findAll(organizationId, initiativeId, pageable, filters)
+                .findAllBy(organizationId, initiativeId, pageable, filters)
                 .map(rewardOrganizationExports2ExportsDTOMapper);
     }
 
@@ -36,11 +37,11 @@ public class OrganizationExportsServiceImpl implements OrganizationExportsServic
     }
 
     @Override
-    public Mono<Page<RewardExportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable) {
-        // TODO map result
-        /*return rewardOrganizationExportsRepository
-                .findAllPaged(organizationId, initiativeId, pageable)
-                .map(rewardOrganizationExports2ExportsDTOMapper);*/
-        return null;
+    public Mono<Page<RewardExportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+
+        return findAllBy(organizationId, initiativeId, pageable, filters)
+                .collectList()
+                .zipWith(countAll(organizationId, initiativeId, pageable, filters))
+                .map(t -> new PageImpl<>(t.getT1(), pageable, t.getT2()));
     }
 }

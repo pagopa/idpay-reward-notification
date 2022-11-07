@@ -22,7 +22,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Flux<RewardOrganizationExport> findAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+    public Flux<RewardOrganizationExport> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
 
         Criteria criteria = Criteria.where(RewardOrganizationExport.Fields.organizationId).is(organizationId)
                 .and(RewardOrganizationExport.Fields.initiativeId).is(initiativeId);
@@ -49,12 +49,6 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                         Query.query(criteria).with(getPageable(pageable)),
                         RewardOrganizationExport.class
                 );
-    }
-
-    @Override
-    public Mono<Page<RewardOrganizationExport>> findAllPaged(String organizationId, String initiativeId, Pageable pageable) {
-        // TODO return Page
-        return null;
     }
 
     private Pageable getPageable(Pageable pageable){

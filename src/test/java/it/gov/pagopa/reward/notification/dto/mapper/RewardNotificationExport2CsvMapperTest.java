@@ -17,9 +17,8 @@ class RewardNotificationExport2CsvMapperTest {
 
     @Test
     void test(){
-        RewardsNotification reward = RewardsNotificationFaker.mockInstance(1);
+        RewardsNotification reward = RewardsNotificationFaker.mockInstance(1, "INITIATIVEID", LocalDate.of(2022,1,31));
         reward.setStartDepositDate(LocalDate.of(2022,1,1));
-        reward.setNotificationDate(LocalDate.of(2022,1,31));
         reward.setIban("IBAN");
         reward.setCheckIbanResult("IBANRESULT");
         reward.setDepositType(DepositType.FINAL);
@@ -40,7 +39,7 @@ class RewardNotificationExport2CsvMapperTest {
         Assertions.assertEquals("SURNAME", result.getAccountHolderSurname());
         Assertions.assertEquals(reward.getIban(), result.getIban());
         Assertions.assertEquals(reward.getRewardCents(), result.getAmount());
-        Assertions.assertEquals("USERID1_INITIATIVEID_20221104, NAME_1_jmy, 2022-01-01, 2022-01-31", result.getPaymentReason());
+        Assertions.assertEquals("USERID1_INITIATIVEID_20220131, NAME_1_jmy, 2022-01-01, 2022-01-31", result.getPaymentReason());
         Assertions.assertEquals(reward.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(reward.getInitiativeId(), result.getInitiativeID());
         Assertions.assertEquals("2022-01-01", result.getStartDatePeriod());

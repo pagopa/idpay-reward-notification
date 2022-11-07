@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class User {
     private String fiscalCode;
+    private String name; // TODO to fill
+    private String surname; // TODO to fill
 }

@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.export;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,11 @@ import reactor.core.publisher.Mono;
 public class ExportCsvServiceImpl implements ExportCsvService {
 
     private final Initiative2ExportRetrieverService initiative2ExportRetrieverService;
+    private final ExportInitiativeRewardsService exportInitiativeRewardsService;
 
-    public ExportCsvServiceImpl(Initiative2ExportRetrieverService initiative2ExportRetrieverService) {
+    public ExportCsvServiceImpl(Initiative2ExportRetrieverService initiative2ExportRetrieverService, ExportInitiativeRewardsService exportInitiativeRewardsService) {
         this.initiative2ExportRetrieverService = initiative2ExportRetrieverService;
+        this.exportInitiativeRewardsService = exportInitiativeRewardsService;
     }
 
     @Scheduled(cron = "${app.csv.export.schedule}")
@@ -29,20 +32,29 @@ public class ExportCsvServiceImpl implements ExportCsvService {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting reward notifications export to CSV");
         long startTime = System.currentTimeMillis();
 
-        long[] initiativeExportStartTime = new long[]{0L};
+        Mono<RewardOrganizationExport> retrieveNewInitiativeExport =
+                initiative2ExportRetrieverService.retrieve();
 
-        Mono<RewardOrganizationExport> singleInitiativeExport =
-                initiative2ExportRetrieverService.retrieve()
-                        .doOnNext(export -> {
-                            log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting export of reward notification related to initiative {}", export.getInitiativeId());
-                            initiativeExportStartTime[0] = System.currentTimeMillis();
-                        })
-
-                        .doOnNext(export -> log.info("[PERFORMANCE_LOG][REWARD_NOTIFICATION_EXPORT_CSV] Completed export of reward notification related to initiative: {}ms, initiative {}", System.currentTimeMillis() - initiativeExportStartTime[0], export.getInitiativeId()));
+        Mono<RewardOrganizationExport> retrieveStuckInitiativeExportsThenNew =
+                initiative2ExportRetrieverService.retrieveStuckExecution()
+                        .switchIfEmpty(retrieveNewInitiativeExport);
 
         // repeat until not more initiatives
-        return singleInitiativeExport
-                .expand(x -> singleInitiativeExport)
+        return exportInitiative(retrieveStuckInitiativeExportsThenNew)
+                .expand(x -> exportInitiative((
+                        isStuckExecution(x)
+                                ? retrieveStuckInitiativeExportsThenNew
+                                : retrieveNewInitiativeExport
+                )))
                 .doFinally(x -> log.info("[PERFORMANCE_LOG][REWARD_NOTIFICATION_EXPORT_CSV] Reward notification export completed in {}ms", System.currentTimeMillis() - startTime));
+    }
+
+    private Flux<RewardOrganizationExport> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {
+        return exportRetriever
+                .flatMapMany(exp -> exportInitiativeRewardsService.performExport(exp, isStuckExecution(exp)));
+    }
+
+    private static boolean isStuckExecution(RewardOrganizationExport x) {
+        return x.getNotificationDate().isBefore(x.getExportDate());
     }
 }

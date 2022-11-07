@@ -162,6 +162,7 @@ logging:
     org.kie: ${LOG_LEVEL_ORG_KIE:WARN}
     org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
+    org.apache.commons:.beanutils.converters: ${LOG_LEVEL_APACHE_COMMON_BEANUTILS_CONVERTERS:WARN}
 
 app:
   # A feature to guarantee the execution order of the trx having the same userId
@@ -181,6 +182,10 @@ app:
       schedule: ${SCHEDULE_EXPORT_CSV:0 1 * * ?} # each day at 01:00AM
       # days before current to search rewardNotification to export
       day-before: ${EXPORT_CSV_DAY_BEFORE:7}
+      # column separator to use when exporting csv
+      separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
+      # The maximum number of rows to store in each csv
+      split-size: ${EXPORT_CSV_SPLIT_SIZE:50000}
       storage:
         base-path: ${EXPORT_BASE_PATH:/rewards/notifications/export}
   pdv:

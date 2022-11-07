@@ -2,16 +2,20 @@ package it.gov.pagopa.reward.notification.repository;
 
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+
 public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended{
 
-    public static final String FIELD_STATUS = RewardOrganizationExport.Fields.status;
     public static final String FIELD_INITIATIVE_ID = RewardOrganizationExport.Fields.initiativeId;
+    public static final String FIELD_EXPORT_DATE = RewardOrganizationExport.Fields.exportDate;
+    public static final String FIELD_STATUS = RewardOrganizationExport.Fields.status;
 
     private final ReactiveMongoTemplate mongoTemplate;
 
@@ -20,11 +24,27 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
+    public Mono<RewardOrganizationExport> reserveStuckExport() {
+        return mongoTemplate.findAndModify(
+                Query.query(Criteria
+                        .where(FIELD_STATUS).is(ExportStatus.IN_PROGRESS)
+                        .and(FIELD_EXPORT_DATE).lt(LocalDate.now())
+                ),
+                new Update()
+                        .set(FIELD_EXPORT_DATE, LocalDate.now()),
+                FindAndModifyOptions.options().returnNew(true),
+                RewardOrganizationExport.class
+        );
+    }
+
+    @Override
     public Mono<RewardOrganizationExport> reserveExport() {
         return mongoTemplate.findAndModify(
-                Query.query(Criteria.where(FIELD_STATUS).is(ExportStatus.TODO)),
+                Query.query(Criteria.where(FIELD_STATUS).is(ExportStatus.TO_DO)),
                 new Update()
-                        .set(FIELD_STATUS, ExportStatus.IN_PROGRESS),
+                        .set(FIELD_STATUS, ExportStatus.IN_PROGRESS)
+                        .set(FIELD_EXPORT_DATE, LocalDate.now()),
+                FindAndModifyOptions.options().returnNew(true),
                 RewardOrganizationExport.class
         );
     }
@@ -34,7 +54,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
         return mongoTemplate.upsert(
                 Query.query(
                         Criteria.where(FIELD_INITIATIVE_ID).is(newExport.getInitiativeId())
-                                .and(FIELD_STATUS).in(ExportStatus.TODO, ExportStatus.IN_PROGRESS)
+                                .and(FIELD_STATUS).in(ExportStatus.TO_DO, ExportStatus.IN_PROGRESS)
                 ),
                 new Update()
                         .setOnInsert(RewardOrganizationExport.Fields.id, newExport.getId())
@@ -43,6 +63,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                         .setOnInsert(RewardOrganizationExport.Fields.initiativeName, newExport.getInitiativeName())
                         .setOnInsert(RewardOrganizationExport.Fields.organizationId, newExport.getOrganizationId())
                         .setOnInsert(RewardOrganizationExport.Fields.notificationDate, newExport.getNotificationDate())
+                        .setOnInsert(RewardOrganizationExport.Fields.progressive, newExport.getProgressive())
                         .setOnInsert(RewardOrganizationExport.Fields.status, newExport.getStatus())
 
                         .setOnInsert(RewardOrganizationExport.Fields.rewardsExportedCents, newExport.getRewardsExportedCents())

@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv.export;
+package it.gov.pagopa.reward.notification.service.csv.export.retrieve;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import reactor.core.publisher.Mono;
@@ -10,5 +10,7 @@ import reactor.core.publisher.Mono;
  * </ol>
  * */
 public interface Initiative2ExportRetrieverService {
+    Mono<RewardOrganizationExport> retrieveStuckExecution();
+
     Mono<RewardOrganizationExport> retrieve();
 }

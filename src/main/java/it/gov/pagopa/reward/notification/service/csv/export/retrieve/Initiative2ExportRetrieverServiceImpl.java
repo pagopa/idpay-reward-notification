@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv.export;
+package it.gov.pagopa.reward.notification.service.csv.export.retrieve;
 
 import com.mongodb.DuplicateKeyException;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
@@ -37,10 +37,16 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     }
 
     @Override
+    public Mono<RewardOrganizationExport> retrieveStuckExecution() {
+        return rewardOrganizationExportsRepository.reserveStuckExport()
+                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved stuck export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
+    }
+
+    @Override
     public Mono<RewardOrganizationExport> retrieve() {
         return rewardOrganizationExportsRepository.reserveExport()
                 .switchIfEmpty(retrieveNewExports())
-                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {}", reservation.getInitiativeId(), reservation.getFilePath()));
+                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
     }
 
     private Mono<RewardOrganizationExport> retrieveNewExports() {
@@ -94,7 +100,8 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 .initiativeName(rule.getInitiativeName())
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
-                .status(ExportStatus.TODO)
+                .progressive(progressive)
+                .status(ExportStatus.TO_DO)
 
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)

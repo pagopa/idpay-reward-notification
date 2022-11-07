@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,8 +78,8 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Mono<UpdateResult> updateExportStatus(String rewardNotificationId, String iban, String checkIbanResult, String exportId) {
-        return mongoTemplate.updateMulti(
+    public Mono<String> updateExportStatus(String rewardNotificationId, String iban, String checkIbanResult, String exportId) {
+        return mongoTemplate.updateFirst(
                 Query.query(Criteria.where(FIELD_ID).is(rewardNotificationId)),
                 new Update()
                         .set(FIELD_IBAN, iban)
@@ -89,6 +88,6 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
                         .set(FIELD_EXPORT_DATE, LocalDateTime.now())
                         .set(FIELD_EXPORT_ID, exportId),
                 RewardsNotification.class
-        );
+        ).map(x->rewardNotificationId);
     }
 }

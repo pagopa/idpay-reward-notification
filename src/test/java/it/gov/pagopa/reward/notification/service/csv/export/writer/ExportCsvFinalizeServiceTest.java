@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.notification.service.csv.export.writer;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.mongodb.Function;
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -46,7 +45,7 @@ class ExportCsvFinalizeServiceTest {
     }
 
     @Test
-    void test() throws IOException {// TODO test csv write
+    void test() throws IOException {
         // Given
         List<RewardNotificationExportCsvDto> csvLines = IntStream.range(0, 10)
                 .mapToObj(i -> RewardNotificationExportCsvDto.builder()
@@ -77,7 +76,7 @@ class ExportCsvFinalizeServiceTest {
 
         csvLines.forEach(l ->
                 Mockito.when(rewardsNotificationRepositoryMock.updateExportStatus(l.getUniqueID(), l.getIban(), l.getCheckIban(), "EXPORTID"))
-                        .thenReturn(Mono.just(Mockito.mock(UpdateResult.class)))
+                        .thenAnswer(i->Mono.just(i.getArgument(0)))
         );
 
         Mockito.when(rewardOrganizationExportsRepositoryMock.save(Mockito.same(export))).thenReturn(Mono.just(export));
@@ -86,6 +85,16 @@ class ExportCsvFinalizeServiceTest {
         RewardOrganizationExport result = service.writeCsvAndFinalize(csvLines, export).block();
 
         // Then
+        checkExportFile(csvLines, export, result);
+
+        // checking if a re-execution would result into error
+        result = service.writeCsvAndFinalize(csvLines, export).block();
+        checkExportFile(csvLines, export, result);
+
+        Mockito.verifyNoMoreInteractions(rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock);
+    }
+
+    private void checkExportFile(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export, RewardOrganizationExport result) throws IOException {
         Assertions.assertNotNull(result);
         Assertions.assertSame(export, result);
 
@@ -106,8 +115,6 @@ class ExportCsvFinalizeServiceTest {
                     expctedCsvLine(csvLines.get(i)),
                     csvLinesStrs.get(i + 1));
         }
-
-        Mockito.verifyNoMoreInteractions(rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock);
     }
 
     private final List<Function<RewardNotificationExportCsvDto, String>> cellGetters=List.of(

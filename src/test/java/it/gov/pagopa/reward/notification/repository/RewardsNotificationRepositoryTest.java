@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -122,9 +121,8 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
         String id = "%s_%s_%s".formatted(TEST_USERID, TEST_INITIATIVEID, Utils.FORMATTER_DATE.format(TODAY));
 
         // When
-        UpdateResult updateResult = rewardsNotificationRepository.updateExportStatus(id, "IBAN", "CHECKIBANRESULT", "EXPORTID").block();
-        Assertions.assertNotNull(updateResult);
-        Assertions.assertEquals(1, updateResult.getModifiedCount());
+        String updatedRewardNotificationId = rewardsNotificationRepository.updateExportStatus(id, "IBAN", "CHECKIBANRESULT", "EXPORTID").block();
+        Assertions.assertNotNull(updatedRewardNotificationId);
 
         // Then
         RewardsNotification result = rewardsNotificationRepository.findById(id).block();

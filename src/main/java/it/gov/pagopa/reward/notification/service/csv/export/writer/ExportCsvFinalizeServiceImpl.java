@@ -57,7 +57,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Updating exported RewardNotifications statuses {} and relating them to export {}", csvLines.size(), export.getId());
         return Flux.fromIterable(csvLines)
                 .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getUniqueID(), l.getIban(), l.getCheckIban(), export.getId()))
-                .doOnNext(x -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Updated exported RewardNotifications statuses ({}) and related to export {}", x.getModifiedCount(), export.getId()))
+                .doOnNext(rId -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Updated exported RewardNotifications status {} and related to export {}", rId, export.getId()))
                 .then(rewardOrganizationExportsRepository.save(export));
     }
 

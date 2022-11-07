@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.function.Function;
 
 @Service
@@ -21,6 +22,7 @@ public class Initiative2RewardNotificationRuleMapper implements Function<Initiat
                 .organizationFiscalCode(initiativeRefund2StoreDTO.getOrganizationVat())
                 .accumulatedAmount(initiativeRefund2StoreDTO.getRefundRule().getAccumulatedAmount())
                 .timeParameter(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter())
+                .updateDate(LocalDateTime.now())
                 .build();
         if (out.getAccumulatedAmount() != null && out.getAccumulatedAmount().getRefundThreshold() != null) {
             out.getAccumulatedAmount().setRefundThresholdCents(Utils.euro2Cents(out.getAccumulatedAmount().getRefundThreshold()));

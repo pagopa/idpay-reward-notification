@@ -185,7 +185,7 @@ app:
     # TOMORROW or 'NEXT_' followed by the day of week
     threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
   pdv:
-    base-url: ${PDV_ENCRYPT_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
+    base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:
       x-api-key: ${PDV_DECRYPT_API_KEY:}
     retry:

@@ -4,10 +4,15 @@ import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2ExportsDTOMapper;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Service
+@Slf4j
 public class OrganizationExportsServiceImpl implements OrganizationExportsService {
 
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
@@ -19,28 +24,23 @@ public class OrganizationExportsServiceImpl implements OrganizationExportsServic
     }
 
     @Override
-    public Flux<RewardExportsDTO> findAllByOrganizationIdAndInitiativeId(String organizationId, String initiativeId) {
+    public Flux<RewardExportsDTO> findAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
         return rewardOrganizationExportsRepository
-                .findAllByOrganizationIdAndInitiativeId(organizationId, initiativeId)
+                .findAll(organizationId, initiativeId, pageable, filters)
                 .map(rewardOrganizationExports2ExportsDTOMapper);
     }
 
     @Override
-    public Flux<RewardExportsDTO> findAllWithFilters(String organizationId, String initiativeId, ExportFilter filters) {
-        // TODO map result
-        return rewardOrganizationExportsRepository
-                .findAllWithFilters(organizationId, initiativeId, filters);
+    public Mono<Long> countAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+        return rewardOrganizationExportsRepository.countAll(organizationId, initiativeId, pageable, filters);
     }
 
     @Override
-    public Mono<Long> countAll(String organizationId, String initiativeId) {
-        return rewardOrganizationExportsRepository.countAll(organizationId, initiativeId);
-    }
-
-    @Override
-    public Mono<Page<RewardExportsDTO>> findAllPaged(String organizationId, String initiativeId) {
+    public Mono<Page<RewardExportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable) {
         // TODO map result
-        return rewardOrganizationExportsRepository
-                .findAllPaged(organizationId, initiativeId);
+        /*return rewardOrganizationExportsRepository
+                .findAllPaged(organizationId, initiativeId, pageable)
+                .map(rewardOrganizationExports2ExportsDTOMapper);*/
+        return null;
     }
 }

@@ -14,11 +14,11 @@ import reactor.core.publisher.Mono;
 public interface NotificationController {
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports")
-    Flux<RewardExportsDTO> getExports(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter optionalFilters);
+    Flux<RewardExportsDTO> getExports(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/count")
-    Mono<Long> getExportsCount(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, ExportFilter optionalFilters);
+    Mono<Long> getExportsCount(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/paged")
-    Mono<Page<RewardExportsDTO>> getExportsPaged(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter optionalFilters);
+    Mono<Page<RewardExportsDTO>> getExportsPaged(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter filters);
 }

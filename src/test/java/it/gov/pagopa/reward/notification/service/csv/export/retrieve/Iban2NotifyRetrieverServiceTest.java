@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,12 +21,13 @@ class Iban2NotifyRetrieverServiceTest {
 
     @Mock private RewardIbanRepository ibanRepositoryMock;
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
+    @Mock private RewardNotificationErrorNotifierService errorNotifierServiceMock;
 
     private Iban2NotifyRetrieverService service;
 
     @BeforeEach
     void init(){
-        service = new Iban2NotifyRetrieverServiceImpl(ibanRepositoryMock, rewardsNotificationRepositoryMock);
+        service = new Iban2NotifyRetrieverServiceImpl(ibanRepositoryMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }
 
     @Test
@@ -38,6 +40,7 @@ class Iban2NotifyRetrieverServiceTest {
 
         Mockito.when(ibanRepositoryMock.findById("USERIDINITIATIATIVEID")).thenReturn(Mono.empty());
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.same(reward))).thenReturn(Mono.just(reward));
+        Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward))).thenReturn(Mono.just(reward));
 
         // When
         RewardsNotification result = service.retrieveIban(reward).block();
@@ -49,7 +52,7 @@ class Iban2NotifyRetrieverServiceTest {
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, reward.getRejectionReason());
         Assertions.assertNotNull(reward.getExportDate());
 
-        Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock);
+        Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock,errorNotifierServiceMock);
     }
 
     @Test
@@ -72,6 +75,6 @@ class Iban2NotifyRetrieverServiceTest {
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getStatus());
         Assertions.assertNull(result.getRejectionReason());
 
-        Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock);
+        Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }
 }

@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.UserService;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,10 +20,12 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
 
     private final UserService userService;
     private final RewardsNotificationRepository rewardsNotificationRepository;
+    private final RewardNotificationErrorNotifierService errorNotifierService;
 
-    public User2NotifyRetrieverServiceImpl(UserService userService, RewardsNotificationRepository rewardsNotificationRepository) {
+    public User2NotifyRetrieverServiceImpl(UserService userService, RewardsNotificationRepository rewardsNotificationRepository, RewardNotificationErrorNotifierService errorNotifierService) {
         this.userService = userService;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
+        this.errorNotifierService = errorNotifierService;
     }
 
     @Override
@@ -35,7 +38,8 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
-                                    .then(Mono.empty());
+                            .flatMap(errorNotifierService::notify)
+                            .then(Mono.empty());
                 }))
                 .map(user -> {
                     log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] fiscalCode related to user {} retrieved", reward.getUserId());

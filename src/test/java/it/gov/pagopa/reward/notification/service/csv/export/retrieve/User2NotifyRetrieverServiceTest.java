@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.UserService;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -21,12 +22,13 @@ class User2NotifyRetrieverServiceTest {
 
     @Mock private UserService userServiceMock;
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
+    @Mock private RewardNotificationErrorNotifierService errorNotifierServiceMock;
 
     private User2NotifyRetrieverService service;
 
     @BeforeEach
     void init(){
-        service = new User2NotifyRetrieverServiceImpl(userServiceMock, rewardsNotificationRepositoryMock);
+        service = new User2NotifyRetrieverServiceImpl(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }
 
     @Test
@@ -38,6 +40,7 @@ class User2NotifyRetrieverServiceTest {
 
         Mockito.when(userServiceMock.getUserInfo("USERID")).thenReturn(Mono.empty());
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.same(reward))).thenReturn(Mono.just(reward));
+        Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward))).thenReturn(Mono.just(reward));
 
         // When
         Pair<RewardsNotification, User> result = service.retrieveUser(reward).block();
@@ -49,7 +52,7 @@ class User2NotifyRetrieverServiceTest {
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getRejectionReason());
         Assertions.assertNotNull(reward.getExportDate());
 
-        Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock);
+        Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }
 
     @Test
@@ -73,6 +76,6 @@ class User2NotifyRetrieverServiceTest {
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getKey().getStatus());
         Assertions.assertNull(result.getKey().getRejectionReason());
 
-        Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock);
+        Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }
 }

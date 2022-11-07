@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface RewardOrganizationExportsRepository extends ReactiveMongoRepository<RewardOrganizationExport, String>, RewardOrganizationExportsRepositoryExtended {
 
-    List<ExportStatus> PENDING_STATUSES = List.of(ExportStatus.IN_PROGRESS, ExportStatus.TODO);
+    List<ExportStatus> PENDING_STATUSES = List.of(ExportStatus.IN_PROGRESS, ExportStatus.TO_DO);
 
     Flux<RewardOrganizationExport> findByStatusIn(Collection<ExportStatus> statuses);
     Flux<RewardOrganizationExport> findByNotificationDate(LocalDate notificationDate);

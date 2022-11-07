@@ -37,10 +37,16 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     }
 
     @Override
+    public Mono<RewardOrganizationExport> retrieveStuckExecution() {
+        return rewardOrganizationExportsRepository.reserveStuckExport()
+                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved stuck export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
+    }
+
+    @Override
     public Mono<RewardOrganizationExport> retrieve() {
         return rewardOrganizationExportsRepository.reserveExport()
                 .switchIfEmpty(retrieveNewExports())
-                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {}", reservation.getInitiativeId(), reservation.getFilePath()));
+                .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
     }
 
     private Mono<RewardOrganizationExport> retrieveNewExports() {
@@ -95,7 +101,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
                 .progressive(progressive)
-                .status(ExportStatus.TODO)
+                .status(ExportStatus.TO_DO)
 
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)

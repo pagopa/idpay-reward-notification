@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ import reactor.core.publisher.Mono;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Slf4j
@@ -26,6 +30,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     private final char csvSeparator;
     private final RewardsNotificationRepository rewardsNotificationRepository;
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
+    private final HeaderColumnNameStrategy<RewardNotificationExportCsvDto> mappingStrategy;
 
     public ExportCsvFinalizeServiceImpl(
             @Value("${app.csv.export.separator}") char csvSeparator,
@@ -33,6 +38,8 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         this.csvSeparator = csvSeparator;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
+
+        mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationExportCsvDto.class);
     }
 
     @Override
@@ -55,7 +62,8 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     }
 
     private void writeCsv(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
-        String localFileName = "/tmp%s".formatted(export.getFilePath());
+        String localFileName = "/tmp%s".formatted(export.getFilePath().replaceAll("\\.zip$", ".csv"));
+        createDirectoryIfNotExists(localFileName);
         try (FileWriter writer = new FileWriter(localFileName)) {
             StatefulBeanToCsv<RewardNotificationExportCsvDto> csvWriter = buildCsvWriter(writer);
             csvWriter.write(csvLines);
@@ -64,8 +72,20 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         }
     }
 
+    private static void createDirectoryIfNotExists(String localFileName) {
+        Path directory = Paths.get(localFileName).getParent();
+        if (!Files.exists(directory)) {
+            try {
+                Files.createDirectory(directory);
+            } catch (IOException e) {
+                throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot create directory to store csv %s".formatted(localFileName), e);
+            }
+        }
+    }
+
     private StatefulBeanToCsv<RewardNotificationExportCsvDto> buildCsvWriter(FileWriter writer) {
         return new StatefulBeanToCsvBuilder<RewardNotificationExportCsvDto>(writer)
+                .withMappingStrategy(mappingStrategy)
                 .withSeparator(csvSeparator)
                 .withLineEnd("\n")
                 .build();

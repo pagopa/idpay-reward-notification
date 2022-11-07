@@ -12,9 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class ExportCsvServiceTest {
@@ -42,21 +44,43 @@ class ExportCsvServiceTest {
     void executeTest() {
         // Given
         AtomicInteger times = new AtomicInteger(0);
-        int N = 5;
-        List<String> expectedInitiativeExported = IntStream.range(0, N).mapToObj("INITIATIVEID%d"::formatted).toList();
+        int N_STUCKS = 3;
+        int N_NEW = 5;
+        List<String> expectedInitiativeExported =
+                Stream.concat(
+                        IntStream.range(0, N_STUCKS).mapToObj("STUCKEXPORT_INITIATIVEID%d"::formatted),
+                        IntStream.range(N_STUCKS, N_NEW+N_STUCKS).mapToObj("INITIATIVEID%d"::formatted)
+                ).toList();
+
+        Mockito.doAnswer(i ->
+                        Mono.defer(() -> {
+                            int x = times.getAndUpdate(prev -> prev < N_STUCKS ? prev + 1 : prev);
+                            return x < N_STUCKS
+                                    ? Mono.just(RewardOrganizationExport.builder()
+                                    .initiativeId("STUCKEXPORT_INITIATIVEID%d".formatted(x))
+                                    .notificationDate(LocalDate.now().minusDays(x + 1))
+                                    .exportDate(LocalDate.now())
+                                    .build())
+                                    : Mono.empty();
+                        }))
+                .when(initiative2ExportRetrieverServiceMock).retrieveStuckExecution();
 
         Mockito.doAnswer(i ->
                         Mono.defer(() -> {
                             int x = times.getAndIncrement();
-                            return x < N
-                                    ? Mono.just(RewardOrganizationExport.builder().initiativeId("INITIATIVEID%d".formatted(x)).build())
+                            return x < N_STUCKS + N_NEW
+                                    ? Mono.just(RewardOrganizationExport.builder()
+                                    .initiativeId("INITIATIVEID%d".formatted(x))
+                                    .notificationDate(LocalDate.now())
+                                    .exportDate(LocalDate.now())
+                                    .build())
                                     : Mono.empty();
                         }))
                 .when(initiative2ExportRetrieverServiceMock).retrieve();
 
         Mockito.doAnswer(i->Flux.just(i.getArgument(0,RewardOrganizationExport.class)))
                 .when(exportInitiativeRewardsServiceMock)
-                .performExport(Mockito.any());
+                .performExport(Mockito.any(), Mockito.anyBoolean());
 
         // When
         List<RewardOrganizationExport> result = service.execute().collectList().block();
@@ -66,12 +90,15 @@ class ExportCsvServiceTest {
                 expectedInitiativeExported,
                 result.stream().map(RewardOrganizationExport::getInitiativeId).toList());
 
-        Assertions.assertEquals(N+1, times.get());
+        Assertions.assertEquals(N_STUCKS+N_NEW+1, times.get());
 
         Assertions.assertEquals(
                 expectedInitiativeExported,
                 Mockito.mockingDetails(exportInitiativeRewardsServiceMock).getInvocations().stream().map(i->i.getArgument(0, RewardOrganizationExport.class).getInitiativeId()).toList()
         );
+
+        Mockito.verify(exportInitiativeRewardsServiceMock, Mockito.times(N_STUCKS)).performExport(Mockito.any(), Mockito.eq(true));
+        Mockito.verify(exportInitiativeRewardsServiceMock, Mockito.times(N_NEW)).performExport(Mockito.any(), Mockito.eq(false));
 
         Mockito.verifyNoMoreInteractions(initiative2ExportRetrieverServiceMock, exportInitiativeRewardsServiceMock);
     }

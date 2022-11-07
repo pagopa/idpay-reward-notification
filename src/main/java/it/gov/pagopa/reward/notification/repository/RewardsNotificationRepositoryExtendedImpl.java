@@ -54,16 +54,26 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Flux<RewardsNotification> findRewards2Notify(String initiativeId) {
+    public Flux<RewardsNotification> findRewards2Notify(String initiativeId, LocalDate notificationDate) {
         return mongoTemplate.find(
                 Query.query(Criteria
                         .where(FIELD_STATUS).is(RewardNotificationStatus.TO_SEND)
                         .and(FIELD_INITIATIVE_ID).is(initiativeId)
+                        .and(FIELD_EXPORT_ID).isNull()
                         .andOperator(
-                                Criteria.where(FIELD_NOTIFICATION_DATE).gte(LocalDate.now().minusDays(dayBeforeToSearch)),
-                                Criteria.where(FIELD_NOTIFICATION_DATE).lte(LocalDate.now())
+                                Criteria.where(FIELD_NOTIFICATION_DATE).gte(notificationDate.minusDays(dayBeforeToSearch)),
+                                Criteria.where(FIELD_NOTIFICATION_DATE).lte(notificationDate)
                         )
                 ),
+                RewardsNotification.class
+        );
+    }
+
+    @Override
+    public Flux<RewardsNotification> findExportRewards(String exportId) {
+        return mongoTemplate.find(
+                Query.query(Criteria
+                        .where(FIELD_EXPORT_ID).is(exportId)),
                 RewardsNotification.class
         );
     }

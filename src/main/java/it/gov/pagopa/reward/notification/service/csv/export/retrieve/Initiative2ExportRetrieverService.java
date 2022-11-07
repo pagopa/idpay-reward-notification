@@ -10,5 +10,7 @@ import reactor.core.publisher.Mono;
  * </ol>
  * */
 public interface Initiative2ExportRetrieverService {
+    Mono<RewardOrganizationExport> retrieveStuckExecution();
+
     Mono<RewardOrganizationExport> retrieve();
 }

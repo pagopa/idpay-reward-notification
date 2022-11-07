@@ -17,6 +17,7 @@ import java.util.List;
 
 class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
 
+    public static final LocalDate NOTIFICATION_DATE = LocalDate.now();
     @Autowired
     private RewardsNotificationRepository repository;
 
@@ -62,7 +63,8 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
                 .initiativeId(ObjectUtils.firstNonNull(initiativeId, "INITIATIVEID%d".formatted(useCase)))
                 .organizationId("ORGANIZATIONID")
                 .status(status)
-                .notificationDate(dayBefore==null?null:LocalDate.now().minusDays(dayBefore))
+                .notificationDate(dayBefore==null?null: NOTIFICATION_DATE.minusDays(dayBefore))
+                .exportId(RewardNotificationStatus.EXPORTED.equals(status) ? "EXPORTID%d".formatted(useCase) : null)
                 .build());
     }
 
@@ -83,7 +85,15 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
     void findRewards2NotifyTest(){
         Assertions.assertEquals(
                 List.of(testData.get(4), testData.get(6)),
-                repository.findRewards2Notify("INITIATIVEIDNOTIFIEDTWICE").collectList().block()
+                repository.findRewards2Notify("INITIATIVEIDNOTIFIEDTWICE", NOTIFICATION_DATE).collectList().block()
+        );
+    }
+
+    @Test
+    void findExportRewardsTest(){
+        Assertions.assertEquals(
+                List.of(testData.get(5)),
+                repository.findExportRewards("EXPORTID5").collectList().block()
         );
     }
 }

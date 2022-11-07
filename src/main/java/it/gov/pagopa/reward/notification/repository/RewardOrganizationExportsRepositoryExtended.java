@@ -6,4 +6,6 @@ import reactor.core.publisher.Mono;
 public interface RewardOrganizationExportsRepositoryExtended {
     Mono<RewardOrganizationExport> reserveExport();
     Mono<RewardOrganizationExport> configureNewExport(RewardOrganizationExport newExport);
+
+    Mono<RewardOrganizationExport> reserveStuckExport();
 }

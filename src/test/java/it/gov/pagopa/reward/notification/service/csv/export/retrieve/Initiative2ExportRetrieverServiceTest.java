@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import org.bson.BsonDocument;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,31 @@ class Initiative2ExportRetrieverServiceTest {
         service = new Initiative2ExportRetrieverServiceImpl(exportBasePath, rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
+    @AfterEach
+    void checkNotMoreInteraction() {
+        Mockito.verifyNoMoreInteractions(rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
+    }
+
+//region retrieveStuckExecution
+    @Test
+    void testWhenNotStuckReservation() {
+        Mockito.when(rewardOrganizationExportRepositoryMock.reserveStuckExport()).thenReturn(Mono.empty());
+
+        RewardOrganizationExport result = service.retrieveStuckExecution().block();
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    void testWhenStuckReservation() {
+        RewardOrganizationExport expected = new RewardOrganizationExport();
+        Mockito.when(rewardOrganizationExportRepositoryMock.reserveStuckExport()).thenReturn(Mono.just(expected));
+
+        RewardOrganizationExport result = service.retrieveStuckExecution().block();
+        Assertions.assertSame(expected, result);
+    }
+//endregion
+
+//region reserveExport
     @Test
     void testWhenReservationAlreadyExists() {
         RewardOrganizationExport expectedResult = new RewardOrganizationExport();
@@ -56,8 +82,6 @@ class Initiative2ExportRetrieverServiceTest {
 
         RewardOrganizationExport result = service.retrieve().block();
         Assertions.assertSame(expectedResult, result);
-
-        Mockito.verifyNoMoreInteractions(rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
     @Test
@@ -81,8 +105,6 @@ class Initiative2ExportRetrieverServiceTest {
 
         RewardOrganizationExport result = service.retrieve().block();
         Assertions.assertNull(result);
-
-        Mockito.verifyNoMoreInteractions(rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
     @Test
@@ -95,8 +117,6 @@ class Initiative2ExportRetrieverServiceTest {
 
         RewardOrganizationExport result = service.retrieve().block();
         Assertions.assertNull(result);
-
-        Mockito.verifyNoMoreInteractions(rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
     @Test
@@ -173,8 +193,6 @@ class Initiative2ExportRetrieverServiceTest {
 
         RewardOrganizationExport result = service.retrieve().block();
         Assertions.assertSame(expectedNewRewardNotification1, result);
-
-        Mockito.verifyNoMoreInteractions(rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
     private RewardOrganizationExport buildNewExpectedRewardNotification(RewardNotificationRule rule, long progressive) {
@@ -191,7 +209,7 @@ class Initiative2ExportRetrieverServiceTest {
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
                 .progressive(progressive)
-                .status(ExportStatus.TODO)
+                .status(ExportStatus.TO_DO)
 
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)
@@ -206,4 +224,5 @@ class Initiative2ExportRetrieverServiceTest {
 
                 .build();
     }
+//endregion
 }

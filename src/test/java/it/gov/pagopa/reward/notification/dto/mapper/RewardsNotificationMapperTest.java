@@ -34,6 +34,7 @@ class RewardsNotificationMapperTest {
         checkFields(notificationId, notificationDate, progressive, trx, rule, result);
 
         TestUtils.checkNotNullFields(result,
+                "exportDate",
                 "depositType",
                 "endDepositDate",
                 "sendDate",

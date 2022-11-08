@@ -10,7 +10,10 @@ import reactor.core.publisher.Mono;
  * </ol>
  * */
 public interface Initiative2ExportRetrieverService {
+    /** exports having status {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getNotificationDate()} < {@link RewardOrganizationExport#getExportDate()} */
     Mono<RewardOrganizationExport> retrieveStuckExecution();
-
+    /** {@link it.gov.pagopa.reward.notification.enums.ExportStatus#TO_DO} {@link  RewardOrganizationExport} */
     Mono<RewardOrganizationExport> retrieve();
+
+    Mono<RewardOrganizationExport> reserveNextSplitExport(RewardOrganizationExport baseExport, int splitNumber);
 }

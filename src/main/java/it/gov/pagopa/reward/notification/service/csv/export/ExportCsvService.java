@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.export;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverService;
 import reactor.core.publisher.Flux;
 
 public interface ExportCsvService {
@@ -11,10 +12,8 @@ public interface ExportCsvService {
      * {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS}.
      * Each day will be search:
      * <ol>
-     *     <li>Stuck {@link  RewardOrganizationExport}, or exports having status {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS}
-     *     and {@link RewardOrganizationExport#getNotificationDate()} < {@link RewardOrganizationExport#getExportDate()}</li>
-     *
-     *     <li>{@link it.gov.pagopa.reward.notification.enums.ExportStatus#TO_DO} {@link  RewardOrganizationExport}</li>
+     *     <li>Stuck {@link  RewardOrganizationExport} (see {@link Initiative2ExportRetrieverService#retrieveStuckExecution()})</li>
+     *     <li>New {@link RewardOrganizationExport} (see ${@link Initiative2ExportRetrieverService#retrieve()})</li>
      * </ol>
      * @see ExportInitiativeRewardsService
      * */

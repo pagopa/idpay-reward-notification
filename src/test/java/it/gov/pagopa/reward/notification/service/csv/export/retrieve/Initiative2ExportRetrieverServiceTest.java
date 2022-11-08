@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRep
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
+import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -225,4 +226,48 @@ class Initiative2ExportRetrieverServiceTest {
                 .build();
     }
 //endregion
+
+    @Test
+    void testReserveNextSplitExport(){
+        // Given
+        RewardOrganizationExport baseExport = buildNewExpectedRewardNotification(RewardNotificationRuleFaker.mockInstance(0), 5);
+        baseExport.setExportDate(LocalDate.now());
+        baseExport.setRewardsExportedCents(10L);
+        baseExport.setRewardsResultsCents(10L);
+        baseExport.setRewardNotified(10L);
+        baseExport.setRewardsResulted(10L);
+        baseExport.setRewardsResultedOk(10L);
+        baseExport.setPercentageResulted(10L);
+        baseExport.setPercentageResultedOk(10L);
+        baseExport.setPercentageResults(10L);
+        baseExport.setStatus(ExportStatus.EXPORTED);
+
+        Mockito.when(rewardOrganizationExportRepositoryMock.save(Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(0)));
+
+        // When
+        RewardOrganizationExport result = service.reserveNextSplitExport(baseExport, 7).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+
+        Assertions.assertEquals("ID_0_ssx_20221108.12", result.getId());
+        Assertions.assertEquals("/export/base/path/ORGANIZATION_ID_0_hpd/ID_0_ssx/NAME_0_vnj_20221108.12.zip", result.getFilePath());
+        Assertions.assertEquals(baseExport.getInitiativeId(), result.getInitiativeId());
+        Assertions.assertEquals(baseExport.getInitiativeName(), result.getInitiativeName());
+        Assertions.assertEquals(baseExport.getOrganizationId(), result.getOrganizationId());
+        Assertions.assertEquals(baseExport.getNotificationDate(), result.getNotificationDate());
+        Assertions.assertEquals(baseExport.getExportDate(), result.getExportDate());
+        Assertions.assertEquals(12, result.getProgressive());
+        Assertions.assertEquals(0L, result.getRewardsExportedCents());
+        Assertions.assertEquals(0L, result.getRewardsResultsCents());
+        Assertions.assertEquals(0L, result.getRewardNotified());
+        Assertions.assertEquals(0L, result.getRewardsResulted());
+        Assertions.assertEquals(0L, result.getRewardsResultedOk());
+        Assertions.assertEquals(0L, result.getPercentageResulted());
+        Assertions.assertEquals(0L, result.getPercentageResultedOk());
+        Assertions.assertEquals(0L, result.getPercentageResults());
+        Assertions.assertEquals(ExportStatus.IN_PROGRESS, result.getStatus());
+
+        TestUtils.checkNotNullFields(result, "feedbackDate");
+    }
 }

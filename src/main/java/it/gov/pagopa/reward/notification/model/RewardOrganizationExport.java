@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "rewards_organization_exports")
 @FieldNameConstants
 public class RewardOrganizationExport {

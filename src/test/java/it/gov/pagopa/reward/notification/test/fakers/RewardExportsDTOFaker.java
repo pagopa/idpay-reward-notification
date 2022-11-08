@@ -30,9 +30,9 @@ public class RewardExportsDTOFaker {
         FakeValuesService fakeValuesService = InitiativeRefundDTOFaker.getFakeValuesService(bias);
 
         out.id("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.initiativeId("INITIATIVE_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+        out.initiativeId("INITIATIVE_ID_%d".formatted(bias));
         out.initiativeName("INITIATIVE_NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.organizationId("ORGANIZATION_ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+        out.organizationId("ORGANIZATION_ID_%d".formatted(bias));
         out.filePath("/%s/%d".formatted(fakeValuesService.bothify("???"), bias));
         out.notificationDate(CHOSEN_DATE);
         out.rewardsExported("%d".formatted(bias * 100L));

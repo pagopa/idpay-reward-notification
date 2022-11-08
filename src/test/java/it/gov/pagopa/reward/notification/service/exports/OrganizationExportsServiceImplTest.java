@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2ExportsDTOMapper;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationExportsFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -33,7 +35,7 @@ class OrganizationExportsServiceImplTest {
         // Given
         RewardOrganizationExport rewardOrganizationExportMock = RewardOrganizationExportsFaker.mockInstance(1);
 
-        Mockito.when(rewardOrganizationExportsRepository.findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Flux.just(rewardOrganizationExportMock));
+        Mockito.when(rewardOrganizationExportsRepository.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null)).thenReturn(Flux.just(rewardOrganizationExportMock));
 
         // When
         List<RewardExportsDTO> result = organizationExportsService.findAllBy(rewardOrganizationExportMock.getOrganizationId(), rewardOrganizationExportMock.getInitiativeId(), null, null).collectList().block();
@@ -47,14 +49,17 @@ class OrganizationExportsServiceImplTest {
     void testFindAllPaged() {
         // Given
         RewardOrganizationExport rewardOrganizationExportMock = RewardOrganizationExportsFaker.mockInstance(1);
+        RewardExportsDTO dtoMock = RewardExportsDTOFaker.mockInstance(1);
+        Page<RewardExportsDTO> page = new PageImpl<>(List.of(dtoMock));
 
-        Mockito.when(rewardOrganizationExportsRepository.findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Flux.just(rewardOrganizationExportMock));
+        Mockito.when(rewardOrganizationExportsRepository.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null)).thenReturn(Flux.just(rewardOrganizationExportMock));
 
         // When
         Page<RewardExportsDTO> result = organizationExportsService.findAllPaged(rewardOrganizationExportMock.getOrganizationId(), rewardOrganizationExportMock.getInitiativeId(), null, null).block();
 
         // Then
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(result, page);
     }
 
 }

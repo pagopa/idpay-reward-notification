@@ -42,5 +42,25 @@ class RewardOrganizationExports2ExportsDTOMapperTest {
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
+        checkFields(result, rewardOrganizationExport);
+    }
+
+    private void checkFields(RewardExportsDTO result, RewardOrganizationExport input) {
+        Assertions.assertEquals(input.getId(), result.getId());
+        Assertions.assertEquals(input.getInitiativeId(), result.getInitiativeId());
+        Assertions.assertEquals(input.getInitiativeName(), result.getInitiativeName());
+        Assertions.assertEquals(input.getOrganizationId(), result.getOrganizationId());
+        Assertions.assertEquals(input.getFilePath(), result.getFilePath());
+        Assertions.assertEquals(input.getNotificationDate(), result.getNotificationDate());
+        Assertions.assertEquals("1,00", result.getRewardsExported());
+        Assertions.assertEquals("1,00", result.getRewardsResults());
+        Assertions.assertEquals(input.getRewardNotified(), result.getRewardNotified());
+        Assertions.assertEquals(input.getRewardsResulted(), result.getRewardsResulted());
+        Assertions.assertEquals(input.getRewardsResultedOk(), result.getRewardsResultedOk());
+        Assertions.assertEquals("100", result.getPercentageResulted());
+        Assertions.assertEquals("100", result.getPercentageResultedOk());
+        Assertions.assertEquals("100", result.getPercentageResults());
+        Assertions.assertEquals(input.getFeedbackDate(), result.getFeedbackDate());
+        Assertions.assertEquals(input.getStatus(), result.getStatus());
     }
 }

@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
@@ -11,10 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @WebFluxTest(controllers = {RewardExportsDTO.class})
 @Import(NotificationControllerImpl.class)
@@ -32,68 +34,81 @@ class NotificationControllerImplTest {
     @Test
     void testGetExportsOk() {
         RewardExportsDTO rewardExportsDTOMock = RewardExportsDTOFaker.mockInstance(1);
-        Mockito.when(organizationExportsService.findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(organizationExportsService.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null))
                 .thenReturn(Flux.just(rewardExportsDTOMock));
 
         webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/exports")
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports")
                         .build(rewardExportsDTOMock.getOrganizationId(), rewardExportsDTOMock.getInitiativeId()))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(RewardExportsDTO.class).isEqualTo(rewardExportsDTOMock);
 
-        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null);
     }
 
     @Test
-    void testGetExportsNotFound() {
+    void testGetExportsEmpty() {
         RewardExportsDTO rewardExportsDTOMock = RewardExportsDTOFaker.mockInstance(1);
-        Mockito.when(organizationExportsService.findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
+        Mockito.when(organizationExportsService.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null))
+                .thenReturn(Flux.empty());
 
         webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/exports")
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports")
                         .build(rewardExportsDTOMock.getOrganizationId(), rewardExportsDTOMock.getInitiativeId()))
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isOk()
+                .expectBody(List.class).isEqualTo(List.of());
 
-        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null);
     }
 
     @Test
     void testGetExportsCountOk() {
         Long count = 1L;
-        Mockito.when(organizationExportsService.countAll(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(organizationExportsService.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null))
                 .thenReturn(Mono.just(count));
 
         webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/exports/count")
-                        .build("ORG", "INTV"))
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/count")
+                        .build("ORGANIZATION_ID_1", "INITIATIVE_ID_1"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Long.class).isEqualTo(count);
 
-        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null);
     }
 
     @Test
-    void testGetExportsCountNotFound() {
-        Long count = 1L;
-        Mockito.when(organizationExportsService.countAll(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
+    void testGetExportsCountEmpty() {
+        Mockito.when(organizationExportsService.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null))
+                .thenReturn(Mono.just(0L));
 
         webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/exports/count")
-                        .build("ORG", "INTV"))
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/count")
+                        .build("ORGANIZATION_ID_1", "INITIATIVE_ID_1"))
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isOk()
+                .expectBody(Long.class).isEqualTo(0L);
 
-        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null);
     }
 
-    /*@Test
+    @Test
     void testGetExportsPaged() {
-        Page<RewardExportsDTO> pageMock = Mockito.mock(Page.class);
+        RewardExportsDTO dtoMock = RewardExportsDTOFaker.mockInstance(1);
+        Page<RewardExportsDTO> page = new PageImpl<>(List.of(dtoMock));
 
-    }*/
+        Mockito.when(organizationExportsService.findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null))
+                .thenReturn(Mono.just(page));
+
+        webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/paged")
+                        .build("ORGANIZATION_ID_1", "INITIATIVE_ID_1"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Page.class).isEqualTo(page);
+
+        Mockito.verify(organizationExportsService, Mockito.times(1)).findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null);
+    }
 }

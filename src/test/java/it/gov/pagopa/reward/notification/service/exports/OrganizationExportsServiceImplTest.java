@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.service.exports;
 
+import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationExports2ExportsDTOMapper;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -13,14 +14,14 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
 
 class OrganizationExportsServiceImplTest {
 
-    @Autowired
-    private RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
+    @Autowired private RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
     private final RewardOrganizationExports2ExportsDTOMapper rewardOrganizationExports2ExportsDTOMapper = new RewardOrganizationExports2ExportsDTOMapper();
 
     private OrganizationExportsService organizationExportsService;
@@ -35,10 +36,10 @@ class OrganizationExportsServiceImplTest {
         // Given
         RewardOrganizationExport rewardOrganizationExportMock = RewardOrganizationExportsFaker.mockInstance(1);
 
-        Mockito.when(rewardOrganizationExportsRepository.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null)).thenReturn(Flux.just(rewardOrganizationExportMock));
+        Mockito.when(rewardOrganizationExportsRepository.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0,2000), new ExportFilter())).thenReturn(Flux.just(rewardOrganizationExportMock));
 
         // When
-        List<RewardExportsDTO> result = organizationExportsService.findAllBy(rewardOrganizationExportMock.getOrganizationId(), rewardOrganizationExportMock.getInitiativeId(), null, null).collectList().block();
+        List<RewardExportsDTO> result = organizationExportsService.findAllBy(rewardOrganizationExportMock.getOrganizationId(), rewardOrganizationExportMock.getInitiativeId(), PageRequest.of(0,2000), new ExportFilter()).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -52,10 +53,10 @@ class OrganizationExportsServiceImplTest {
         RewardExportsDTO dtoMock = RewardExportsDTOFaker.mockInstance(1);
         Page<RewardExportsDTO> page = new PageImpl<>(List.of(dtoMock));
 
-        Mockito.when(rewardOrganizationExportsRepository.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", null, null)).thenReturn(Flux.just(rewardOrganizationExportMock));
+        Mockito.when(rewardOrganizationExportsRepository.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0,2000), new ExportFilter())).thenReturn(Flux.just(rewardOrganizationExportMock));
 
         // When
-        Page<RewardExportsDTO> result = organizationExportsService.findAllPaged(rewardOrganizationExportMock.getOrganizationId(), rewardOrganizationExportMock.getInitiativeId(), null, null).block();
+        Page<RewardExportsDTO> result = organizationExportsService.findAllPaged(rewardOrganizationExportMock.getOrganizationId(), rewardOrganizationExportMock.getInitiativeId(), PageRequest.of(0,2000), new ExportFilter()).block();
 
         // Then
         Assertions.assertNotNull(result);

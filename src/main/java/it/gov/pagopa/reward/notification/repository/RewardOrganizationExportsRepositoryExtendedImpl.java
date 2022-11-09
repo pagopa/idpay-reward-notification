@@ -79,8 +79,6 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
      * Checks if filters are defined in the request. If they are, it checks which are requested and adds them to query;
      * else, it adds the default filter that wants the {@link RewardOrganizationExport}'s status to be included in the
      * {@link ExportConstants#EXPORT_EXPOSED_STATUSES} collection.
-     * @param criteria
-     * @param filters
      */
     private void updateCriteriaWithFilters(Criteria criteria, ExportFilter filters) {
         if (filters != null){

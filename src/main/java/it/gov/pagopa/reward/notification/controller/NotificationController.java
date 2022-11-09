@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,11 +15,23 @@ import reactor.core.publisher.Mono;
 public interface NotificationController {
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports")
-    Flux<RewardExportsDTO> getExports(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter filters);
+    Flux<RewardExportsDTO> getExports(
+            @PathVariable("organizationId") String organizationId,
+            @PathVariable("initiativeId") String initiativeId,
+            @PageableDefault(size = 2000) Pageable pageable,
+            ExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/count")
-    Mono<Long> getExportsCount(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter filters);
+    Mono<Long> getExportsCount(
+            @PathVariable("organizationId") String organizationId,
+            @PathVariable("initiativeId") String initiativeId,
+            @PageableDefault(size = 2000) Pageable pageable,
+            ExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/paged")
-    Mono<Page<RewardExportsDTO>> getExportsPaged(@PathVariable("organizationId") String organizationId, @PathVariable("initiativeId") String initiativeId, Pageable pageable, ExportFilter filters);
+    Mono<Page<RewardExportsDTO>> getExportsPaged(
+            @PathVariable("organizationId") String organizationId,
+            @PathVariable("initiativeId") String initiativeId,
+            @PageableDefault(size = 2000) Pageable pageable,
+            ExportFilter filters);
 }

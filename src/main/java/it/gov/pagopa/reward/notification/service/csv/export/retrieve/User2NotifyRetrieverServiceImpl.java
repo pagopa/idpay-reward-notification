@@ -35,6 +35,7 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find fiscalCode related to user {}", reward.getUserId());
 
                     reward.setStatus(RewardNotificationStatus.ERROR);
+                    reward.setRejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)

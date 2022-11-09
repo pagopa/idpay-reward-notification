@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -53,6 +54,8 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 .flatMap(reward2CsvLineService::apply)
                 // 3. wait to fill split or the end of the rewards
                 .buffer(csvMaxRows)
+                // 3.1. if no rows has been correctly transformed into csvLines
+                .defaultIfEmpty(Collections.emptyList()) // TODO delete or store with status EMPTY?
                 // 4. write CSV for each split and finalize the export
                 .flatMap(csvLines -> writeAndFinalizeSplit(export, startTime, splitNumber, csvLines));
     }
@@ -62,7 +65,7 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 // if stuck export, retrieve as first export related rewards
                 ? rewardsNotificationRepository.findExportRewards(export.getId())
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.info("[REWARD_NOTIFICATION_EXPORT_CSV][STUCK_EXECUTION] Stuck execution has no records {}", export.getId());
+                    log.info("[REWARD_NOTIFICATION_EXPORT_CSV][STUCK_EXECUTION] Stuck execution has no more records {}", export.getId());
                     return Mono.empty();
                 }))
                 .doOnComplete(() -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV][STUCK_EXECUTION] Stuck execution records extraction completed"))

@@ -2,16 +2,14 @@ package it.gov.pagopa.reward.notification;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
-import it.gov.pagopa.reward.notification.test.utils.RestTestUtils;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
-import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -27,24 +25,20 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
@@ -86,6 +80,11 @@ import static org.awaitility.Awaitility.await;
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
                 //endregion
 
+                //region pdv
+                "app.pdv.retry.delay-millis=5000",
+                "app.pdv.retry.max-attempts=3",
+                //endregion
+
                 //region kafka brokers
                 "logging.level.org.apache.zookeeper=WARN",
                 "logging.level.org.apache.kafka=WARN",
@@ -106,13 +105,13 @@ import static org.awaitility.Awaitility.await;
                 "spring.mongodb.embedded.version=4.0.21",
                 //endregion
 
-                //region pdv
-                "app.pdv.retry.delay-millis=5000",
-                "app.pdv.retry.max-attempts=3",
+                //region wiremock
+                "logging.level.WireMock=OFF",
+                "app.pdv.base-url=http://localhost:${wiremock.server.port}"
                 //endregion
         })
-@ContextConfiguration(initializers = BaseIntegrationTest.PdvInitializer.class)
 @AutoConfigureDataMongo
+@AutoConfigureWireMock(stubs = "classpath:/stub/pdv", port = 0)
 public abstract class BaseIntegrationTest {
     public static final String APPLICATION_NAME = "idpay-reward-notification";
 
@@ -154,6 +153,9 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
 
+    @Autowired
+    private WireMockServer wireMockServer;
+
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
@@ -188,10 +190,15 @@ public abstract class BaseIntegrationTest {
                         ************************
                         Embedded mongo: %s
                         Embedded kafka: %s
+                        Wiremock HTTP: http://localhost:%s
+                        Wiremock HTTPS: %s
                         ************************
                         """,
                 mongoUrl,
-                "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes));
+                "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes),
+                wireMockServer.getOptions().portNumber(),
+                wireMockServer.baseUrl())
+        ;
     }
 
     @Test
@@ -400,21 +407,4 @@ public abstract class BaseIntegrationTest {
         Assertions.assertEquals(expectedKey, errorMessage.key());
     }
 
-    //Setting WireMock
-    @RegisterExtension
-    static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
-            .options(RestTestUtils.getWireMockConfiguration("/stub/pdv"))
-            .build();
-    public static class PdvInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        @SneakyThrows
-        @Override
-        public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-                    String.format("app.pdv.base-url=%s", pdvWireMock.getRuntimeInfo().getHttpBaseUrl())
-            );
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-                    String.format("app.pdv.headers.x-api-key=%s", "x_api_key")
-            );
-        }
-    }
 }

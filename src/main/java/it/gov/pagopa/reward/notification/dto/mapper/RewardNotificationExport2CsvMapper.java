@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
+import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class RewardNotificationExport2CsvMapper {
         out.setOrganizationId(reward.getOrganizationId());
         out.setOrganizationFiscalCode(reward.getOrganizationFiscalCode());
         out.setCheckIban(reward.getCheckIbanResult());
-        out.setTypologyReward(reward.getDepositType().getLabel());
+        out.setTypologyReward((reward.getDepositType() == null? DepositType.FINAL : reward.getDepositType()).getLabel());
         out.setRelatedPaymentID(null);
 
         return out;

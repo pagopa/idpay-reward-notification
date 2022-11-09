@@ -33,7 +33,7 @@ public class RewardsNotificationFaker {
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(bias);
         RewardNotificationRule rule = RewardNotificationRuleFaker.mockInstance(bias);
         rule.setInitiativeId(initiativeId);
-        String notificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, notificationDate.format(Utils.FORMATTER_DATE));
+        String notificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, notificationDate!=null?notificationDate.format(Utils.FORMATTER_DATE):"null");
         return mapper.apply(notificationId, notificationDate, 0L, trx, rule).toBuilder();
     }
 }

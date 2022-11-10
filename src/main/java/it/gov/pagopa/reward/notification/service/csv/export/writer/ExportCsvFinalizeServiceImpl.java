@@ -76,7 +76,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         Path directory = Paths.get(localFileName).getParent();
         if (!Files.exists(directory)) {
             try {
-                Files.createDirectory(directory);
+                Files.createDirectories(directory);
             } catch (IOException e) {
                 throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot create directory to store csv %s".formatted(localFileName), e);
             }

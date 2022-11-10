@@ -126,4 +126,33 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     private String escapeRuleName(String initiativeName) {
         return initiativeName.replaceAll("\\W", "").substring(0, 10);
     }
+
+    @Override
+    public Mono<RewardOrganizationExport> reserveNextSplitExport(RewardOrganizationExport baseExport, int splitNumber) {
+        return rewardOrganizationExportsRepository.save(buildNextOrganizationExportSplit(baseExport, splitNumber));
+    }
+
+    public RewardOrganizationExport buildNextOrganizationExportSplit(RewardOrganizationExport baseExport, int splitNumber) {
+        log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] trying to configure export on next split based on {} of inititiative {} and splitNumber {}", baseExport.getId(), baseExport.getInitiativeId(), splitNumber);
+
+        long progressive = baseExport.getProgressive()+splitNumber;
+        return baseExport.toBuilder()
+                .id(baseExport.getId().replaceFirst("\\.%d$".formatted(baseExport.getProgressive()), ".%d".formatted(progressive)))
+                .filePath(baseExport.getFilePath().replaceFirst("\\.%d.zip$".formatted(baseExport.getProgressive()), ".%d.zip".formatted(progressive)))
+                .progressive(progressive)
+                .status(ExportStatus.IN_PROGRESS)
+
+                .rewardsExportedCents(0L)
+                .rewardsResultsCents(0L)
+
+                .rewardNotified(0L)
+                .rewardsResulted(0L)
+                .rewardsResultedOk(0L)
+
+                .percentageResults(0L)
+                .percentageResulted(0L)
+                .percentageResultedOk(0L)
+
+                .build();
+    }
 }

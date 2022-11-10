@@ -30,6 +30,15 @@ class RewardNotificationExport2CsvMapperTest {
                 .build();
 
         RewardNotificationExportCsvDto result = mapper.apply(reward, user);
+        checkResults(reward, result);
+
+        reward.setDepositType(null);
+        RewardNotificationExportCsvDto result2 = mapper.apply(reward, user);
+        reward.setDepositType(DepositType.FINAL);// default filled if null
+        checkResults(reward, result2);
+    }
+
+    private void checkResults(RewardsNotification reward, RewardNotificationExportCsvDto result) {
         Assertions.assertNotNull(result);
 
         Assertions.assertEquals(reward.getProgressive(), result.getProgressiveCode());

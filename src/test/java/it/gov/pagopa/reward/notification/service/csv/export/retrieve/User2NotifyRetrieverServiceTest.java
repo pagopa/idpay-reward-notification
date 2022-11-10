@@ -50,6 +50,7 @@ class User2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.ERROR, reward.getStatus());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getRejectionReason());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getRejectionCode());
         Assertions.assertNotNull(reward.getExportDate());
 
         Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
@@ -75,6 +76,25 @@ class User2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getKey().getStatus());
         Assertions.assertNull(result.getKey().getRejectionReason());
+        Assertions.assertNull(result.getKey().getRejectionCode());
+
+        Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
+    }
+
+    @Test
+    void testWhenException(){
+        // Given
+        RewardsNotification reward = new RewardsNotification();
+        reward.setUserId("USERID");
+        reward.setStatus(RewardNotificationStatus.TO_SEND);
+
+        Mockito.when(userServiceMock.getUserInfo("USERID")).thenReturn(Mono.error(new RuntimeException("DUMMY")));
+
+        // When
+        Pair<RewardsNotification, User> result = service.retrieveUser(reward).block();
+
+        // Then
+        Assertions.assertNull(result);
 
         Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }

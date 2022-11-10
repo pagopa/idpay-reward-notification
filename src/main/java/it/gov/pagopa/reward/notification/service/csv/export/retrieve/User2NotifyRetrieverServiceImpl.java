@@ -35,6 +35,7 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find fiscalCode related to user {}", reward.getUserId());
 
                     reward.setStatus(RewardNotificationStatus.ERROR);
+                    reward.setRejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
@@ -45,6 +46,11 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
                     log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] fiscalCode related to user {} retrieved", reward.getUserId());
 
                     return Pair.of(reward, user);
+                })
+
+                .onErrorResume(e -> {
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while searching userId", e);
+                    return Mono.empty();
                 });
     }
 }

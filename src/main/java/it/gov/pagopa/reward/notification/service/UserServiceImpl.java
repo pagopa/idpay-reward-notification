@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService{
                     .map(s -> User.builder().fiscalCode(s.getPii()).build())
                     .doOnNext(u -> {
                         userCache.put(userId,u);
-                        log.info("Added into map user info with userId: {}", userId);
+                        log.debug("Added into map user info with userId: {}", userId);
                     });
         }
     }

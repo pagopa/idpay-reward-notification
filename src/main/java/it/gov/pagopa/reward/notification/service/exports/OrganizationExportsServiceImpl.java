@@ -32,8 +32,8 @@ public class OrganizationExportsServiceImpl implements OrganizationExportsServic
     }
 
     @Override
-    public Mono<Long> countAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
-        return rewardOrganizationExportsRepository.countAll(organizationId, initiativeId, pageable, filters);
+    public Mono<Long> countAll(String organizationId, String initiativeId, ExportFilter filters) {
+        return rewardOrganizationExportsRepository.countAll(organizationId, initiativeId, filters);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class OrganizationExportsServiceImpl implements OrganizationExportsServic
 
         return findAllBy(organizationId, initiativeId, pageable, filters)
                 .collectList()
-                .zipWith(countAll(organizationId, initiativeId, pageable, filters))
+                .zipWith(countAll(organizationId, initiativeId, filters))
                 .map(t -> new PageImpl<>(t.getT1(), pageable, t.getT2()));
     }
 }

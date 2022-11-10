@@ -10,5 +10,5 @@ public interface RewardOrganizationExportsRepositoryExtended {
 
     Flux<RewardOrganizationExport> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
 
-    Mono<Long> countAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
+    Mono<Long> countAll(String organizationId, String initiativeId, ExportFilter filters);
 }

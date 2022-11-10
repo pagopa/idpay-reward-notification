@@ -44,7 +44,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Mono<Long> countAll(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+    public Mono<Long> countAll(String organizationId, String initiativeId, ExportFilter filters) {
 
         Criteria criteria = Criteria
                 .where(RewardOrganizationExport.Fields.organizationId).is(organizationId)
@@ -58,7 +58,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
         } else {
             return mongoTemplate
                     .count(
-                            Query.query(criteria).with(getPageable(pageable)),
+                            Query.query(criteria),
                             RewardOrganizationExport.class
                     );
         }

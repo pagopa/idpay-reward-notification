@@ -26,9 +26,9 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<Long> getExportsCount(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+    public Mono<Long> getExportsCount(String organizationId, String initiativeId, ExportFilter filters) {
         return organizationExportsService
-                .countAll(organizationId, initiativeId, pageable, filters)
+                .countAll(organizationId, initiativeId, filters)
                 .switchIfEmpty(Mono.just(0L));
     }
 

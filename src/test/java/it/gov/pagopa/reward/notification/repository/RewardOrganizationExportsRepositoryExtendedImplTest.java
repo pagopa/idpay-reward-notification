@@ -106,11 +106,10 @@ class RewardOrganizationExportsRepositoryExtendedImplTest extends BaseIntegratio
     void testCountAll() {
         String organizationId = TEST_ORGANIZATION_ID;
         String initiativeId = TEST_INITIATIVE_ID;
-        Pageable pageable = null;
         ExportFilter filters = null;
 
         Long result = rewardOrganizationExportsRepository
-                .countAll(organizationId, initiativeId, pageable, filters)
+                .countAll(organizationId, initiativeId, filters)
                 .block();
 
         Assertions.assertEquals(1, result);

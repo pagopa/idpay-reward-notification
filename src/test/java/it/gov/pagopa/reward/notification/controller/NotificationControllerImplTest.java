@@ -1,12 +1,10 @@
 package it.gov.pagopa.reward.notification.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import it.gov.pagopa.reward.notification.config.JsonConfig;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +68,7 @@ class NotificationControllerImplTest {
     @Test
     void testGetExportsCountOk() {
         Long count = 1L;
-        Mockito.when(organizationExportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter()))
+        Mockito.when(organizationExportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ExportFilter()))
                 .thenReturn(Mono.just(count));
 
         webClient.get()
@@ -80,12 +78,12 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBody(Long.class).isEqualTo(count);
 
-        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter());
+        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ExportFilter());
     }
 
     @Test
     void testGetExportsCountEmpty() {
-        Mockito.when(organizationExportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter()))
+        Mockito.when(organizationExportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ExportFilter()))
                 .thenReturn(Mono.empty());
 
         webClient.get()
@@ -95,7 +93,7 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBody(Long.class).isEqualTo(0L);
 
-        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter());
+        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ExportFilter());
     }
 
     @Test

@@ -95,9 +95,9 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
             if (filters.getNotificationDateFrom() != null && filters.getNotificationDateTo() != null) {
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).gte(filters.getNotificationDateFrom()));
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).lte(filters.getNotificationDateTo()));
-            } else if (filters.getNotificationDateTo() != null) {
+            } else if (filters.getNotificationDateFrom() != null && filters.getNotificationDateTo() == null) {
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).gte(filters.getNotificationDateFrom()));
-            } else if (filters.getNotificationDateFrom() != null) {
+            } else if (filters.getNotificationDateTo() != null && filters.getNotificationDateFrom() == null) {
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).lte(filters.getNotificationDateTo()));
             }
 

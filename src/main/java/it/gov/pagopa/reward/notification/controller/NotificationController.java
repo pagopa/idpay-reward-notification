@@ -18,7 +18,7 @@ public interface NotificationController {
     Flux<RewardExportsDTO> getExports(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PageableDefault(size = 2000) Pageable pageable,
+            @PageableDefault(size = 15) Pageable pageable,
             ExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/count")
@@ -31,6 +31,6 @@ public interface NotificationController {
     Mono<Page<RewardExportsDTO>> getExportsPaged(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PageableDefault(size = 2000) Pageable pageable,
+            @PageableDefault(size = 15) Pageable pageable,
             ExportFilter filters);
 }

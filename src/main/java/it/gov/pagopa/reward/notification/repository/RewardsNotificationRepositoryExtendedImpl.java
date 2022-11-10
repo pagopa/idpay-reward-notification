@@ -41,6 +41,7 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
                 Query.query(Criteria
                         .where(FIELD_STATUS).is(RewardNotificationStatus.TO_SEND)
                         .and(FIELD_INITIATIVE_ID).nin(initiativeIds2Exclude)
+                        .and(FIELD_EXPORT_ID).isNull()
                         .andOperator(
                                 Criteria.where(FIELD_NOTIFICATION_DATE).gte(LocalDate.now().minusDays(dayBeforeToSearch)),
                                 Criteria.where(FIELD_NOTIFICATION_DATE).lte(LocalDate.now())

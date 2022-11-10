@@ -46,6 +46,11 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
                     reward.setIban(iban.getIban());
                     reward.setCheckIbanResult(iban.getCheckIbanOutcome());
                 })
-                .map(x -> reward);
+                .map(x -> reward)
+
+                .onErrorResume(e -> {
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while searching userId-initiativeId iban", e);
+                    return Mono.empty();
+                });
     }
 }

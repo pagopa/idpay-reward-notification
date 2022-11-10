@@ -79,4 +79,23 @@ class Iban2NotifyRetrieverServiceTest {
 
         Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }
+
+    @Test
+    void testWhenException(){
+        // Given
+        RewardsNotification reward = new RewardsNotification();
+        reward.setUserId("USERID");
+        reward.setInitiativeId("INITIATIATIVEID");
+        reward.setStatus(RewardNotificationStatus.TO_SEND);
+
+        Mockito.when(ibanRepositoryMock.findById("USERIDINITIATIATIVEID")).thenReturn(Mono.error(new RuntimeException("DUMMY")));
+
+        // When
+        RewardsNotification result = service.retrieveIban(reward).block();
+
+        // Then
+        Assertions.assertNull(result);
+
+        Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
+    }
 }

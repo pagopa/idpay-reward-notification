@@ -46,6 +46,11 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
                     log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] fiscalCode related to user {} retrieved", reward.getUserId());
 
                     return Pair.of(reward, user);
+                })
+
+                .onErrorResume(e -> {
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while searching userId", e);
+                    return Mono.empty();
                 });
     }
 }

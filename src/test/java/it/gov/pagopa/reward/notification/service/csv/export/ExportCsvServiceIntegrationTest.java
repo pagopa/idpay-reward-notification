@@ -17,6 +17,7 @@ import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -26,11 +27,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
         "app.csv.export.split-size=500"
@@ -38,6 +46,7 @@ import java.util.stream.LongStream;
 class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
 
     public static final LocalDate TODAY = LocalDate.now();
+    public static final String TODAY_STR = Utils.FORMATTER_DATE.format(TODAY);
     public static final LocalDate YESTERDAY = TODAY.minusDays(1);
 
     @Value("${app.csv.export.day-before}")
@@ -91,8 +100,10 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         // useCase rewards to be notified, but without iban
         storeRewardsUseCases(3, rule3.getInitiativeId(), YESTERDAY, null, false, true);
 
-        // useCase rewards to be notified, but without CF
+        // useCase rewards to be notified, first split successfully built with the maximum size, no more split due to cf ko
+        storeRewardsUseCases(splitSize-5, rule4.getInitiativeId(), YESTERDAY, null, true, true);
         storeRewardsUseCases(1, rule4.getInitiativeId(), YESTERDAY, null, true, false);
+        storeRewardsUseCases(5, rule4.getInitiativeId(), YESTERDAY, null, true, true);
 
         Assertions.assertEquals(testCases.get(), rewardsRepository.count().block());
 
@@ -162,7 +173,7 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
     private UserRestClient userRestClient;
 
     @Test
-    void test() {
+    void test() throws ExecutionException, InterruptedException {
         // Given
         storeTestData();
 
@@ -171,13 +182,18 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         userRestClient.retrieveUserInfo("USERID_OK_123").block();
 
         // When
-        List<RewardOrganizationExport> result = exportCsvService.execute()
-                .sort(Comparator.comparing(RewardOrganizationExport::getId))
-                .collectList().block();
+        CompletableFuture<List<RewardOrganizationExport>> execute1 = exportCsvService.execute().collectList().toFuture();
+        CompletableFuture<List<RewardOrganizationExport>> execute2 = exportCsvService.execute().collectList().toFuture();
+
+        List<RewardOrganizationExport> result = Stream.concat(execute1.get().stream(), execute2.get().stream())
+                .sorted(Comparator.comparing(RewardOrganizationExport::getId))
+                .toList();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(3 * 2 +2, result.size());
+        Assertions.assertEquals(3 * 2 +1, result.size()); // 3 split for INITIATIVEID, 3 split for INITIATIVEID2, 1 for INITIATIVEID3
+
+        Assertions.assertEquals(Collections.emptyList(), rewardsRepository.findInitiatives2Notify(Collections.emptyList()).collectList().block(), "There are still initiative to be notified!");
 
         List<RewardOrganizationExport> exports = exportsRepository.findAll()
                 .sort(Comparator.comparing(RewardOrganizationExport::getId))
@@ -185,11 +201,10 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
 
         Assertions.assertEquals(exports, result);
 
-        String todayStr = Utils.FORMATTER_DATE.format(TODAY);
-        checkInitiativeExports("INITIATIVEID_%s.1".formatted(todayStr), rule1, "/rewards/notifications/export/ORGANIZATION_ID_1_uww/INITIATIVEID/NAME_1_jmy_%s.1.zip".formatted(todayStr), 1L, TODAY, result);
+        checkInitiativeExports("INITIATIVEID_%s.1".formatted(TODAY_STR), rule1, "/rewards/notifications/export/ORGANIZATION_ID_1_uww/INITIATIVEID/NAME_1_jmy_%s.1.zip".formatted(TODAY_STR), 1L, TODAY, result);
         checkInitiativeExports("STUCKEXPORTID.5", rule2, "/rewards/notifications/export/ORGANIZATION_ID_2_izn/INITIATIVEID2/STUCKEXPORT.5.zip", 5L, stuckNotificationDate, result);
 
-        checkIbanKoUseCases(result);
+        checkIbanKoUseCases();
         checkCfKoUseCases(result);
     }
 
@@ -212,6 +227,8 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         );
     }
 
+    private final Pattern csvUniqueIdGroupMatch = Pattern.compile("(?:\"[^\"]*\";){1}\"([^\"]*)\".*");
+    @SneakyThrows
     private void checkExport(List<RewardOrganizationExport> result, String exportId, RewardNotificationRule rule, long expectedProgressive, String expectedFilePath, LocalDate expectedNotificationDate, long expectedExportSize) {
         RewardOrganizationExport export = result.stream().filter(e -> exportId.equals(e.getId())).findFirst().orElse(null);
         Assertions.assertNotNull(export);
@@ -234,7 +251,7 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNull(export.getFeedbackDate());
         Assertions.assertEquals(ExportStatus.EXPORTED, export.getStatus());
 
-        List<RewardsNotification> rewards = rewardsRepository.findAll(Example.of(RewardsNotification.builder().exportId(exportId).build())).collectList().block();
+        List<RewardsNotification> rewards = rewardsRepository.findExportRewards(exportId).collectList().block();
         Assertions.assertNotNull(rewards);
         Assertions.assertEquals(expectedExportSize, rewards.size());
         rewards.forEach(r-> {
@@ -244,7 +261,14 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
             Assertions.assertEquals(LocalDate.now(), r.getExportDate().toLocalDate());
         });
 
-        // TODO check CSV
+        Path exportFile = Path.of("/tmp", export.getFilePath().replace(".zip", ".csv"));
+        Files.exists(exportFile);
+        try(Stream<String> lines = Files.lines(exportFile)){
+            Assertions.assertEquals(
+                    rewards.stream().map(RewardsNotification::getId).sorted().toList(),
+                lines.skip(1).map(l->csvUniqueIdGroupMatch.matcher(l).replaceAll("$1")).sorted().toList()
+            );
+        }
     }
 
     private void checkExportSplit(List<RewardOrganizationExport> result, int splitNumber, int splitSize, String expectedBaseExportId, RewardNotificationRule rule, long expectedBaseProgressive, String expectedBaseFilePath, LocalDate expectedNotificationDate){
@@ -256,7 +280,7 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
                 expectedNotificationDate, splitSize);
     }
 
-    private void checkIbanKoUseCases(List<RewardOrganizationExport> result) {
+    private void checkIbanKoUseCases() {
         List<RewardsNotification> expectedIbanKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
                 .rejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
                 .build())).collectList().block();
@@ -274,10 +298,10 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
             Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });
 
-        checkExport(result,
-                "INITIATIVEID3_20221109.1", rule3,
-                1, "/rewards/notifications/export/ORGANIZATION_ID_3_vgj/INITIATIVEID3/NAME_3_hqu_20221109.1.zip"
-                , TODAY, 0);
+        // check not export
+        Assertions.assertEquals(0,
+                exportsRepository.findAll(Example.of(RewardOrganizationExport.builder().initiativeId(rule3.getInitiativeId()).build())).count().block()
+        );
     }
 
     private void checkCfKoUseCases(List<RewardOrganizationExport> result) {
@@ -288,8 +312,8 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNotNull(expectedCfKo);
         Assertions.assertEquals(1, expectedCfKo.size());
         expectedCfKo.forEach(r->{
-            Assertions.assertNull(r.getIban());
-            Assertions.assertNull(r.getCheckIbanResult());
+            Assertions.assertEquals("IBAN_%s".formatted(r.getUserId()), r.getIban());
+            Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getUserId()), r.getCheckIbanResult());
             Assertions.assertEquals(rule4.getInitiativeId(), r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());
@@ -299,9 +323,9 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         });
 
         checkExport(result,
-                "INITIATIVEID4_20221109.1", rule4,
-                1
-                , "/rewards/notifications/export/ORGANIZATION_ID_4_fwi/INITIATIVEID4/NAME_4_wfp_20221109.1.zip"
-                , TODAY, 0);
+                "INITIATIVEID4_%s.1".formatted(TODAY_STR)
+                , rule4, 1
+                , "/rewards/notifications/export/ORGANIZATION_ID_4_fwi/INITIATIVEID4/NAME_4_wfp_%s.1.zip".formatted(TODAY_STR)
+                , TODAY, splitSize);
     }
 }

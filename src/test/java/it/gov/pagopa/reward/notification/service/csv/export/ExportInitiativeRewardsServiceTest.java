@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExpor
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.csv.export.mapper.RewardNotification2ExportCsvService;
 import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverService;
@@ -31,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class ExportInitiativeRewardsServiceTest {
@@ -39,19 +41,20 @@ class ExportInitiativeRewardsServiceTest {
 
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock private RewardNotification2ExportCsvService reward2CsvLineServiceMock;
-    @Mock private ExportCsvFinalizeService csvWriterServiceMock;
     @Mock private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
+    @Mock private RewardOrganizationExportsRepository exportsRepositoryMock;
+    @Mock private ExportCsvFinalizeService csvWriterServiceMock;
 
     private ExportInitiativeRewardsService service;
 
     @BeforeEach
     void init() {
-        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, csvWriterServiceMock);
+        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock);
     }
 
     @AfterEach
     void verifyNoMoreMockInvocations() {
-        Mockito.verifyNoMoreInteractions(rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, csvWriterServiceMock);
+        Mockito.verifyNoMoreInteractions(rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, exportsRepositoryMock, csvWriterServiceMock);
     }
 
     @Test
@@ -73,6 +76,7 @@ class ExportInitiativeRewardsServiceTest {
                         .exportId(stuckExport.getId())
                         .status(RewardNotificationStatus.EXPORTED)
                         .build())
+                .peek(this::mockCsvLineBuild)
                 .toList();
         Mockito.when(rewardsNotificationRepositoryMock.findExportRewards(stuckExport.getId())).thenReturn(Flux.fromIterable(stuckRewardNotification));
 
@@ -155,7 +159,7 @@ class ExportInitiativeRewardsServiceTest {
         RewardOrganizationExport exportSplit2 = mockNextSplitInvocation(export);
 
         // When
-        List<RewardOrganizationExport> result = service.performExport(export, true).collectList().block();
+        List<RewardOrganizationExport> result = service.performExport(export, false).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -182,11 +186,9 @@ class ExportInitiativeRewardsServiceTest {
     }
 
     private Pair<List<RewardsNotification>, List<String>> mockCommonInvocations(int baseIndex, int n, RewardOrganizationExport export, int maxProgressive) {
-        List<RewardsNotification> rewardNotification2Notify = IntStream.range(baseIndex, baseIndex + n).mapToObj(RewardsNotificationFaker::mockInstance).toList();
-        Mockito.when(rewardsNotificationRepositoryMock.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())).thenReturn(Flux.fromIterable(rewardNotification2Notify));
+        List<RewardsNotification> rewardNotification2Notify = mockRewards(baseIndex, n, export);
 
-        Mockito.when(reward2CsvLineServiceMock.apply(Mockito.any())).thenAnswer(i ->
-                Mono.just(RewardNotificationExportCsvDto.builder().uniqueID(i.getArgument(0, RewardsNotification.class).getId()).build()));
+        rewardNotification2Notify.forEach(this::mockCsvLineBuild);
 
         List<String> invocationOrder = new BlockingArrayQueue<>();
         Mockito.when(csvWriterServiceMock.writeCsvAndFinalize(Mockito.any(), Mockito.any())).thenAnswer(i -> {
@@ -202,6 +204,21 @@ class ExportInitiativeRewardsServiceTest {
         return Pair.of(rewardNotification2Notify, invocationOrder);
     }
 
+    private void mockCsvLineBuild(RewardsNotification r) {
+        Mockito.when(reward2CsvLineServiceMock.apply(Mockito.same(r))).thenAnswer(i ->
+                Mono.just(RewardNotificationExportCsvDto.builder().uniqueID(i.getArgument(0, RewardsNotification.class).getId()).build()));
+    }
+
+    private List<RewardsNotification> mockRewards(int baseIndex, int n, RewardOrganizationExport export) {
+        List<RewardsNotification> rewardNotification2Notify = buildMockRewardInstances(baseIndex, n);
+        Mockito.when(rewardsNotificationRepositoryMock.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())).thenReturn(Flux.fromIterable(rewardNotification2Notify));
+        return rewardNotification2Notify;
+    }
+
+    private static List<RewardsNotification> buildMockRewardInstances(int baseIndex, int n) {
+        return IntStream.range(baseIndex, baseIndex + n).mapToObj(RewardsNotificationFaker::mockInstance).toList();
+    }
+
     private RewardOrganizationExport mockNextSplitInvocation(RewardOrganizationExport export) {
         RewardOrganizationExport exportSplit2 = new RewardOrganizationExport();
         exportSplit2.setId("EXPORTID.1");
@@ -211,5 +228,59 @@ class ExportInitiativeRewardsServiceTest {
 
         Mockito.when(initiative2ExportRetrieverServiceMock.reserveNextSplitExport(Mockito.same(export), Mockito.eq(1))).thenReturn(Mono.just(exportSplit2));
         return exportSplit2;
+    }
+
+    @Test
+    void testEmptyExport(){
+        // Given
+        int newRewards = csvMaxRows *2;
+
+        RewardOrganizationExport export = new RewardOrganizationExport();
+        export.setId("EXPORTID");
+        export.setInitiativeId("INITIATIVEID");
+        export.setNotificationDate(LocalDate.now());
+        export.setProgressive(0L);
+        export.setExportDate(LocalDate.now());
+
+        Mockito.when(rewardsNotificationRepositoryMock.findExportRewards(export.getId())).thenReturn(Flux.empty());
+        Mockito.when(exportsRepositoryMock.delete(Mockito.same(export))).thenReturn(Mono.empty());
+
+        mockRewards(0, newRewards, export);
+        Mockito.when(reward2CsvLineServiceMock.apply(Mockito.any())).thenReturn(Mono.empty());
+        // When
+        List<RewardOrganizationExport> result = service.performExport(export, false).collectList().block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(0, result.size());
+    }
+
+    @Test
+    void testEmptyExportSplit(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+        export.setId("EXPORTID");
+        export.setInitiativeId("INITIATIVEID");
+        export.setNotificationDate(LocalDate.now());
+        export.setProgressive(0L);
+        export.setExportDate(LocalDate.now());
+
+        Mockito.when(rewardsNotificationRepositoryMock.findExportRewards(export.getId())).thenReturn(Flux.empty());
+
+        Mockito.when(reward2CsvLineServiceMock.apply(Mockito.any())).thenReturn(Mono.empty());
+
+        List<RewardsNotification> firstSplitRecords = mockCommonInvocations(0, csvMaxRows, export, 1).getKey();
+        List<RewardsNotification> recordsDiscarded = buildMockRewardInstances(csvMaxRows, csvMaxRows * 2);
+
+        Mockito.when(rewardsNotificationRepositoryMock.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())).thenReturn(Flux.fromStream(Stream.concat(firstSplitRecords.stream(), recordsDiscarded.stream())));
+
+        // When
+        List<RewardOrganizationExport> result = service.performExport(export, false).collectList().block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+
+        Assertions.assertSame(export, result.get(0));
     }
 }

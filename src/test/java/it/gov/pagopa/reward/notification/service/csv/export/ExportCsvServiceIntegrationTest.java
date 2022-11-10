@@ -263,7 +263,10 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
             Assertions.assertEquals(LocalDate.now(), r.getExportDate().toLocalDate());
         });
 
-        Path zipPath = Paths.get("/tmp", export.getFilePath());
+        Path originalZipFile = Paths.get("/tmp", export.getFilePath());
+        Assertions.assertFalse(Files.exists(originalZipFile));
+
+        Path zipPath = Paths.get(originalZipFile.toString().replace(".zip", ".uploaded.zip"));
         Assertions.assertTrue(Files.exists(zipPath));
         Path csvPath = Paths.get(export.getFilePath().replace(".zip", ".csv"));
         Assertions.assertFalse(Files.exists(csvPath));

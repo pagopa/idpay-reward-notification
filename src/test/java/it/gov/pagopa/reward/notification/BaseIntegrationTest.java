@@ -7,6 +7,7 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+import it.gov.pagopa.reward.notification.azure.storage.AzureBlobClient;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -25,12 +26,14 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -40,13 +43,18 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.ReflectionUtils;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import javax.management.*;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.util.*;
@@ -156,6 +164,9 @@ public abstract class BaseIntegrationTest {
     @Autowired
     private WireMockServer wireMockServer;
 
+    @MockBean
+    private AzureBlobClient azureBlobClientMock;
+
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
@@ -197,8 +208,21 @@ public abstract class BaseIntegrationTest {
                 mongoUrl,
                 "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes),
                 wireMockServer.getOptions().portNumber(),
-                wireMockServer.baseUrl())
-        ;
+                wireMockServer.baseUrl());
+
+        mockAzureBlobClient();
+    }
+
+    protected void mockAzureBlobClient() {
+        Mockito.lenient().when(azureBlobClientMock.uploadFile(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenAnswer(i->{
+                    File zipFile = i.getArgument(0);
+                    Path zipPath = Path.of(zipFile.getAbsolutePath());
+                    Files.copy(zipPath,
+                            zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    return Mono.just(zipFile);
+                });
     }
 
     @Test

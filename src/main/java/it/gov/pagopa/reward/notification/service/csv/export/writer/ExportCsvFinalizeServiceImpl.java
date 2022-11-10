@@ -50,15 +50,22 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     public Mono<RewardOrganizationExport> writeCsvAndFinalize(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Writing export of initiative {} having id {} on localPath /tmp{} containing {} rows", export.getInitiativeId(), export.getId(), export.getFilePath(), csvLines.size());
 
-        String zipFilePath = writeCsv(csvLines, export);
+        Path zipFilePath = writeCsv(csvLines, export);
 
         updateExportCounters(csvLines, export);
         export.setStatus(ExportStatus.EXPORTED);
 
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Sending to Azure Storage export of initiative {} having id {} on path {}", export.getInitiativeId(), export.getId(), export.getFilePath());
 
-        return azureBlobClient.uploadFile(Path.of(zipFilePath).toFile(), export.getFilePath(), "application/zip")
-                .doOnNext(x->log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Updating exported RewardNotifications statuses {} and relating them to export {}", csvLines.size(), export.getId()))
+        return azureBlobClient.uploadFile(zipFilePath.toFile(), export.getFilePath(), "application/zip")
+                .doOnNext(x-> {
+                    log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Updating exported RewardNotifications statuses {} and relating them to export {}", csvLines.size(), export.getId());
+                    try {
+                        Files.delete(zipFilePath);
+                    } catch (IOException e) {
+                        log.warn("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot delete uploaded zip from container {}", zipFilePath, e);
+                    }
+                })
                 .flatMapMany(x -> Flux.fromIterable(csvLines)
                         .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getUniqueID(), l.getIban(), l.getCheckIban(), export.getId()))
                         .doOnNext(rId -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Updated exported RewardNotifications status {} and related to export {}", rId, export.getId()))
@@ -66,7 +73,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                 .then(rewardOrganizationExportsRepository.save(export));
     }
 
-    private String writeCsv(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
+    private Path writeCsv(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
         String localZipFileName = "/tmp%s".formatted(export.getFilePath());
         String localCsvFileName = localZipFileName.replaceAll("\\.zip$", ".csv");
 
@@ -89,7 +96,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
             throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot zip csv file %s".formatted(localCsvFileName), e);
         }
 
-        return localZipFileName;
+        return Path.of(localZipFileName);
     }
 
     private static void createDirectoryIfNotExists(String localFileName) {

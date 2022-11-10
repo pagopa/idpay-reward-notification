@@ -23,9 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -85,7 +83,13 @@ class ExportCsvFinalizeServiceTest {
 
         File zipFile = new File("/tmp", export.getFilePath());
         Mockito.when(azureBlobClientMock.uploadFile(zipFile, export.getFilePath(), "application/zip"))
-                .thenReturn(Mono.just(zipFile));
+                .thenAnswer(i->{
+                    Path zipPath = Path.of(zipFile.getAbsolutePath());
+                    Files.copy(zipPath,
+                            zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    return Mono.just(zipFile);
+                });
 
         // When
         RewardOrganizationExport result = service.writeCsvAndFinalize(csvLines, export).block();
@@ -108,9 +112,12 @@ class ExportCsvFinalizeServiceTest {
         Assertions.assertEquals(10, result.getRewardNotified());
         Assertions.assertEquals(1000L, result.getRewardsExportedCents());
 
-        Path zipPath = Paths.get("/tmp/result.zip");
+        Assertions.assertFalse(Files.exists(Paths.get("/tmp/result.zip")));
+        Path zipPath = Paths.get("/tmp/result.uploaded.zip");
         Assertions.assertTrue(Files.exists(zipPath));
         Path csvPath = Paths.get("/tmp/result.csv");
+        Assertions.assertFalse(Files.exists(csvPath));
+
         ZipUtils.unzip(zipPath.toString(), csvPath.getParent().toString());
         Assertions.assertTrue(Files.exists(csvPath));
 
@@ -124,6 +131,8 @@ class ExportCsvFinalizeServiceTest {
                     expctedCsvLine(csvLines.get(i)),
                     csvLinesStrs.get(i + 1));
         }
+
+        Files.delete(csvPath);
     }
 
     private final List<Function<RewardNotificationExportCsvDto, String>> cellGetters=List.of(

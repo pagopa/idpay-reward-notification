@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 import java.io.File;
 
 public interface AzureBlobClient {
-    Mono<Void> uploadFile(File file, String destination, String contentType);
+    Mono<File> uploadFile(File file, String destination, String contentType);
 }

@@ -8,7 +8,7 @@ import java.io.File;
 @Service
 public class AzureBlobClientImpl implements AzureBlobClient {
     @Override
-    public Mono<Void> uploadFile(File file, String destination, String contentType) {
-        return Mono.just(file).then();//TODO
+    public Mono<File> uploadFile(File file, String destination, String contentType) {
+        return Mono.just(file);//TODO
     }
 }

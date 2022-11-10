@@ -15,6 +15,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.rest.UserRestClient;
 import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.service.utils.ZipUtils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import lombok.SneakyThrows;
@@ -29,6 +30,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
@@ -261,14 +263,21 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
             Assertions.assertEquals(LocalDate.now(), r.getExportDate().toLocalDate());
         });
 
-        Path exportFile = Path.of("/tmp", export.getFilePath().replace(".zip", ".csv"));
-        Files.exists(exportFile);
-        try(Stream<String> lines = Files.lines(exportFile)){
+        Path zipPath = Paths.get("/tmp", export.getFilePath());
+        Assertions.assertTrue(Files.exists(zipPath));
+        Path csvPath = Paths.get(export.getFilePath().replace(".zip", ".csv"));
+        Assertions.assertFalse(Files.exists(csvPath));
+
+        ZipUtils.unzip(zipPath.toString(), csvPath.getParent().toString());
+        Assertions.assertTrue(Files.exists(csvPath));
+
+        try(Stream<String> lines = Files.lines(csvPath)){
             Assertions.assertEquals(
                     rewards.stream().map(RewardsNotification::getId).sorted().toList(),
                 lines.skip(1).map(l->csvUniqueIdGroupMatch.matcher(l).replaceAll("$1")).sorted().toList()
             );
         }
+        Files.delete(csvPath);
     }
 
     private void checkExportSplit(List<RewardOrganizationExport> result, int splitNumber, int splitSize, String expectedBaseExportId, RewardNotificationRule rule, long expectedBaseProgressive, String expectedBaseFilePath, LocalDate expectedNotificationDate){

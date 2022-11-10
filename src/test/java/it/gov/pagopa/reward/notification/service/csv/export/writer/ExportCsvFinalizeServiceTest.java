@@ -83,8 +83,9 @@ class ExportCsvFinalizeServiceTest {
 
         Mockito.when(rewardOrganizationExportsRepositoryMock.save(Mockito.same(export))).thenReturn(Mono.just(export));
 
-        Mockito.when(azureBlobClientMock.uploadFile(new File("/tmp",export.getFilePath()), export.getFilePath(), "application/zip"))
-                .thenReturn(Mono.just(export).then());
+        File zipFile = new File("/tmp", export.getFilePath());
+        Mockito.when(azureBlobClientMock.uploadFile(zipFile, export.getFilePath(), "application/zip"))
+                .thenReturn(Mono.just(zipFile));
 
         // When
         RewardOrganizationExport result = service.writeCsvAndFinalize(csvLines, export).block();

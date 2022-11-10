@@ -1,15 +1,20 @@
 package it.gov.pagopa.reward.notification.config;
 
+import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import springfox.documentation.builders.AlternateTypeBuilder;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.schema.WildcardType;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -54,6 +59,8 @@ public class SwaggerConfig {
 				.apis(Predicate.not(RequestHandlerSelectors.basePackage("org.springframework.hateoas"))).build()
 				.alternateTypeRules(
 						newRule(typeResolver.resolve(Pageable.class), pageableMixin(), Ordered.HIGHEST_PRECEDENCE))
+				.alternateTypeRules(
+						newRule(typeResolver.resolve(Page.class, WildcardType.class), typeResolver.resolve(PageSwaggerOverride.class, WildcardType.class), Ordered.HIGHEST_PRECEDENCE))
 				.directModelSubstitute(LocalTime.class, String.class)
 				.apiInfo(this.metadata());
 	}
@@ -75,5 +82,15 @@ public class SwaggerConfig {
 				.property(b->b.name("size").type(Integer.class).canRead(true).canWrite(true))
 				.property(b->b.name("sort").type(String.class).canRead(true).canWrite(true))
 				.build();
+	}
+
+	@ApiModel()
+	static interface PageSwaggerOverride<T> extends Page<T> {
+
+		@Override
+		@JsonIgnore
+		default Pageable getPageable() {
+			return Page.super.getPageable();
+		}
 	}
 }

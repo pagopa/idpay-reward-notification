@@ -11,4 +11,4 @@ public enum ExportStatus {
     PARTIAL,
     /** if all records have been returned by the organization */
     COMPLETE
-}
+    }

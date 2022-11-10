@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
@@ -150,6 +151,7 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                             .trxIds(trxs.stream().map(TransactionDTO::getId).toList())
                             .depositType(DepositType.PARTIAL)
                             .startDepositDate(TODAY)
+                            .status(RewardNotificationStatus.TO_SEND)
                     .build();
             switch (n.getInitiativeId()) {
                 case INITIATIVE_ID_NOTIFY_DAILY -> {

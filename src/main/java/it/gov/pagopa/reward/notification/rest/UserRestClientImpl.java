@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.rest;
 
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -10,10 +11,10 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class UserRestClientImpl implements UserRestClient {
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String URI = "/tokens/{token}/pii";
@@ -30,23 +31,24 @@ public class UserRestClientImpl implements UserRestClient {
         this.pdvMaxAttempts = pdvMaxAttempts;
         this.webClient = webClientBuilder.clone()
                 .baseUrl(pdvBaseUrl)
-                .defaultHeader(API_KEY_HEADER,apiKeyValue)
+                .defaultHeader(API_KEY_HEADER, apiKeyValue)
                 .build();
     }
 
     @Override
-    public Mono<UserInfoPDV> retrieveUserInfo(String userId){
-
-        Map<String, String> params = new HashMap<>();
-        params.put("token", userId);
-
-        return  webClient
+    public Mono<UserInfoPDV> retrieveUserInfo(String userId) {
+        return webClient
                 .method(HttpMethod.GET)
-                .uri(URI, params)
+                .uri(URI, Map.of("token", userId))
                 .retrieve()
                 .bodyToMono(UserInfoPDV.class)
-                .retryWhen(Retry.fixedDelay(pdvMaxAttempts,Duration.ofMillis(pdvRetryDelay))
+                .retryWhen(Retry.fixedDelay(pdvMaxAttempts, Duration.ofMillis(pdvRetryDelay))
                         .filter(ex -> ex instanceof WebClientResponseException.TooManyRequests)
-                );
+                )
+
+                .onErrorResume(WebClientResponseException.NotFound.class, x -> {
+                    log.warn("userId not found into pdv: {}", userId);
+                    return Mono.empty();
+                });
     }
 }

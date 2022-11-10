@@ -5,16 +5,23 @@ import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.utils.ExportConstants;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended {
+public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended{
+
+    public static final String FIELD_INITIATIVE_ID = RewardOrganizationExport.Fields.initiativeId;
+    public static final String FIELD_EXPORT_DATE = RewardOrganizationExport.Fields.exportDate;
+    public static final String FIELD_STATUS = RewardOrganizationExport.Fields.status;
 
     private final ReactiveMongoTemplate mongoTemplate;
 
@@ -105,5 +112,71 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
         } else {
             criteria.and(RewardOrganizationExport.Fields.status).in(ExportConstants.EXPORT_EXPOSED_STATUSES);
         }
+    }
+
+    @Override
+    public Mono<RewardOrganizationExport> reserveStuckExport() {
+        return mongoTemplate.findAndModify(
+                Query.query(Criteria
+                        .where(FIELD_STATUS).is(ExportStatus.IN_PROGRESS)
+                        .and(FIELD_EXPORT_DATE).lt(LocalDate.now())
+                ),
+                new Update()
+                        .set(FIELD_EXPORT_DATE, LocalDate.now()),
+                FindAndModifyOptions.options().returnNew(true),
+                RewardOrganizationExport.class
+        );
+    }
+
+    @Override
+    public Mono<RewardOrganizationExport> reserveExport() {
+        return mongoTemplate.findAndModify(
+                Query.query(Criteria.where(FIELD_STATUS).is(ExportStatus.TO_DO)),
+                new Update()
+                        .set(FIELD_STATUS, ExportStatus.IN_PROGRESS)
+                        .set(FIELD_EXPORT_DATE, LocalDate.now()),
+                FindAndModifyOptions.options().returnNew(true),
+                RewardOrganizationExport.class
+        );
+    }
+
+    @Override
+    public Mono<RewardOrganizationExport> configureNewExport(RewardOrganizationExport newExport) {
+        return mongoTemplate.upsert(
+                Query.query(
+                        Criteria.where(FIELD_INITIATIVE_ID).is(newExport.getInitiativeId())
+                                .and(FIELD_STATUS).in(ExportStatus.TO_DO, ExportStatus.IN_PROGRESS)
+                ),
+                new Update()
+                        .setOnInsert(RewardOrganizationExport.Fields.id, newExport.getId())
+                        .setOnInsert(RewardOrganizationExport.Fields.filePath, newExport.getFilePath())
+                        .setOnInsert(RewardOrganizationExport.Fields.initiativeId, newExport.getInitiativeId())
+                        .setOnInsert(RewardOrganizationExport.Fields.initiativeName, newExport.getInitiativeName())
+                        .setOnInsert(RewardOrganizationExport.Fields.organizationId, newExport.getOrganizationId())
+                        .setOnInsert(RewardOrganizationExport.Fields.notificationDate, newExport.getNotificationDate())
+                        .setOnInsert(RewardOrganizationExport.Fields.progressive, newExport.getProgressive())
+                        .setOnInsert(RewardOrganizationExport.Fields.status, newExport.getStatus())
+
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardsExportedCents, newExport.getRewardsExportedCents())
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardsResultsCents, newExport.getRewardsResultsCents())
+
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardNotified, newExport.getRewardNotified())
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardsResulted, newExport.getRewardsResulted())
+                        .setOnInsert(RewardOrganizationExport.Fields.rewardsResultedOk, newExport.getRewardsResultedOk())
+
+                        .setOnInsert(RewardOrganizationExport.Fields.percentageResults, newExport.getPercentageResults())
+                        .setOnInsert(RewardOrganizationExport.Fields.percentageResulted, newExport.getPercentageResulted())
+                        .setOnInsert(RewardOrganizationExport.Fields.percentageResultedOk, newExport.getPercentageResultedOk())
+
+                        ,
+                RewardOrganizationExport.class
+        ).flatMap(r->{
+            if(r.getMatchedCount()>0) {
+                return Mono.empty();
+            }
+            else {
+                return Mono.just(newExport);
+            }
+        });
     }
 }

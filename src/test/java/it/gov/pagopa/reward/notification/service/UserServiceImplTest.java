@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv;
+package it.gov.pagopa.reward.notification.service;
 
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import it.gov.pagopa.reward.notification.model.User;
@@ -59,7 +59,7 @@ class UserServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "name", "surname"); // TODO name and surname will be filled here?
         Assertions.assertEquals("FISCALCODE_RETRIEVED", result.getFiscalCode());
         Assertions.assertNotNull(inspectCache.get(userIdTest));
         Assertions.assertEquals(initialSizeCache+1,inspectCache.size());
@@ -82,7 +82,7 @@ class UserServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "name", "surname"); // TODO name and surname will be filled here?
         Assertions.assertEquals("FISCALCODE_0", result.getFiscalCode());
         Assertions.assertNotNull(inspectCache.get(userIdTest));
         Assertions.assertEquals(initialSizeCache,inspectCache.size());
@@ -93,6 +93,7 @@ class UserServiceImplTest {
     private Map<String, User> retrieveCache() {
         Object cacheBefore = ReflectionUtils.getField(userCacheField, userService);
         Assertions.assertNotNull(cacheBefore);
+        //noinspection unchecked
         return (Map<String, User>) cacheBefore;
     }
 }

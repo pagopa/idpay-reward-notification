@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "rewards_organization_exports")
 @FieldNameConstants
 public class RewardOrganizationExport {
@@ -27,6 +27,8 @@ public class RewardOrganizationExport {
     private String organizationId;
     private String filePath;
     private LocalDate notificationDate;
+    private LocalDate exportDate;
+    private long progressive;
 
     /** Total reward notified in cents */
     private Long rewardsExportedCents;

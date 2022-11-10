@@ -170,6 +170,7 @@ logging:
     org.kie: ${LOG_LEVEL_ORG_KIE:WARN}
     org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
+    org.apache.commons:.beanutils.converters: ${LOG_LEVEL_APACHE_COMMON_BEANUTILS_CONVERTERS:WARN}
 
 app:
   # A feature to guarantee the execution order of the trx having the same userId
@@ -184,10 +185,21 @@ app:
     weekly-notification-day: ${REWARDS_NOTIFICATION_WEEKLY_NOTIFICATION_DAY:SUNDAY}
     # TOMORROW or 'NEXT_' followed by the day of week
     threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
+  csv:
+    export:
+      schedule: ${SCHEDULE_EXPORT_CSV:0 1 * * ?} # each day at 01:00AM
+      # days before current to search rewardNotification to export
+      day-before: ${EXPORT_CSV_DAY_BEFORE:7}
+      # column separator to use when exporting csv
+      separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
+      # The maximum number of rows to store in each csv
+      split-size: ${EXPORT_CSV_SPLIT_SIZE:50000}
+      storage:
+        base-path: ${EXPORT_BASE_PATH:/rewards/notifications/export}
   pdv:
     base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:
-      x-api-key: ${PDV_DECRYPT_API_KEY:}
+      x-api-key: ${PDV_DECRYPT_API_KEY:x_api_key}
     retry:
       delay-millis: ${PDV_RETRY_DELAY_MILLIS:10000}
       max-attempts: ${PDV_RETRY_MAX_ATTEMPTS:${RETRY_MAX_ATTEMPTS:10}}

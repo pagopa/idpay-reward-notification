@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.csv;
+package it.gov.pagopa.reward.notification.service;
 
 import it.gov.pagopa.reward.notification.model.User;
 import reactor.core.publisher.Mono;

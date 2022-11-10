@@ -266,21 +266,25 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         Path originalZipFile = Paths.get("/tmp", export.getFilePath());
         Assertions.assertFalse(Files.exists(originalZipFile));
 
-        Path zipPath = Paths.get(originalZipFile.toString().replace(".zip", ".uploaded.zip"));
-        Assertions.assertTrue(Files.exists(zipPath));
-        Path csvPath = Paths.get(export.getFilePath().replace(".zip", ".csv"));
+        Path uploadedZipPath = Paths.get(originalZipFile.toString().replace(".zip", ".uploaded.zip"));
+        Assertions.assertTrue(Files.exists(uploadedZipPath));
+        Path csvPath = Paths.get(uploadedZipPath.toString().replace(".uploaded.zip", ".csv"));
         Assertions.assertFalse(Files.exists(csvPath));
 
-        ZipUtils.unzip(zipPath.toString(), csvPath.getParent().toString());
-        Assertions.assertTrue(Files.exists(csvPath));
+        ZipUtils.unzip(uploadedZipPath.toString(), csvPath.getParent().toString());
 
-        try(Stream<String> lines = Files.lines(csvPath)){
-            Assertions.assertEquals(
-                    rewards.stream().map(RewardsNotification::getId).sorted().toList(),
-                lines.skip(1).map(l->csvUniqueIdGroupMatch.matcher(l).replaceAll("$1")).sorted().toList()
-            );
+        try{
+            Assertions.assertTrue(Files.exists(csvPath));
+
+            try(Stream<String> lines = Files.lines(csvPath)){
+                Assertions.assertEquals(
+                        rewards.stream().map(RewardsNotification::getId).sorted().toList(),
+                        lines.skip(1).map(l->csvUniqueIdGroupMatch.matcher(l).replaceAll("$1")).sorted().toList()
+                );
+            }
+        } finally {
+            Files.delete(csvPath);
         }
-        Files.delete(csvPath);
     }
 
     private void checkExportSplit(List<RewardOrganizationExport> result, int splitNumber, int splitSize, String expectedBaseExportId, RewardNotificationRule rule, long expectedBaseProgressive, String expectedBaseFilePath, LocalDate expectedNotificationDate){

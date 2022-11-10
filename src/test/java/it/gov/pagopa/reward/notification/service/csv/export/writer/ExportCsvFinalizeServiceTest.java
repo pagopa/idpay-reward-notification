@@ -119,20 +119,23 @@ class ExportCsvFinalizeServiceTest {
         Assertions.assertFalse(Files.exists(csvPath));
 
         ZipUtils.unzip(zipPath.toString(), csvPath.getParent().toString());
-        Assertions.assertTrue(Files.exists(csvPath));
+        try {
+            Assertions.assertTrue(Files.exists(csvPath));
 
-        List<String> csvLinesStrs = Files.readAllLines(csvPath);
-        Assertions.assertEquals(
-                "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"accountHolderName\";\"accountHolderSurname\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
-                csvLinesStrs.get(0));
-
-        for (int i = 0; i < csvLines.size(); i++) {
+            List<String> csvLinesStrs = Files.readAllLines(csvPath);
             Assertions.assertEquals(
-                    expctedCsvLine(csvLines.get(i)),
-                    csvLinesStrs.get(i + 1));
-        }
+                    "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"accountHolderName\";\"accountHolderSurname\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
+                    csvLinesStrs.get(0));
 
-        Files.delete(csvPath);
+            for (int i = 0; i < csvLines.size(); i++) {
+                Assertions.assertEquals(
+                        expctedCsvLine(csvLines.get(i)),
+                        csvLinesStrs.get(i + 1));
+            }
+        }
+        finally {
+            Files.delete(csvPath);
+        }
     }
 
     private final List<Function<RewardNotificationExportCsvDto, String>> cellGetters=List.of(

@@ -3,11 +3,13 @@ package it.gov.pagopa.reward.notification.service.csv.export.writer;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.mongodb.Function;
+import it.gov.pagopa.reward.notification.azure.storage.AzureBlobClient;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.utils.ZipUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,10 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -30,10 +31,9 @@ import java.util.stream.IntStream;
 @ExtendWith(MockitoExtension.class)
 class ExportCsvFinalizeServiceTest {
 
-    @Mock
-    private RewardsNotificationRepository rewardsNotificationRepositoryMock;
-    @Mock
-    private RewardOrganizationExportsRepository rewardOrganizationExportsRepositoryMock;
+    @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
+    @Mock private RewardOrganizationExportsRepository rewardOrganizationExportsRepositoryMock;
+    @Mock private AzureBlobClient azureBlobClientMock;
 
     private ExportCsvFinalizeService service;
 
@@ -41,7 +41,7 @@ class ExportCsvFinalizeServiceTest {
     void init() {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         char csvSeparator = ';';
-        service = new ExportCsvFinalizeServiceImpl(csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock);
+        service = new ExportCsvFinalizeServiceImpl(csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, azureBlobClientMock);
     }
 
     @Test
@@ -81,6 +81,16 @@ class ExportCsvFinalizeServiceTest {
 
         Mockito.when(rewardOrganizationExportsRepositoryMock.save(Mockito.same(export))).thenReturn(Mono.just(export));
 
+        File zipFile = new File("/tmp", export.getFilePath());
+        Mockito.when(azureBlobClientMock.uploadFile(zipFile, export.getFilePath(), "application/zip"))
+                .thenAnswer(i->{
+                    Path zipPath = Path.of(zipFile.getAbsolutePath());
+                    Files.copy(zipPath,
+                            zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    return Mono.just(zipFile);
+                });
+
         // When
         RewardOrganizationExport result = service.writeCsvAndFinalize(csvLines, export).block();
 
@@ -102,18 +112,29 @@ class ExportCsvFinalizeServiceTest {
         Assertions.assertEquals(10, result.getRewardNotified());
         Assertions.assertEquals(1000L, result.getRewardsExportedCents());
 
+        Assertions.assertFalse(Files.exists(Paths.get("/tmp/result.zip")));
+        Path zipPath = Paths.get("/tmp/result.uploaded.zip");
+        Assertions.assertTrue(Files.exists(zipPath));
         Path csvPath = Paths.get("/tmp/result.csv");
-        Assertions.assertTrue(Files.exists(csvPath));
+        Assertions.assertFalse(Files.exists(csvPath));
 
-        List<String> csvLinesStrs = Files.readAllLines(csvPath);
-        Assertions.assertEquals(
-                "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"accountHolderName\";\"accountHolderSurname\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
-                csvLinesStrs.get(0));
+        ZipUtils.unzip(zipPath.toString(), csvPath.getParent().toString());
+        try {
+            Assertions.assertTrue(Files.exists(csvPath));
 
-        for (int i = 0; i < csvLines.size(); i++) {
+            List<String> csvLinesStrs = Files.readAllLines(csvPath);
             Assertions.assertEquals(
-                    expctedCsvLine(csvLines.get(i)),
-                    csvLinesStrs.get(i + 1));
+                    "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"accountHolderName\";\"accountHolderSurname\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
+                    csvLinesStrs.get(0));
+
+            for (int i = 0; i < csvLines.size(); i++) {
+                Assertions.assertEquals(
+                        expctedCsvLine(csvLines.get(i)),
+                        csvLinesStrs.get(i + 1));
+            }
+        }
+        finally {
+            Files.delete(csvPath);
         }
     }
 

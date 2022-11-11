@@ -25,12 +25,17 @@ public class RewardOrganizationExports2ExportsDTOMapper implements Function<Rewa
 
     @Override
     public RewardExportsDTO apply(RewardOrganizationExport rewardOrganizationExport) {
+        String filePath = rewardOrganizationExport.getFilePath();
+        if(filePath!=null){
+            String[] pathSplitted = filePath.split("/");
+            filePath=pathSplitted[pathSplitted.length-1];
+        }
         return RewardExportsDTO.builder()
                 .id(rewardOrganizationExport.getId())
                 .initiativeId(rewardOrganizationExport.getInitiativeId())
                 .initiativeName(rewardOrganizationExport.getInitiativeName())
                 .organizationId(rewardOrganizationExport.getOrganizationId())
-                .filePath(rewardOrganizationExport.getFilePath())
+                .filePath(filePath)
                 .notificationDate(rewardOrganizationExport.getNotificationDate())
 
                 .rewardsExported(centsToEur(rewardOrganizationExport.getRewardsExportedCents()))

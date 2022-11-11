@@ -30,6 +30,7 @@ public class RewardOrganizationExportsFaker {
         out.organizationId("ORGANIZATION_ID_%d".formatted(bias));
         out.filePath("/%s/%d".formatted(fakeValuesService.bothify("???"), bias));
         out.notificationDate(CHOSEN_DATE);
+        out.exportDate(CHOSEN_DATE);
         out.rewardsExportedCents(bias*10000L);
         out.rewardsResultsCents(bias*10000L);
         out.rewardNotified(bias+1L);

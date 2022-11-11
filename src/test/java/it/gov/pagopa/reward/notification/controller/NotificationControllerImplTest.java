@@ -32,11 +32,13 @@ class NotificationControllerImplTest {
     @Autowired
     protected WebTestClient webClient;
 
+    private static final PageRequest TEST_PAGE_REQUEST = PageRequest.of(0,10);
+
     @Test
     void testGetExportsOk() {
         RewardExportsDTO rewardExportsDTOMock = RewardExportsDTOFaker.mockInstance(1);
 
-        Mockito.when(organizationExportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter()))
+        Mockito.when(organizationExportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ExportFilter()))
                 .thenReturn(Flux.just(rewardExportsDTOMock));
 
         webClient.get()
@@ -46,13 +48,13 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBodyList(RewardExportsDTO.class).isEqualTo(List.of(rewardExportsDTOMock));
 
-        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter());
+        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ExportFilter());
     }
 
     @Test
     void testGetExportsEmpty() {
         RewardExportsDTO rewardExportsDTOMock = RewardExportsDTOFaker.mockInstance(1);
-        Mockito.when(organizationExportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter()))
+        Mockito.when(organizationExportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ExportFilter()))
                 .thenReturn(Flux.empty());
 
         webClient.get()
@@ -62,7 +64,7 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBodyList(RewardExportsDTO.class).isEqualTo(Collections.emptyList());
 
-        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", PageRequest.of(0, 2000), new ExportFilter());
+        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ExportFilter());
     }
 
     @Test
@@ -99,11 +101,10 @@ class NotificationControllerImplTest {
     @Test
     void testGetExportsPaged() {
         RewardExportsDTO dtoMock = RewardExportsDTOFaker.mockInstance(1);
-        PageRequest pageRequest = PageRequest.of(0, 2000);
-        PageImpl<RewardExportsDTO> pageMock = new PageImpl<>(List.of(dtoMock), pageRequest, 1);
+        PageImpl<RewardExportsDTO> pageMock = new PageImpl<>(List.of(dtoMock), TEST_PAGE_REQUEST, 1);
 
 
-        Mockito.when(organizationExportsServiceMock.findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", pageRequest, new ExportFilter()))
+        Mockito.when(organizationExportsServiceMock.findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ExportFilter()))
                 .thenReturn(Mono.just(pageMock));
 
         webClient.get()
@@ -114,6 +115,6 @@ class NotificationControllerImplTest {
                 .expectBody(new ParameterizedTypeReference<Page<RewardExportsDTO>>() {})
                 .isEqualTo(pageMock);
 
-        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", pageRequest, new ExportFilter());
+        Mockito.verify(organizationExportsServiceMock, Mockito.times(1)).findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ExportFilter());
     }
 }

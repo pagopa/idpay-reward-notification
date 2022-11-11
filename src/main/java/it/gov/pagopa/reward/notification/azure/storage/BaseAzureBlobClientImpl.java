@@ -14,11 +14,11 @@ import reactor.core.publisher.Mono;
 import java.io.File;
 
 @Slf4j
-public class BaseAzureBlobClientImpl implements AzureBlobClient {
+public abstract class BaseAzureBlobClientImpl implements AzureBlobClient {
 
     private final BlobContainerAsyncClient blobContainerClient;
 
-    public BaseAzureBlobClientImpl(
+    protected BaseAzureBlobClientImpl(
             String storageConnectionString,
             String blobContainerName
     ) {

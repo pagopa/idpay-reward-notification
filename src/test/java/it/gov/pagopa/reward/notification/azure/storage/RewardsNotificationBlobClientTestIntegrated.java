@@ -19,7 +19,7 @@ class RewardsNotificationBlobClientTestIntegrated extends RewardsNotificationBlo
 
     @Override
     protected AzureBlobClient builtBlobInstance() {
-        return new BaseAzureBlobClientImpl(connectionString, "refund");
+        return new RewardsNotificationBlobClientImpl(connectionString, "refund");
     }
 
     @Override

@@ -13,9 +13,11 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 @SuppressWarnings("squid:S3577") // suppressing class name not match alert
 @TestPropertySource(locations = {
-        "classpath:/secrets/appPdv.properties"
-})
-@ContextConfiguration(inheritInitializers = false)
+        "classpath:/secrets/appPdv.properties",
+},
+        properties = {
+                "app.pdv.base-url=https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1"
+        })
 class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
 
     @Autowired
@@ -33,17 +35,17 @@ class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
         UserInfoPDV result = userRestClient.retrieveUserInfo(userIdOK).block();
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(fiscalCodeOKExpected,result.getPii());
+        Assertions.assertEquals(fiscalCodeOKExpected, result.getPii());
 
     }
 
     @Test
     void retrieveUserInfoNotFound() {
-        try{
+        try {
             userRestClient.retrieveUserInfo(userIdNotFound).block();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             Assertions.assertTrue(e instanceof WebClientException);
-            Assertions.assertEquals(WebClientResponseException.NotFound.class,e.getClass());
+            Assertions.assertEquals(WebClientResponseException.NotFound.class, e.getClass());
         }
     }
 }

@@ -36,6 +36,6 @@ public class NotificationControllerImpl implements NotificationController{
     public Mono<Page<RewardExportsDTO>> getExportsPaged(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
         return organizationExportsService
                 .findAllPaged(organizationId, initiativeId, pageable, filters)
-                .switchIfEmpty(Mono.just(Page.empty()));
+                .switchIfEmpty(Mono.just(Page.empty(pageable)));
     }
 }

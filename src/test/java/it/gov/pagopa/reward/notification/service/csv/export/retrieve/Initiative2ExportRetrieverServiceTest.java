@@ -250,7 +250,7 @@ class Initiative2ExportRetrieverServiceTest {
 
         String todayStr=Utils.FORMATTER_DATE.format(LocalDate.now());
         Assertions.assertEquals("ID_0_ssx_%s.12".formatted(todayStr), result.getId());
-        Assertions.assertEquals("/export/base/path/ORGANIZATION_ID_0_hpd/ID_0_ssx/NAME_0_vnj_%s.12.zip".formatted(todayStr), result.getFilePath());
+        Assertions.assertEquals("ORGANIZATION_ID_0_hpd/ID_0_ssx/export/NAME_0_vnj_%s.12.zip".formatted(todayStr), result.getFilePath());
         Assertions.assertEquals(baseExport.getInitiativeId(), result.getInitiativeId());
         Assertions.assertEquals(baseExport.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(baseExport.getOrganizationId(), result.getOrganizationId());

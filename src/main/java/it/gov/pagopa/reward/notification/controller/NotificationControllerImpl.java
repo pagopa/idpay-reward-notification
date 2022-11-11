@@ -21,8 +21,7 @@ public class NotificationControllerImpl implements NotificationController{
     @Override
     public Flux<RewardExportsDTO> getExports(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
            return organizationExportsService
-                   .findAllBy(organizationId, initiativeId, pageable, filters)
-                   .switchIfEmpty(Flux.empty());
+                   .findAllBy(organizationId, initiativeId, pageable, filters);
     }
 
     @Override

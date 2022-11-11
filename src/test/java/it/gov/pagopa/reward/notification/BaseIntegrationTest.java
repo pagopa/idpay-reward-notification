@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
@@ -120,6 +121,7 @@ import static org.awaitility.Awaitility.await;
         })
 @AutoConfigureDataMongo
 @AutoConfigureWireMock(stubs = "classpath:/stub/pdv", port = 0)
+@AutoConfigureWebTestClient
 public abstract class BaseIntegrationTest {
     public static final String APPLICATION_NAME = "idpay-reward-notification";
 

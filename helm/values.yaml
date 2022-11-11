@@ -29,7 +29,7 @@ microservice-chart:
 
   ingress:
     create: true
-    path: /idpay/reward/notification/(.*)
+    path: /idpayrewardnotification/(.*)
 
   serviceAccount:
     create: false

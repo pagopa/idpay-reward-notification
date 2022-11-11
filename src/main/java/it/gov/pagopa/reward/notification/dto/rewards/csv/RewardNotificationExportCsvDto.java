@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.rewards.csv;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class RewardNotificationExportCsvDto {
+
+    @CsvIgnore private String id;
 
     @CsvBindByName(column="progressiveCode") private Long progressiveCode;
     @CsvBindByName(column="uniqueID") private String uniqueID;

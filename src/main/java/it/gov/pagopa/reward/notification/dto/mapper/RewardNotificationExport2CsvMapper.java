@@ -17,8 +17,10 @@ public class RewardNotificationExport2CsvMapper {
         String depositStartDateStr = DateTimeFormatter.ISO_DATE.format(reward.getStartDepositDate());
         String depositEndDateStr = DateTimeFormatter.ISO_DATE.format(reward.getNotificationDate());
 
+        out.setId(reward.getId());
+
         out.setProgressiveCode(reward.getProgressive());
-        out.setUniqueID(reward.getId());
+        out.setUniqueID(reward.getExternalId());
         out.setFiscalCode(user.getFiscalCode());
         out.setAccountHolderName(user.getName());
         out.setAccountHolderSurname(user.getSurname());

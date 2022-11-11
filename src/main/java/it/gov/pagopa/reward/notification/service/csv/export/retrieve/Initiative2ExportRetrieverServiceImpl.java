@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRep
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
@@ -32,8 +33,17 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
             RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationRepository rewardsNotificationRepository, RewardNotificationRuleRepository rewardNotificationRuleRepository) {
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
-        this.exportBasePath = exportBasePath;
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
+
+        if(StringUtils.isEmpty(exportBasePath)){
+            this.exportBasePath="";
+        } else {
+            if(exportBasePath.endsWith("/")){
+                this.exportBasePath=exportBasePath;
+            } else {
+                this.exportBasePath= "%s/".formatted(exportBasePath);
+            }
+        }
     }
 
     @Override
@@ -90,7 +100,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
         String nowFormatted = Utils.FORMATTER_DATE.format(now);
         return RewardOrganizationExport.builder()
                 .id("%s_%s.%d".formatted(rule.getInitiativeId(), nowFormatted, progressive))
-                .filePath("%s/%s/%s/%s".formatted(
+                .filePath("%s%s/%s/export/%s".formatted(
                         exportBasePath,
                         rule.getOrganizationId(),
                         rule.getInitiativeId(),
@@ -124,7 +134,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     }
 
     private String escapeRuleName(String initiativeName) {
-        return initiativeName.replaceAll("\\W", "").substring(0, 10);
+        return StringUtils.left(initiativeName.replaceAll("\\W", ""), 10);
     }
 
     @Override

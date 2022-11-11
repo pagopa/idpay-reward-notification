@@ -42,7 +42,8 @@ class RewardNotificationExport2CsvMapperTest {
         Assertions.assertNotNull(result);
 
         Assertions.assertEquals(reward.getProgressive(), result.getProgressiveCode());
-        Assertions.assertEquals(reward.getId(), result.getUniqueID());
+        Assertions.assertEquals(reward.getId(), result.getId());
+        Assertions.assertEquals(reward.getExternalId(), result.getUniqueID());
         Assertions.assertEquals("CF", result.getFiscalCode());
         Assertions.assertEquals("NAME", result.getAccountHolderName());
         Assertions.assertEquals("SURNAME", result.getAccountHolderSurname());

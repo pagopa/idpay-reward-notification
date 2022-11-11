@@ -4,7 +4,7 @@ import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-import it.gov.pagopa.reward.notification.azure.storage.AzureBlobClient;
+import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -33,11 +33,11 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     private final RewardsNotificationRepository rewardsNotificationRepository;
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
     private final HeaderColumnNameStrategy<RewardNotificationExportCsvDto> mappingStrategy;
-    private final AzureBlobClient azureBlobClient;
+    private final RewardsNotificationBlobClient azureBlobClient;
 
     public ExportCsvFinalizeServiceImpl(
             @Value("${app.csv.export.separator}") char csvSeparator,
-            RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, AzureBlobClient azureBlobClient) {
+            RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationBlobClient azureBlobClient) {
         this.csvSeparator = csvSeparator;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
@@ -58,6 +58,15 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Sending to Azure Storage export of initiative {} having id {} on path {}", export.getInitiativeId(), export.getId(), export.getFilePath());
 
         return azureBlobClient.uploadFile(zipFilePath.toFile(), export.getFilePath(), "application/zip")
+                .filter(r-> {
+                    boolean uploadResult = r.getStatusCode() == 201;
+                    if(!uploadResult){
+                        log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while uploading export {}: {}, {}, {}", export.getFilePath(), r.getStatusCode(), r.getHeaders(), r.getValue());
+                        return false;
+                    } else {
+                        return true;
+                    }
+                })
                 .doOnNext(x-> {
                     log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Updating exported RewardNotifications statuses {} and relating them to export {}", csvLines.size(), export.getId());
                     try {
@@ -67,14 +76,21 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                     }
                 })
                 .flatMapMany(x -> Flux.fromIterable(csvLines)
-                        .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getUniqueID(), l.getIban(), l.getCheckIban(), export.getId()))
+                        .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getId(), l.getIban(), l.getCheckIban(), export.getId()))
                         .doOnNext(rId -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Updated exported RewardNotifications status {} and related to export {}", rId, export.getId()))
                 )
-                .then(rewardOrganizationExportsRepository.save(export));
+                .collectList()
+                .flatMap(x-> {
+                    if(!x.isEmpty()){
+                        return rewardOrganizationExportsRepository.save(export);
+                    } else {
+                        return Mono.empty();
+                    }
+                });
     }
 
     private Path writeCsv(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
-        String localZipFileName = "/tmp%s".formatted(export.getFilePath());
+        String localZipFileName = "/tmp/%s".formatted(export.getFilePath());
         String localCsvFileName = localZipFileName.replaceAll("\\.zip$", ".csv");
 
         log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Writing export CSV of initiative {} having id {} on path {}", export.getInitiativeId(), export.getId(), localCsvFileName);

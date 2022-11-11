@@ -2,20 +2,32 @@ package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
+import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.export.ExportCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RestController
 public class NotificationControllerImpl implements NotificationController{
 
     private final OrganizationExportsServiceImpl organizationExportsService;
+    private final ExportCsvService exportCsvService;
 
-    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService) {
+    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService, ExportCsvService exportCsvService) {
         this.organizationExportsService = organizationExportsService;
+        this.exportCsvService = exportCsvService;
+    }
+
+    @Override
+    public Flux<RewardOrganizationExport> forceExportScheduling() {
+        log.info("Forcing rewardNotification csv export");
+        return exportCsvService.execute();
     }
 
     @Override

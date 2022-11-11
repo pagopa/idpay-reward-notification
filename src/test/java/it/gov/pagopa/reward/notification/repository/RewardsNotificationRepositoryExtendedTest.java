@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
@@ -85,7 +86,7 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
     void findRewards2NotifyTest(){
         Assertions.assertEquals(
                 List.of(testData.get(4), testData.get(6)),
-                repository.findRewards2Notify("INITIATIVEIDNOTIFIEDTWICE", NOTIFICATION_DATE).collectList().block()
+                repository.findRewards2Notify("INITIATIVEIDNOTIFIEDTWICE", NOTIFICATION_DATE).sort(Comparator.comparing(RewardsNotification::getId)).collectList().block()
         );
     }
 

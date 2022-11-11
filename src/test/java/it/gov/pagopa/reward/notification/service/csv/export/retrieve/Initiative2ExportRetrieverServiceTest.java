@@ -41,13 +41,12 @@ class Initiative2ExportRetrieverServiceTest {
 
     private Initiative2ExportRetrieverServiceImpl service;
 
-    private final String exportBasePath = "/export/base/path";
     private final LocalDate now = LocalDate.now();
     private final String nowFormatted = Utils.FORMATTER_DATE.format(now);
 
     @BeforeEach
     void init() {
-        service = new Initiative2ExportRetrieverServiceImpl(exportBasePath, rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
+        service = new Initiative2ExportRetrieverServiceImpl("", rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
     @AfterEach
@@ -199,8 +198,7 @@ class Initiative2ExportRetrieverServiceTest {
     private RewardOrganizationExport buildNewExpectedRewardNotification(RewardNotificationRule rule, long progressive) {
         return RewardOrganizationExport.builder()
                 .id("%s_%s.%d".formatted(rule.getInitiativeId(), nowFormatted, progressive))
-                .filePath("%s/%s/%s/%s".formatted(
-                        exportBasePath,
+                .filePath("%s/%s/export/%s".formatted(
                         rule.getOrganizationId(),
                         rule.getInitiativeId(),
                         rule.getInitiativeName() + "_" + nowFormatted + "." + progressive + ".zip"
@@ -252,7 +250,7 @@ class Initiative2ExportRetrieverServiceTest {
 
         String todayStr=Utils.FORMATTER_DATE.format(LocalDate.now());
         Assertions.assertEquals("ID_0_ssx_%s.12".formatted(todayStr), result.getId());
-        Assertions.assertEquals("/export/base/path/ORGANIZATION_ID_0_hpd/ID_0_ssx/NAME_0_vnj_%s.12.zip".formatted(todayStr), result.getFilePath());
+        Assertions.assertEquals("ORGANIZATION_ID_0_hpd/ID_0_ssx/export/NAME_0_vnj_%s.12.zip".formatted(todayStr), result.getFilePath());
         Assertions.assertEquals(baseExport.getInitiativeId(), result.getInitiativeId());
         Assertions.assertEquals(baseExport.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(baseExport.getOrganizationId(), result.getOrganizationId());

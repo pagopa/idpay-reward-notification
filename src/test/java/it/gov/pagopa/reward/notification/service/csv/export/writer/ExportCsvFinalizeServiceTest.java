@@ -2,8 +2,10 @@ package it.gov.pagopa.reward.notification.service.csv.export.writer;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.azure.core.http.rest.Response;
+import com.azure.storage.blob.models.BlockBlobItem;
 import com.mongodb.Function;
-import it.gov.pagopa.reward.notification.azure.storage.AzureBlobClient;
+import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -23,7 +25,10 @@ import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -33,7 +38,7 @@ class ExportCsvFinalizeServiceTest {
 
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock private RewardOrganizationExportsRepository rewardOrganizationExportsRepositoryMock;
-    @Mock private AzureBlobClient azureBlobClientMock;
+    @Mock private RewardsNotificationBlobClient rewardsNotificationBlobClientMock;
 
     private ExportCsvFinalizeService service;
 
@@ -41,7 +46,7 @@ class ExportCsvFinalizeServiceTest {
     void init() {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         char csvSeparator = ';';
-        service = new ExportCsvFinalizeServiceImpl(csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, azureBlobClientMock);
+        service = new ExportCsvFinalizeServiceImpl(csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock);
     }
 
     @Test
@@ -82,13 +87,16 @@ class ExportCsvFinalizeServiceTest {
         Mockito.when(rewardOrganizationExportsRepositoryMock.save(Mockito.same(export))).thenReturn(Mono.just(export));
 
         File zipFile = new File("/tmp", export.getFilePath());
-        Mockito.when(azureBlobClientMock.uploadFile(zipFile, export.getFilePath(), "application/zip"))
+        Mockito.when(rewardsNotificationBlobClientMock.uploadFile(zipFile, export.getFilePath(), "application/zip"))
                 .thenAnswer(i->{
                     Path zipPath = Path.of(zipFile.getAbsolutePath());
                     Files.copy(zipPath,
                             zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
                             StandardCopyOption.REPLACE_EXISTING);
-                    return Mono.just(zipFile);
+                    //noinspection rawtypes
+                    Response responseMocked = Mockito.mock(Response.class);
+                    Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
+                    return Mono.just(responseMocked);
                 });
 
         // When
@@ -159,5 +167,25 @@ class ExportCsvFinalizeServiceTest {
     );
     private String expctedCsvLine(RewardNotificationExportCsvDto lineDto) {
         return cellGetters.stream().map(g -> g.apply(lineDto)).map(v->"\"%s\"".formatted(ObjectUtils.firstNonNull(v,""))).collect(Collectors.joining(";"));
+    }
+
+    @Test
+    void testUploadError(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+        export.setFilePath("TESTFILE");
+        RewardNotificationExportCsvDto reward = new RewardNotificationExportCsvDto();
+        reward.setAmount(100L);
+
+        @SuppressWarnings("unchecked") Response<BlockBlobItem> responseMocked = Mockito.mock(Response.class);
+        Mockito.when(responseMocked.getStatusCode()).thenReturn(404);
+        Mockito.when(rewardsNotificationBlobClientMock.uploadFile(new File("/tmp",export.getFilePath()), export.getFilePath(), "application/zip"))
+                .thenReturn(Mono.just(responseMocked));
+
+        // When
+        RewardOrganizationExport result = service.writeCsvAndFinalize(List.of(reward), export).block();
+
+        // Then
+        Assertions.assertNull(result);
     }
 }

@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification;
 
+import com.azure.core.http.rest.Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -7,7 +8,7 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
-import it.gov.pagopa.reward.notification.azure.storage.AzureBlobClient;
+import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -165,7 +166,7 @@ public abstract class BaseIntegrationTest {
     private WireMockServer wireMockServer;
 
     @MockBean
-    private AzureBlobClient azureBlobClientMock;
+    private RewardsNotificationBlobClient rewardsNotificationBlobClientMock;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
@@ -214,14 +215,17 @@ public abstract class BaseIntegrationTest {
     }
 
     protected void mockAzureBlobClient() {
-        Mockito.lenient().when(azureBlobClientMock.uploadFile(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.lenient().when(rewardsNotificationBlobClientMock.uploadFile(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenAnswer(i->{
                     File zipFile = i.getArgument(0);
                     Path zipPath = Path.of(zipFile.getAbsolutePath());
                     Files.copy(zipPath,
                             zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
                             StandardCopyOption.REPLACE_EXISTING);
-                    return Mono.just(zipFile);
+                    //noinspection rawtypes
+                    Response responseMocked = Mockito.mock(Response.class);
+                    Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
+                    return Mono.just(responseMocked);
                 });
     }
 

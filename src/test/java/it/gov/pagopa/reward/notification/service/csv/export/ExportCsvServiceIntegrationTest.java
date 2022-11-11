@@ -113,7 +113,7 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         exportsRepository.save(RewardOrganizationExport.builder()
                 .id("STUCKEXPORTID.5")
                 .progressive(5)
-                .filePath("/rewards/notifications/export/ORGANIZATION_ID_2_izn/INITIATIVEID2/STUCKEXPORT.5.zip")
+                .filePath("rewards/notifications/export/ORGANIZATION_ID_2_izn/INITIATIVEID2/STUCKEXPORT.5.zip")
                 .initiativeId(rule2.getInitiativeId())
                 .initiativeName(rule2.getInitiativeName())
                 .organizationId(rule2.getOrganizationId())
@@ -203,8 +203,8 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
 
         Assertions.assertEquals(exports, result);
 
-        checkInitiativeExports("INITIATIVEID_%s.1".formatted(TODAY_STR), rule1, "/rewards/notifications/export/ORGANIZATION_ID_1_uww/INITIATIVEID/NAME_1_jmy_%s.1.zip".formatted(TODAY_STR), 1L, TODAY, result);
-        checkInitiativeExports("STUCKEXPORTID.5", rule2, "/rewards/notifications/export/ORGANIZATION_ID_2_izn/INITIATIVEID2/STUCKEXPORT.5.zip", 5L, stuckNotificationDate, result);
+        checkInitiativeExports("INITIATIVEID_%s.1".formatted(TODAY_STR), rule1, "rewards/notifications/export/ORGANIZATION_ID_1_uww/INITIATIVEID/NAME_1_jmy_%s.1.zip".formatted(TODAY_STR), 1L, TODAY, result);
+        checkInitiativeExports("STUCKEXPORTID.5", rule2, "rewards/notifications/export/ORGANIZATION_ID_2_izn/INITIATIVEID2/STUCKEXPORT.5.zip", 5L, stuckNotificationDate, result);
 
         checkIbanKoUseCases();
         checkCfKoUseCases(result);
@@ -341,7 +341,7 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
         checkExport(result,
                 "INITIATIVEID4_%s.1".formatted(TODAY_STR)
                 , rule4, 1
-                , "/rewards/notifications/export/ORGANIZATION_ID_4_fwi/INITIATIVEID4/NAME_4_wfp_%s.1.zip".formatted(TODAY_STR)
+                , "rewards/notifications/export/ORGANIZATION_ID_4_fwi/INITIATIVEID4/NAME_4_wfp_%s.1.zip".formatted(TODAY_STR)
                 , TODAY, splitSize);
     }
 }

@@ -50,7 +50,7 @@ class RewardOrganizationExports2ExportsDTOMapperTest {
         Assertions.assertEquals(input.getInitiativeId(), result.getInitiativeId());
         Assertions.assertEquals(input.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(input.getOrganizationId(), result.getOrganizationId());
-        Assertions.assertEquals(input.getFilePath(), result.getFilePath());
+        Assertions.assertEquals("file", result.getFilePath());
         Assertions.assertEquals(input.getNotificationDate(), result.getNotificationDate());
         Assertions.assertEquals("1,00", result.getRewardsExported());
         Assertions.assertEquals("1,00", result.getRewardsResults());

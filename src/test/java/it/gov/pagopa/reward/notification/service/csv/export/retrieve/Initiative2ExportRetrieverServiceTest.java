@@ -41,13 +41,12 @@ class Initiative2ExportRetrieverServiceTest {
 
     private Initiative2ExportRetrieverServiceImpl service;
 
-    private final String exportBasePath = "/export/base/path";
     private final LocalDate now = LocalDate.now();
     private final String nowFormatted = Utils.FORMATTER_DATE.format(now);
 
     @BeforeEach
     void init() {
-        service = new Initiative2ExportRetrieverServiceImpl(exportBasePath, rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
+        service = new Initiative2ExportRetrieverServiceImpl("", rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
     @AfterEach
@@ -199,8 +198,7 @@ class Initiative2ExportRetrieverServiceTest {
     private RewardOrganizationExport buildNewExpectedRewardNotification(RewardNotificationRule rule, long progressive) {
         return RewardOrganizationExport.builder()
                 .id("%s_%s.%d".formatted(rule.getInitiativeId(), nowFormatted, progressive))
-                .filePath("%s/%s/%s/%s".formatted(
-                        exportBasePath,
+                .filePath("%s/%s/export/%s".formatted(
                         rule.getOrganizationId(),
                         rule.getInitiativeId(),
                         rule.getInitiativeName() + "_" + nowFormatted + "." + progressive + ".zip"

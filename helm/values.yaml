@@ -53,6 +53,7 @@ microservice-chart:
     KAFKA_REFUND_RULE_REQUEST_GROUP_ID: "idpay-rewards-notification-rule-consumer-group"
     KAFKA_REWARD_RESPONSE_GROUP_ID: "idpay-rewards-notification-transaction-group"
     KAFKA_CHECKIBAN_OUTCOME_GROUP_ID: "idpay-rewards-notification-checkiban-out-group"
+    EXPORT_BASE_PATH: ""
 
   envConfigMapExternals:
     idpay-common:

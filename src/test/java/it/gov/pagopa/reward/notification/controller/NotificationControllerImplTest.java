@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.controller;
 import it.gov.pagopa.reward.notification.config.JsonConfig;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
+import it.gov.pagopa.reward.notification.service.csv.export.ExportCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,9 @@ import java.util.List;
 class NotificationControllerImplTest {
 
     @MockBean
-    OrganizationExportsServiceImpl organizationExportsServiceMock;
+    private OrganizationExportsServiceImpl organizationExportsServiceMock;
+    @MockBean
+    private ExportCsvService exportCsvServiceMock;
 
     @Autowired
     protected WebTestClient webClient;

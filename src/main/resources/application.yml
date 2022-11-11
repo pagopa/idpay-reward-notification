@@ -197,7 +197,7 @@ app:
       storage:
         connection-string: ${EXPORT_AZURE_STORAGE_CONNECTION_STRING:UseDevelopmentStorage=true;}
         blob-container-name: ${EXPORT_AZURE_STORAGE_BLOB_CONTAINER_NAME:refund}
-        base-path: ${EXPORT_BASE_PATH:rewards/notifications/export}
+        base-path: ${EXPORT_BASE_PATH:rewards/notifications}
   pdv:
     base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:

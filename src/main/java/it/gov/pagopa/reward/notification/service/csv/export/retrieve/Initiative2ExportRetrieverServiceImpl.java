@@ -134,7 +134,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     }
 
     private String escapeRuleName(String initiativeName) {
-        return initiativeName.replaceAll("\\W", "").substring(0, 10);
+        return StringUtils.left(initiativeName.replaceAll("\\W", ""), 10);
     }
 
     @Override

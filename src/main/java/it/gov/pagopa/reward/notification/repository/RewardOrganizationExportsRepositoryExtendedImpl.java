@@ -61,7 +61,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
         updateCriteriaWithFilters(criteria, filters);
 
         if (filters != null && filters.getStatus() != null && checkStatusNotInExported(filters.getStatus())) {
-            return Mono.empty();
+            return Mono.just(0L);
         } else {
             return mongoTemplate
                     .count(

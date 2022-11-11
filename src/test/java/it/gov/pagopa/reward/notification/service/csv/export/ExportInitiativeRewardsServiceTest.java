@@ -73,6 +73,7 @@ class ExportInitiativeRewardsServiceTest {
         List<RewardsNotification> stuckRewardNotification = IntStream.range(0, stuckRewards)
                 .mapToObj(i -> RewardsNotificationFaker.mockInstanceBuilder(i)
                         .id("STUCKREWARDS%d".formatted(i))
+                        .externalId("STUCKREWARDSEXTERNALID%d".formatted(i))
                         .exportId(stuckExport.getId())
                         .status(RewardNotificationStatus.EXPORTED)
                         .build())
@@ -105,7 +106,7 @@ class ExportInitiativeRewardsServiceTest {
 
             // The first lines should be (in any order) the stuck rewards
             Assertions.assertEquals(
-                    stuckRewardNotification.stream().map(RewardsNotification::getId).collect(Collectors.toSet()),
+                    stuckRewardNotification.stream().map(RewardsNotification::getExternalId).collect(Collectors.toSet()),
                     csvLines.subList(0, stuckRewards).stream().map(RewardNotificationExportCsvDto::getUniqueID).collect(Collectors.toSet())
             );
 
@@ -132,7 +133,7 @@ class ExportInitiativeRewardsServiceTest {
         }), Mockito.same(exportSplit2));
 
         Assertions.assertEquals(
-                rewardNotification2Notify.stream().map(RewardsNotification::getId).collect(Collectors.toSet()),
+                rewardNotification2Notify.stream().map(RewardsNotification::getExternalId).collect(Collectors.toSet()),
                 newRewardIdsExported);
 
         Assertions.assertEquals(
@@ -177,7 +178,7 @@ class ExportInitiativeRewardsServiceTest {
         Mockito.verify(csvWriterServiceMock).writeCsvAndFinalize(Mockito.argThat(csvWriteMockedInvocation), Mockito.same(exportSplit2));
 
         Assertions.assertEquals(
-                rewardNotification2Notify.stream().map(RewardsNotification::getId).collect(Collectors.toSet()),
+                rewardNotification2Notify.stream().map(RewardsNotification::getExternalId).collect(Collectors.toSet()),
                 newRewardIdsExported);
 
         Assertions.assertEquals(
@@ -206,7 +207,9 @@ class ExportInitiativeRewardsServiceTest {
 
     private void mockCsvLineBuild(RewardsNotification r) {
         Mockito.when(reward2CsvLineServiceMock.apply(Mockito.same(r))).thenAnswer(i ->
-                Mono.just(RewardNotificationExportCsvDto.builder().uniqueID(i.getArgument(0, RewardsNotification.class).getId()).build()));
+                Mono.just(RewardNotificationExportCsvDto.builder()
+                        .uniqueID(r.getExternalId())
+                        .id(r.getId()).build()));
     }
 
     private List<RewardsNotification> mockRewards(int baseIndex, int n, RewardOrganizationExport export) {

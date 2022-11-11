@@ -55,7 +55,8 @@ class ExportCsvFinalizeServiceTest {
         List<RewardNotificationExportCsvDto> csvLines = IntStream.range(0, 10)
                 .mapToObj(i -> RewardNotificationExportCsvDto.builder()
                         .progressiveCode((long) i)
-                        .uniqueID("REWARDNOTIFICATIONID%d".formatted(i))
+                        .id("REWARDNOTIFICATIONID%d".formatted(i))
+                        .uniqueID("REWARDNOTIFICATIONEXTERNALID%d".formatted(i))
                         .fiscalCode("fiscalCode%d".formatted(i))
                         .accountHolderName("accountHolderName%d".formatted(i))
                         .accountHolderSurname("accountHolderSurname%d".formatted(i))
@@ -80,7 +81,7 @@ class ExportCsvFinalizeServiceTest {
                 .build();
 
         csvLines.forEach(l ->
-                Mockito.when(rewardsNotificationRepositoryMock.updateExportStatus(l.getUniqueID(), l.getIban(), l.getCheckIban(), "EXPORTID"))
+                Mockito.when(rewardsNotificationRepositoryMock.updateExportStatus(l.getId(), l.getIban(), l.getCheckIban(), "EXPORTID"))
                         .thenAnswer(i->Mono.just(i.getArgument(0)))
         );
 
@@ -137,7 +138,7 @@ class ExportCsvFinalizeServiceTest {
 
             for (int i = 0; i < csvLines.size(); i++) {
                 Assertions.assertEquals(
-                        expctedCsvLine(csvLines.get(i)),
+                        expectedCsvLine(csvLines.get(i)),
                         csvLinesStrs.get(i + 1));
             }
         }
@@ -165,7 +166,7 @@ class ExportCsvFinalizeServiceTest {
             RewardNotificationExportCsvDto::getTypologyReward,
             RewardNotificationExportCsvDto::getRelatedPaymentID
     );
-    private String expctedCsvLine(RewardNotificationExportCsvDto lineDto) {
+    private String expectedCsvLine(RewardNotificationExportCsvDto lineDto) {
         return cellGetters.stream().map(g -> g.apply(lineDto)).map(v->"\"%s\"".formatted(ObjectUtils.firstNonNull(v,""))).collect(Collectors.joining(";"));
     }
 

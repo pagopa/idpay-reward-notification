@@ -76,7 +76,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                     }
                 })
                 .flatMapMany(x -> Flux.fromIterable(csvLines)
-                        .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getUniqueID(), l.getIban(), l.getCheckIban(), export.getId()))
+                        .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getId(), l.getIban(), l.getCheckIban(), export.getId()))
                         .doOnNext(rId -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Updated exported RewardNotifications status {} and related to export {}", rId, export.getId()))
                 )
                 .collectList()

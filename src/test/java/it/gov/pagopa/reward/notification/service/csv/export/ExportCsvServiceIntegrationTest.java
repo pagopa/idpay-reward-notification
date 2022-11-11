@@ -278,7 +278,7 @@ class ExportCsvServiceIntegrationTest extends BaseIntegrationTest {
 
             try(Stream<String> lines = Files.lines(csvPath)){
                 Assertions.assertEquals(
-                        rewards.stream().map(RewardsNotification::getId).sorted().toList(),
+                        rewards.stream().map(RewardsNotification::getExternalId).sorted().toList(),
                         lines.skip(1).map(l->csvUniqueIdGroupMatch.matcher(l).replaceAll("$1")).sorted().toList()
                 );
             }

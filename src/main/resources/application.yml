@@ -186,7 +186,7 @@ app:
     # TOMORROW or 'NEXT_' followed by the day of week
     threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
     expired-initiatives:
-      since-days: ${REWARDS_NOTIFICATION_EXPIRED_INITIATIVES_SINCE_DAYS:7}
+      day-before: ${REWARDS_NOTIFICATION_EXPIRED_INITIATIVES_DAY_BEFORE:7}
       schedule: ${EXPIRED_INITIATIVES_SCHEDULE:0 0 5 * * ?}
   csv:
     export:

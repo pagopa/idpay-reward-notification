@@ -44,7 +44,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final LocalDate TOMORROW = TODAY.plusDays(1);
-    public static final LocalDate NEXT_WEEK= TODAY.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+    public static final LocalDate NEXT_WEEK= TODAY.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
     public static final LocalDate NEXT_MONTH= TODAY.with(TemporalAdjusters.firstDayOfNextMonth());
     public static final LocalDate NEXT_QUARTER= TODAY.withDayOfMonth(1).withMonth((TODAY.get(IsoFields.QUARTER_OF_YEAR)*3)).plusMonths(1);
 

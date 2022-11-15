@@ -8,22 +8,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
 @Service
 @Slf4j
 public class RewardsNotificationExpiredInitiativeHandlerServiceImpl implements RewardsNotificationExpiredInitiativeHandlerService {
-    @Value("${app.rewards-notification.expired-initiatives.day-before}")
-    private Integer dayBefore;
+
+    private final int dayBefore;
 
     private final RewardNotificationRuleRepository rewardNotificationRuleRepository;
     private final RewardsNotificationRepository rewardsNotificationRepository;
 
-    public RewardsNotificationExpiredInitiativeHandlerServiceImpl(RewardNotificationRuleRepository rewardNotificationRuleRepository, RewardsNotificationRepository rewardsNotificationRepository) {
+    public RewardsNotificationExpiredInitiativeHandlerServiceImpl(RewardNotificationRuleRepository rewardNotificationRuleRepository, RewardsNotificationRepository rewardsNotificationRepository, @Value("${app.rewards-notification.expired-initiatives.day-before}") int dayBefore) {
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
+        this.dayBefore = dayBefore;
     }
 
     @Scheduled(cron = "${app.rewards-notification.expired-initiatives.schedule}")
@@ -38,7 +38,7 @@ public class RewardsNotificationExpiredInitiativeHandlerServiceImpl implements R
         LocalDate today = LocalDate.now();
 
         return rewardNotificationRuleRepository
-                .findByAccumulatedAmountIsNotAndEndDateGreaterThanEqualsAndEndDateLessThan(
+                .findByAccumulatedAmountIsNotAndEndDateGreaterThanEqualAndEndDateLessThan(
                         null,
                         today.minusDays(dayBefore),
                         today

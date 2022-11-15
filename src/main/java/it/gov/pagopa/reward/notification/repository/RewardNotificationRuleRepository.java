@@ -9,5 +9,5 @@ import java.time.LocalDate;
 
 public interface RewardNotificationRuleRepository extends ReactiveMongoRepository<RewardNotificationRule, String> {
 
-    Flux<RewardNotificationRule> findByAccumulatedAmountIsNotAndEndDateGreaterThanEqualsAndEndDateLessThan(AccumulatedAmountDTO accumulatedAmount, LocalDate from, LocalDate to);
+    Flux<RewardNotificationRule> findByAccumulatedAmountIsNotAndEndDateGreaterThanEqualAndEndDateLessThan(AccumulatedAmountDTO accumulatedAmount, LocalDate from, LocalDate to);
 }

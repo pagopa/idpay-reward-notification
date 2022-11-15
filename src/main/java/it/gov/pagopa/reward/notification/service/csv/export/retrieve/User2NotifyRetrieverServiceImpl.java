@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.UserService;
 import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
+import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;

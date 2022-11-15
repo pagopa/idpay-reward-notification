@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.test.utils.json;
+package it.gov.pagopa.reward.notification.utils.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,13 +27,12 @@ class PageModuleTest {
         // Then
         Assertions.assertNotNull(serialized);
         Assertions.assertEquals(
-                "{\"content\":[\"%s\"],\"pageable\":{\"page\":0,\"size\":1,\"sort\":{\"orders\":[]}},\"total\":%d}"
-                        .formatted(testString, 1),
+                "{\"content\":[\"%s\"],\"first\":true,\"last\":true,\"totalPages\":1,\"totalElements\":1,\"numberOfElements\":1,\"size\":1,\"number\":0,\"sort\":[]}"
+                        .formatted(testString),
                 serialized
         );
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedPage, result);
-
     }
 }

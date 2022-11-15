@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.utils.csv;
+package it.gov.pagopa.reward.notification.utils.csv;
 
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvToBean;

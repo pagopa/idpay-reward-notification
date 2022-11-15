@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.utils.json;
+package it.gov.pagopa.reward.notification.utils.json;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

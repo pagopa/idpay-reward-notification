@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;

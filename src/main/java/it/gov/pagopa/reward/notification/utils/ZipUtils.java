@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.utils;
+package it.gov.pagopa.reward.notification.utils;
 
 import lombok.extern.slf4j.Slf4j;
 

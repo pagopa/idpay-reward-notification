@@ -62,8 +62,6 @@ public class SwaggerConfig {
 				.apis(Predicate.not(RequestHandlerSelectors.basePackage("org.springframework.hateoas"))).build()
 				.alternateTypeRules(
 						newRule(typeResolver.resolve(Pageable.class), pageableMixin(), Ordered.HIGHEST_PRECEDENCE))
-//				.alternateTypeRules(
-//						newRule(typeResolver.resolve(Page.class, WildcardType.class), pageMixin(), Ordered.HIGHEST_PRECEDENCE))
 				.directModelSubstitute(LocalTime.class, String.class)
 				.apiInfo(this.metadata());
 	}

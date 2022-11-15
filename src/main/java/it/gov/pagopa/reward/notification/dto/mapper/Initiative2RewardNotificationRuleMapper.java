@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

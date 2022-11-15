@@ -7,7 +7,7 @@ import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;

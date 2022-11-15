@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.bson.BsonDocument;

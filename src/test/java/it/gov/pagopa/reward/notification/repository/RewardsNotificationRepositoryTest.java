@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.repository;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

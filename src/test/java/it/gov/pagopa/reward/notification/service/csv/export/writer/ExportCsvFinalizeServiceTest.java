@@ -11,7 +11,7 @@ import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.utils.ZipUtils;
+import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

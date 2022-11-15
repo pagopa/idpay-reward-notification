@@ -13,9 +13,9 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.rest.UserRestClient;
-import it.gov.pagopa.reward.notification.service.utils.ExportCsvConstants;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
-import it.gov.pagopa.reward.notification.service.utils.ZipUtils;
+import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
+import it.gov.pagopa.reward.notification.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import lombok.SneakyThrows;

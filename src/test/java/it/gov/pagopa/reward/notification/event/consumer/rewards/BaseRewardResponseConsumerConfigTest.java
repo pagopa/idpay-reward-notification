@@ -14,7 +14,7 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
 import it.gov.pagopa.reward.notification.service.LockServiceImpl;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;

@@ -182,9 +182,9 @@ app:
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
   rewards-notification:
-    weekly-notification-day: ${REWARDS_NOTIFICATION_WEEKLY_NOTIFICATION_DAY:SUNDAY}
+    weekly-notification-day: ${REWARDS_NOTIFICATION_WEEKLY_NOTIFICATION_DAY:MONDAY}
     # TOMORROW or 'NEXT_' followed by the day of week
-    threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_SUNDAY}
+    threshold-notification-day: ${REWARDS_NOTIFICATION_THRESHOLD_NOTIFICATION_DAY:NEXT_MONDAY}
     expired-initiatives:
       day-before: ${REWARDS_NOTIFICATION_EXPIRED_INITIATIVES_DAY_BEFORE:7}
       schedule: ${EXPIRED_INITIATIVES_SCHEDULE:0 0 5 * * ?}

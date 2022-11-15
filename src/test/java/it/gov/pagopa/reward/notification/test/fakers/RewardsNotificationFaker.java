@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 
 import java.time.LocalDate;
 

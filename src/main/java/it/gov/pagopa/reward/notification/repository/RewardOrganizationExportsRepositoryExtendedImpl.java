@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.repository;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
-import it.gov.pagopa.reward.notification.service.utils.ExportConstants;
+import it.gov.pagopa.reward.notification.utils.ExportConstants;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;

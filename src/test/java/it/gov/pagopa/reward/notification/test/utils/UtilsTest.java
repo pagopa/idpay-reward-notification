@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.test.utils;
 
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

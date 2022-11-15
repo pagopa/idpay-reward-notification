@@ -4,8 +4,10 @@ import it.gov.pagopa.reward.notification.config.JsonConfig;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.export.ExportCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,6 +34,8 @@ class NotificationControllerImplTest {
     private OrganizationExportsServiceImpl organizationExportsServiceMock;
     @MockBean
     private ExportCsvService exportCsvServiceMock;
+    @MockBean
+    private RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
 
     @Autowired
     protected WebTestClient webClient;
@@ -50,6 +54,20 @@ class NotificationControllerImplTest {
                 .expectBodyList(RewardOrganizationExport.class).isEqualTo(Collections.emptyList());
 
         Mockito.verify(exportCsvServiceMock).execute();
+    }
+
+    @Test
+    void testForceExpiredInitiativesScheduling() {
+        Mockito.when(expiredInitiativeHandlerService.handle())
+                .thenReturn(Flux.empty());
+
+        webClient.get()
+                .uri("/idpay/reward/notification/expired-initiatives/start")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(RewardsNotification.class).isEqualTo(Collections.emptyList());
+
+        Mockito.verify(expiredInitiativeHandlerService).handle();
     }
 
     @Test

@@ -78,6 +78,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
+        "${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -107,6 +108,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-reward-notification-upload.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
                 //region mongodb
@@ -154,6 +156,8 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardResponse;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}")
     protected String topicIbanOutcome;
+    @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}")
+    protected String topicRewardNotificationUpload;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
 
@@ -163,6 +167,8 @@ public abstract class BaseIntegrationTest {
     protected String groupIdRewardResponse;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
+    @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.group}")
+    protected String groupIdRewardNotificationUpload;
 
     @Autowired
     private WireMockServer wireMockServer;
@@ -358,7 +364,7 @@ public abstract class BaseIntegrationTest {
         for(;maxAttempts>0; maxAttempts--){
             try {
                 final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
-                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
+                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().filter(Objects::nonNull).mapToLong(OffsetAndMetadata::offset).sum());
                 return commits;
             } catch (Throwable e){
                 lastException = new RuntimeException(e);

@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.ExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
-import it.gov.pagopa.reward.notification.service.csv.export.retrieve.Initiative2ExportRetrieverServiceImpl;
+import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;

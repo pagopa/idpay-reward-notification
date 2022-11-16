@@ -76,8 +76,8 @@ public class TestUtils {
     /**
      * To read {@link org.apache.kafka.common.header.Header} value
      */
-    public static String getHeaderValue(ConsumerRecord<String, String> errorMessage, String errorMsgHeaderSrcServer) {
-        Header header = errorMessage.headers().lastHeader(errorMsgHeaderSrcServer);
+    public static String getHeaderValue(ConsumerRecord<String, String> record, String headerName) {
+        Header header = record.headers().lastHeader(headerName);
         return header!=null? new String(header.value()) : null;
     }
 }

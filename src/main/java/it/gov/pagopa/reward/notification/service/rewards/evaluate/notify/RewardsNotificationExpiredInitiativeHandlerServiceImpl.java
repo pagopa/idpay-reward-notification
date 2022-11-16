@@ -38,8 +38,7 @@ public class RewardsNotificationExpiredInitiativeHandlerServiceImpl implements R
         LocalDate today = LocalDate.now();
 
         return rewardNotificationRuleRepository
-                .findByAccumulatedAmountIsNotAndEndDateGreaterThanEqualAndEndDateLessThan(
-                        null,
+                .findByAccumulatedAmountNotNullAndEndDateBetween(
                         today.minusDays(dayBefore),
                         today
                 )

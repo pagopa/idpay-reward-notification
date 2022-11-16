@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class RewardsNotificationExpiredInitiativeHandlerServiceImplTest {
@@ -50,18 +51,19 @@ class RewardsNotificationExpiredInitiativeHandlerServiceImplTest {
 
         Mockito.when(
                 rewardNotificationRuleRepository
-                        .findByAccumulatedAmountIsNotAndEndDateGreaterThanEqualAndEndDateLessThan(null, today.minusDays(dayBefore), today)
+                        .findByAccumulatedAmountNotNullAndEndDateBetween(today.minusDays(dayBefore), today)
         ).thenReturn(Flux.just(expectedRule));
 
         Mockito.when(rewardsNotificationRepository.findByInitiativeIdAndNotificationDate(expectedRule.getInitiativeId(), null))
                 .thenReturn(Flux.just(expectedNotification));
 
         // When
-        RewardsNotification result = service.handle().blockLast();
+        List<RewardsNotification> result = service.handle().collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(today.plusDays(1), result.getNotificationDate());
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(today.plusDays(1), result.get(0).getNotificationDate());
 
     }
 }

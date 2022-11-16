@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.config.JsonConfig;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
-import it.gov.pagopa.reward.notification.service.csv.export.ExportCsvService;
+import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class NotificationControllerImplTest {
     @MockBean
     private OrganizationExportsServiceImpl organizationExportsServiceMock;
     @MockBean
-    private ExportCsvService exportCsvServiceMock;
+    private ExportRewardNotificationCsvService exportRewardNotificationCsvServiceMock;
 
     @Autowired
     protected WebTestClient webClient;
@@ -40,7 +40,7 @@ class NotificationControllerImplTest {
 
     @Test
     void testforceExportScheduling() {
-        Mockito.when(exportCsvServiceMock.execute())
+        Mockito.when(exportRewardNotificationCsvServiceMock.execute())
                 .thenReturn(Flux.empty());
 
         webClient.get()
@@ -49,7 +49,7 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBodyList(RewardOrganizationExport.class).isEqualTo(Collections.emptyList());
 
-        Mockito.verify(exportCsvServiceMock).execute();
+        Mockito.verify(exportRewardNotificationCsvServiceMock).execute();
     }
 
     @Test

@@ -41,6 +41,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     private final String rewardIbanOutcomeTopic;
     private final String rewardIbanOutcomeGroup;
 
+    private final String organizationFeedbackUploadServiceType;
+    private final String organizationFeedbackUploadServer;
+    private final String organizationFeedbackUploadTopic;
+    private final String organizationFeedbackUploadGroup;
+
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
                                     @Value("${spring.application.name}") String applicationName,
@@ -58,7 +63,13 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-outcome.type}") String rewardIbanOutcomeServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardIbanOutcomeServer,
                                     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}") String rewardIbanOutcomeTopic,
-                                    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}") String rewardIbanOutcomeGroup) {
+                                    @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}") String rewardIbanOutcomeGroup,
+
+                                    @Value("${spring.cloud.stream.binders.kafka-reward-notification-upload.type}") String organizationFeedbackUploadServiceType,
+                                    @Value("${spring.cloud.stream.binders.kafka-reward-notification-upload.environment.spring.cloud.stream.kafka.binder.brokers}") String organizationFeedbackUploadServer,
+                                    @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}") String organizationFeedbackUploadTopic,
+                                    @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.group}") String organizationFeedbackUploadGroup
+    ) {
         this.streamBridge = streamBridge;
         this.applicationName = applicationName;
 
@@ -76,6 +87,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
         this.rewardIbanOutcomeServer = rewardIbanOutcomeServer;
         this.rewardIbanOutcomeTopic = rewardIbanOutcomeTopic;
         this.rewardIbanOutcomeGroup = rewardIbanOutcomeGroup;
+
+        this.organizationFeedbackUploadServiceType = organizationFeedbackUploadServiceType;
+        this.organizationFeedbackUploadServer = organizationFeedbackUploadServer;
+        this.organizationFeedbackUploadTopic = organizationFeedbackUploadTopic;
+        this.organizationFeedbackUploadGroup = organizationFeedbackUploadGroup;
     }
 
     @Override
@@ -91,6 +107,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     @Override
     public void notifyRewardIbanOutcome(Message<String> message, String description, boolean retryable, Throwable exception) {
         notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, rewardIbanOutcomeGroup, message, description, retryable, true, exception);
+    }
+
+    @Override
+    public void notifyOrganizationFeedbackUpload(Message<String> message, String description, boolean retryable, Throwable exception) {
+        notify(organizationFeedbackUploadServiceType, organizationFeedbackUploadServer, organizationFeedbackUploadTopic, organizationFeedbackUploadGroup, message, description, retryable, true, exception);
     }
 
     @Override

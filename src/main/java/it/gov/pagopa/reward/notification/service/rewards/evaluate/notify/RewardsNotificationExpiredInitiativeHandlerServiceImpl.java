@@ -47,8 +47,9 @@ public class RewardsNotificationExpiredInitiativeHandlerServiceImpl implements R
                                 rule.getInitiativeId(),
                                 null
                         )
-                        .doOnNext(n -> n.setNotificationDate(today.plusDays(1))));
+                )
+                .doOnNext(n -> n.setNotificationDate(today.plusDays(1)))
+                .flatMap(rewardsNotificationRepository::save);
     }
-
 
 }

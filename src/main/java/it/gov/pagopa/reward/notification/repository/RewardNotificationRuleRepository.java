@@ -9,6 +9,6 @@ import java.time.LocalDate;
 
 public interface RewardNotificationRuleRepository extends ReactiveMongoRepository<RewardNotificationRule, String> {
 
-    @Query(value = "{'endDate':{ $gte:?0, $lt:?1 }}")
+    @Query(value = "{'accumulatedAmount':{$ne:null}, 'endDate':{ $gte:?0, $lt:?1 }}")
     Flux<RewardNotificationRule> findByAccumulatedAmountNotNullAndEndDateBetween(LocalDate from, LocalDate to);
 }

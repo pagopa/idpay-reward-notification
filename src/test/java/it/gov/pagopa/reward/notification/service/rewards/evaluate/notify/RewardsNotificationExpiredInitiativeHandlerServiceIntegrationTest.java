@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -22,13 +23,8 @@ class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends 
 
     public static final LocalDate TODAY = LocalDate.now();
 
-    private RewardNotificationRule expiredInitiative;
-    private RewardNotificationRule validInitiative;
-
-    private RewardsNotification expiredNotification1;
-    private RewardsNotification expiredNotification2;
-    private RewardsNotification validNotification1;
-    private RewardsNotification validNotification2;
+    private final List<RewardNotificationRule> initiativesTestData = new ArrayList<>();
+    private final List<RewardsNotification> notificationsTestData = new ArrayList<>();
 
     @Autowired
     private RewardNotificationRuleRepository ruleRepository;
@@ -41,44 +37,52 @@ class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends 
 
     private void storeTestData() {
         // initiatives
-        expiredInitiative = ruleRepository.save(
+        initiativesTestData.add(ruleRepository.save(
                 RewardNotificationRuleFaker.mockInstanceBuilder(1)
                         .initiativeId("INITIATIVE1")
                         .endDate(TODAY.minusDays(5))
                         .build()
-        ).block();
-        validInitiative = ruleRepository.save(
+        ).block());
+        initiativesTestData.add(ruleRepository.save(
                 RewardNotificationRuleFaker.mockInstanceBuilder(2)
                         .initiativeId("INITIATIVE2")
                         .endDate(TODAY.plusDays(30))
                         .build()
-        ).block();
+        ).block());
+        initiativesTestData.add(ruleRepository.save(
+                RewardNotificationRuleFaker.mockInstanceBuilder(3)
+                        .initiativeId("INITIATIVE3")
+                        .endDate(TODAY.plusDays(30))
+                        .accumulatedAmount(null)
+                        .build()
+        ).block());
 
         // notifications
-        expiredNotification1 = notificationRepository.save(
+        notificationsTestData.add(notificationRepository.save(
                 RewardsNotificationFaker.mockInstanceBuilder(1)
                         .initiativeId("INITIATIVE1")
                         .notificationDate(TODAY.minusDays(6))
                         .build()
-        ).block();
-        expiredNotification2 = notificationRepository.save(
+        ).block());
+        notificationsTestData.add(notificationRepository.save(
                 RewardsNotificationFaker.mockInstanceBuilder(2)
                         .initiativeId("INITIATIVE1")
                         .notificationDate(null)
                         .build()
-        ).block();
-        validNotification1 = notificationRepository.save(
+        ).block());
+        notificationsTestData.add(notificationRepository.save(
                 RewardsNotificationFaker.mockInstanceBuilder(3)
                         .initiativeId("INITIATIVE2")
                         .notificationDate(TODAY)
                         .build()
-        ).block();
-        validNotification2 = notificationRepository.save(
+        ).block());
+        notificationsTestData.add(notificationRepository.save(
                 RewardsNotificationFaker.mockInstanceBuilder(4)
                         .initiativeId("INITIATIVE2")
                         .notificationDate(null)
                         .build()
-        ).block();
+        ).block());
+
     }
 
     @BeforeEach
@@ -89,12 +93,14 @@ class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends 
 
     @AfterEach
     void clearData() {
-        ruleRepository.deleteAll().block();
-        notificationRepository.deleteAll().block();
+        ruleRepository.deleteAll(initiativesTestData).block();
+        notificationRepository.deleteAll(notificationsTestData).block();
     }
 
     @Test
     void testHandle() {
+        // Given
+        RewardsNotification expectedNotification = notificationsTestData.get(1);
 
         // When
         List<RewardsNotification> result = service.handle().collectList().block();
@@ -102,7 +108,27 @@ class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends 
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.size());
-        checkHandleResult(expiredNotification2, result.get(0));
+        checkHandleResult(expectedNotification, result.get(0));
+        checkResultFromRepo(result);
+    }
+
+    void checkResultFromRepo(List<RewardsNotification> result) {
+        List<String> resultIds = new ArrayList<>();
+
+        for(RewardsNotification n : result) {
+            resultIds.add(n.getId());
+            RewardsNotification entry = notificationRepository.findById(n.getId()).block();
+            Assertions.assertNotNull(entry);
+            Assertions.assertEquals(n, entry);
+        }
+
+        for (RewardsNotification n : notificationsTestData) {
+            if (!resultIds.contains(n.getId())) {
+                RewardsNotification entry = notificationRepository.findById(n.getId()).block();
+                Assertions.assertNotNull(entry);
+                Assertions.assertEquals(n, entry);
+            }
+        }
     }
 
     void checkHandleResult(RewardsNotification expected, RewardsNotification actual) {

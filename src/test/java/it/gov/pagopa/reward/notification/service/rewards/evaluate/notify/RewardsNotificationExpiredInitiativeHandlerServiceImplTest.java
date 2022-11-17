@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -56,6 +57,8 @@ class RewardsNotificationExpiredInitiativeHandlerServiceImplTest {
 
         Mockito.when(rewardsNotificationRepository.findByInitiativeIdAndNotificationDate(expectedRule.getInitiativeId(), null))
                 .thenReturn(Flux.just(expectedNotification));
+
+        Mockito.when(rewardsNotificationRepository.save(Mockito.any())).thenReturn(Mono.just(expectedNotification));
 
         // When
         List<RewardsNotification> result = service.handle().collectList().block();

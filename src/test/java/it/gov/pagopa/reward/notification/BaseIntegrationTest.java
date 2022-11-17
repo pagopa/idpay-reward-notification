@@ -86,6 +86,7 @@ import static org.awaitility.Awaitility.await;
 
                 //region common feature disabled
                 "app.csv.export.schedule=-",
+                "app.rewards-notification.expired-initiatives.schedule=-",
                 "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
                 //endregion

@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.controller;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -17,6 +18,9 @@ public interface NotificationController {
 
     @GetMapping("/reward/notification/exports/start")
     Flux<RewardOrganizationExport> forceExportScheduling();
+
+    @GetMapping("/reward/notification/expired-initiatives/start")
+    Flux<RewardsNotification> forceExpiredInitiativesScheduling();
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports")
     Flux<RewardExportsDTO> getExports(

@@ -3,8 +3,10 @@ package it.gov.pagopa.reward.notification.controller;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.export.ExportCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,16 +20,24 @@ public class NotificationControllerImpl implements NotificationController{
 
     private final OrganizationExportsServiceImpl organizationExportsService;
     private final ExportCsvService exportCsvService;
+    private final RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
 
-    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService, ExportCsvService exportCsvService) {
+    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService, ExportCsvService exportCsvService, RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService) {
         this.organizationExportsService = organizationExportsService;
         this.exportCsvService = exportCsvService;
+        this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
     }
 
     @Override
     public Flux<RewardOrganizationExport> forceExportScheduling() {
         log.info("Forcing rewardNotification csv export");
         return exportCsvService.execute();
+    }
+
+    @Override
+    public Flux<RewardsNotification> forceExpiredInitiativesScheduling() {
+        log.info("Forcing rewardNotification expired initiatives handling");
+        return expiredInitiativeHandlerService.handle();
     }
 
     @Override

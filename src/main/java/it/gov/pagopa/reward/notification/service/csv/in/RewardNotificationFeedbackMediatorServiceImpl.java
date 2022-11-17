@@ -4,8 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.StorageEventDto;
-import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
+import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.LockService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaConsumer<List<StorageEventDto>, List<StorageEventDto>> implements RewardNotificationFeedbackMediatorService {
+public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBlockingPartitionConsumer<List<StorageEventDto>, List<StorageEventDto>> implements RewardNotificationFeedbackMediatorService {
 
     private final ErrorNotifierService errorNotifierService;
 
@@ -32,8 +33,8 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaCons
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.rewardTrxConsumer-in-0.consumer.ackTime}") long commitMillis,
 
-            ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
-        super(applicationName);
+            LockService lockService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+        super(applicationName, lockService);
 
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);

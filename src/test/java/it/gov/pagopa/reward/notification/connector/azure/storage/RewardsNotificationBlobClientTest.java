@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.azure.storage;
+package it.gov.pagopa.reward.notification.connector.azure.storage;
 
 class RewardsNotificationBlobClientTest extends BaseAzureBlobClientTest{
     @Override

@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger;
 import com.azure.core.http.rest.Response;
 import com.azure.storage.blob.models.BlockBlobItem;
 import com.mongodb.Function;
-import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
+import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;

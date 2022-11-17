@@ -1,9 +1,11 @@
-package it.gov.pagopa.reward.notification.azure.storage;
+package it.gov.pagopa.reward.notification.connector.azure.storage;
 
 import com.azure.core.http.rest.PagedFlux;
 import com.azure.core.http.rest.Response;
+import com.azure.storage.blob.BlobAsyncClient;
 import com.azure.storage.blob.BlobContainerAsyncClient;
 import com.azure.storage.blob.models.BlobItem;
+import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.BlockBlobItem;
 import com.azure.storage.blob.models.DeleteSnapshotsOptionType;
 import org.junit.jupiter.api.Assertions;
@@ -14,9 +16,14 @@ import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 abstract class BaseAzureBlobClientTest {
 
@@ -30,12 +37,14 @@ abstract class BaseAzureBlobClientTest {
     protected abstract AzureBlobClient builtBlobInstance();
 
     @Test
-    protected void test() {
+    protected void test() throws IOException {
         // Given
         File testFile = new File("README.md");
         String destination = "baseAzureBlobClientTest/README.md";
+        Path downloadPath = Path.of("target/README.md");
+        Files.deleteIfExists(downloadPath.toAbsolutePath());
 
-        BlobContainerAsyncClient mockClient = mockClient(testFile, destination);
+        BlobContainerAsyncClient mockClient = mockClient(testFile, destination, downloadPath);
 
         // When Upload
         Response<BlockBlobItem> uploadResult = blobClient.uploadFile(testFile, destination, "text").block();
@@ -53,6 +62,20 @@ abstract class BaseAzureBlobClientTest {
                 List.of("baseAzureBlobClientTest/README.md")
                 , listResult.stream().map(BlobItem::getName).toList());
 
+        // When download
+        File downloadedFile = downloadPath.toFile();
+        Assertions.assertFalse(downloadedFile.exists());
+        Response<BlobProperties> downloadResult = blobClient.downloadFile(destination, downloadPath).block();
+
+        // Then downloadResult
+        Assertions.assertNotNull(downloadResult);
+        Assertions.assertEquals(206, downloadResult.getStatusCode());
+        if (mockClient == null) {
+            Assertions.assertTrue(downloadedFile.exists());
+            Assertions.assertEquals(testFile.length(), downloadedFile.length());
+            Assertions.assertTrue(downloadedFile.delete());
+        }
+
         // When Delete
         Response<Boolean> deleteResult = blobClient.deleteFile(destination).block();
 
@@ -61,7 +84,7 @@ abstract class BaseAzureBlobClientTest {
         Assertions.assertTrue(deleteResult.getValue());
 
         // When List after delete
-        if(mockClient != null){
+        if (mockClient != null) {
             mockListFilesOperation(destination, Collections.emptyList(), mockClient);
         }
         List<BlobItem> listAfterDeleteResult = blobClient.listFiles(destination).collectList().block();
@@ -69,9 +92,18 @@ abstract class BaseAzureBlobClientTest {
         // Then listAfterDeleteResult
         Assertions.assertNotNull(listAfterDeleteResult);
         Assertions.assertEquals(Collections.emptyList(), listAfterDeleteResult);
+
+        // When downloadAfterDeleteResult
+        if (mockClient != null) {
+            mockDownloadFileOperation(destination, downloadPath, false, mockClient);
+        }
+        Response<BlobProperties> downloadAfterDeleteResult = blobClient.downloadFile(destination, downloadPath).block();
+
+        // Then downloadResult
+        Assertions.assertNull(downloadAfterDeleteResult);
     }
 
-    protected BlobContainerAsyncClient mockClient(File file, String destination) {
+    protected BlobContainerAsyncClient mockClient(File file, String destination, Path downloadPath) {
         try {
             Field clientField = ReflectionUtils.findField(BaseAzureBlobClientImpl.class, "blobContainerClient");
             Assertions.assertNotNull(clientField);
@@ -86,6 +118,8 @@ abstract class BaseAzureBlobClientTest {
             mockListFilesOperation(destination, List.of(mockBlobItem), clientMock);
 
             mockDeleteOperation(destination, clientMock);
+
+            mockDownloadFileOperation(destination, downloadPath, true, clientMock);
 
             clientField.set(blobClient, clientMock);
 
@@ -102,8 +136,8 @@ abstract class BaseAzureBlobClientTest {
         //noinspection unchecked
         Mockito.when(clientMock.getBlobAsyncClient(destination)
                         .uploadFromFileWithResponse(Mockito.argThat(
-                        opt -> file.getPath().equals(opt.getFilePath())
-                )))
+                                opt -> file.getPath().equals(opt.getFilePath())
+                        )))
                 .thenReturn(Mono.just(responseMock));
     }
 
@@ -124,5 +158,22 @@ abstract class BaseAzureBlobClientTest {
         Mockito.when(clientMock.getBlobAsyncClient(destination)
                         .deleteIfExistsWithResponse(Mockito.eq(DeleteSnapshotsOptionType.INCLUDE), Mockito.isNull()))
                 .thenReturn(Mono.just(responseMock));
+    }
+
+    private void mockDownloadFileOperation(String destination, Path downloadPath, boolean fileExists, BlobContainerAsyncClient clientMock) {
+        @SuppressWarnings("rawtypes") Response responseMock = Mockito.mock(Response.class);
+        Mockito.when(responseMock.getStatusCode()).thenReturn(206);
+
+        BlobAsyncClient blobAsyncClientMock = clientMock.getBlobAsyncClient(destination);
+
+        Mockito.doReturn(fileExists? Mono.just(responseMock) : Mono.empty())
+                .when(blobAsyncClientMock)
+                .downloadToFileWithResponse(Mockito.argThat(opt ->
+                        opt.getFilePath().equals(downloadPath.toString()) && opt.getOpenOptions().equals(Set.of(
+                                StandardOpenOption.CREATE,
+                                StandardOpenOption.TRUNCATE_EXISTING,
+                                StandardOpenOption.READ,
+                                StandardOpenOption.WRITE
+                        ))));
     }
 }

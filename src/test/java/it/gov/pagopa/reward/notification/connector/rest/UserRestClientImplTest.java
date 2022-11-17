@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.rest;
+package it.gov.pagopa.reward.notification.connector.rest;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;

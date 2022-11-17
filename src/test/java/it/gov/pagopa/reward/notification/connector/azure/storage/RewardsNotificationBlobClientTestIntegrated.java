@@ -1,8 +1,9 @@
-package it.gov.pagopa.reward.notification.azure.storage;
+package it.gov.pagopa.reward.notification.connector.azure.storage;
 
 import com.azure.storage.blob.BlobContainerAsyncClient;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.Properties;
 
 class RewardsNotificationBlobClientTestIntegrated extends RewardsNotificationBlobClientTest {
@@ -23,7 +24,7 @@ class RewardsNotificationBlobClientTestIntegrated extends RewardsNotificationBlo
     }
 
     @Override
-    protected BlobContainerAsyncClient mockClient(File file, String destination) {
+    protected BlobContainerAsyncClient mockClient(File file, String destination, Path downloadPath) {
         // Do Nothing
         return null;
     }

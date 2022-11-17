@@ -8,7 +8,7 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
-import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
+import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;

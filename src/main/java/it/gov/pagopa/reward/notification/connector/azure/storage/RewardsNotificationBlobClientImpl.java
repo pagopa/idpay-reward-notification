@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.azure.storage;
+package it.gov.pagopa.reward.notification.connector.azure.storage;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.model;
 
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -50,5 +50,5 @@ public class RewardOrganizationExport {
     private Long percentageResults;
 
     private LocalDateTime feedbackDate;
-    private ExportStatus status;
+    private RewardOrganizationExportStatus status;
 }

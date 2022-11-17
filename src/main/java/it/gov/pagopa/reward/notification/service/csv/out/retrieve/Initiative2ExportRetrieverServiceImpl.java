@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out.retrieve;
 
 import com.mongodb.DuplicateKeyException;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
@@ -111,7 +111,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
                 .progressive(progressive)
-                .status(ExportStatus.TO_DO)
+                .status(RewardOrganizationExportStatus.TO_DO)
 
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)
@@ -150,7 +150,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 .id(baseExport.getId().replaceFirst("\\.%d$".formatted(baseExport.getProgressive()), ".%d".formatted(progressive)))
                 .filePath(baseExport.getFilePath().replaceFirst("\\.%d.zip$".formatted(baseExport.getProgressive()), ".%d.zip".formatted(progressive)))
                 .progressive(progressive)
-                .status(ExportStatus.IN_PROGRESS)
+                .status(RewardOrganizationExportStatus.IN_PROGRESS)
 
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)

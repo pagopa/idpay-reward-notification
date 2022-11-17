@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.service.csv.out.retrieve;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcernResult;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
@@ -208,7 +208,7 @@ class Initiative2ExportRetrieverServiceTest {
                 .organizationId(rule.getOrganizationId())
                 .notificationDate(now)
                 .progressive(progressive)
-                .status(ExportStatus.TO_DO)
+                .status(RewardOrganizationExportStatus.TO_DO)
 
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)
@@ -238,7 +238,7 @@ class Initiative2ExportRetrieverServiceTest {
         baseExport.setPercentageResulted(10L);
         baseExport.setPercentageResultedOk(10L);
         baseExport.setPercentageResults(10L);
-        baseExport.setStatus(ExportStatus.EXPORTED);
+        baseExport.setStatus(RewardOrganizationExportStatus.EXPORTED);
 
         Mockito.when(rewardOrganizationExportRepositoryMock.save(Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(0)));
 
@@ -265,7 +265,7 @@ class Initiative2ExportRetrieverServiceTest {
         Assertions.assertEquals(0L, result.getPercentageResulted());
         Assertions.assertEquals(0L, result.getPercentageResultedOk());
         Assertions.assertEquals(0L, result.getPercentageResults());
-        Assertions.assertEquals(ExportStatus.IN_PROGRESS, result.getStatus());
+        Assertions.assertEquals(RewardOrganizationExportStatus.IN_PROGRESS, result.getStatus());
 
         TestUtils.checkNotNullFields(result, "feedbackDate");
     }

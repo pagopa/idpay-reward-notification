@@ -7,7 +7,7 @@ import com.azure.storage.blob.models.BlockBlobItem;
 import com.mongodb.Function;
 import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -117,7 +117,7 @@ class ExportCsvFinalizeServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertSame(export, result);
 
-        Assertions.assertEquals(ExportStatus.EXPORTED, result.getStatus());
+        Assertions.assertEquals(RewardOrganizationExportStatus.EXPORTED, result.getStatus());
         Assertions.assertEquals(10, result.getRewardNotified());
         Assertions.assertEquals(1000L, result.getRewardsExportedCents());
 

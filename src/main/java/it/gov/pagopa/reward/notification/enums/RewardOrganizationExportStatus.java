@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.enums;
 
-public enum ExportStatus {
+public enum RewardOrganizationExportStatus {
     /** if the export is to be processed */
     TO_DO,
     /** if the export is in progress */

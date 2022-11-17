@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.repository;
 
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
@@ -11,10 +12,10 @@ public interface RewardOrganizationExportsRepositoryExtended {
     Flux<RewardOrganizationExport> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
     Mono<Long> countAll(String organizationId, String initiativeId, ExportFilter filters);
 
-    /** new export on an initiative configured only if there are not pending ({@link it.gov.pagopa.reward.notification.enums.ExportStatus#TO_DO} or {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS}) exports on that initiative */
+    /** new export on an initiative configured only if there are not pending ({@link RewardOrganizationExportStatus#TO_DO} or {@link RewardOrganizationExportStatus#IN_PROGRESS}) exports on that initiative */
     Mono<RewardOrganizationExport> configureNewExport(RewardOrganizationExport newExport);
-    /** It will retrieve an export changing its status from {@link it.gov.pagopa.reward.notification.enums.ExportStatus#TO_DO} to {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS} if any, setting {@link RewardOrganizationExport#getExportDate()} to today and allowing the current process to handle it */
+    /** It will retrieve an export changing its status from {@link RewardOrganizationExportStatus#TO_DO} to {@link RewardOrganizationExportStatus#IN_PROGRESS} if any, setting {@link RewardOrganizationExport#getExportDate()} to today and allowing the current process to handle it */
     Mono<RewardOrganizationExport> reserveExport();
-    /** It will retrieve an export having status {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getExportDate()} < today, updating it to today, and allowing the current process to handle it */
+    /** It will retrieve an export having status {@link RewardOrganizationExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getExportDate()} < today, updating it to today, and allowing the current process to handle it */
     Mono<RewardOrganizationExport> reserveStuckExport();
 }

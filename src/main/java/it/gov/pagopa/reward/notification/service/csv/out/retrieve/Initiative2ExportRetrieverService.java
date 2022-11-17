@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.service.csv.out.retrieve;
 
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import reactor.core.publisher.Mono;
 
@@ -10,9 +11,9 @@ import reactor.core.publisher.Mono;
  * </ol>
  * */
 public interface Initiative2ExportRetrieverService {
-    /** exports having status {@link it.gov.pagopa.reward.notification.enums.ExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getNotificationDate()} < {@link RewardOrganizationExport#getExportDate()} */
+    /** exports having status {@link RewardOrganizationExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getNotificationDate()} < {@link RewardOrganizationExport#getExportDate()} */
     Mono<RewardOrganizationExport> retrieveStuckExecution();
-    /** {@link it.gov.pagopa.reward.notification.enums.ExportStatus#TO_DO} {@link  RewardOrganizationExport} */
+    /** {@link RewardOrganizationExportStatus#TO_DO} {@link  RewardOrganizationExport} */
     Mono<RewardOrganizationExport> retrieve();
 
     Mono<RewardOrganizationExport> reserveNextSplitExport(RewardOrganizationExport baseExport, int splitNumber);

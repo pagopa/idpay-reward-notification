@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.repository;
 
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.ExportConstants;
 import org.springframework.data.domain.Pageable;
@@ -72,7 +72,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     private boolean checkStatusNotInExported(String status) {
-        return !ExportConstants.EXPORT_EXPOSED_STATUSES.contains(ExportStatus.valueOf(status));
+        return !ExportConstants.EXPORT_EXPOSED_STATUSES.contains(RewardOrganizationExportStatus.valueOf(status));
     }
 
     private Pageable getPageable(Pageable pageable) {
@@ -116,7 +116,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     public Mono<RewardOrganizationExport> reserveStuckExport() {
         return mongoTemplate.findAndModify(
                 Query.query(Criteria
-                        .where(FIELD_STATUS).is(ExportStatus.IN_PROGRESS)
+                        .where(FIELD_STATUS).is(RewardOrganizationExportStatus.IN_PROGRESS)
                         .and(FIELD_EXPORT_DATE).lt(LocalDate.now())
                 ),
                 new Update()
@@ -129,9 +129,9 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     @Override
     public Mono<RewardOrganizationExport> reserveExport() {
         return mongoTemplate.findAndModify(
-                Query.query(Criteria.where(FIELD_STATUS).is(ExportStatus.TO_DO)),
+                Query.query(Criteria.where(FIELD_STATUS).is(RewardOrganizationExportStatus.TO_DO)),
                 new Update()
-                        .set(FIELD_STATUS, ExportStatus.IN_PROGRESS)
+                        .set(FIELD_STATUS, RewardOrganizationExportStatus.IN_PROGRESS)
                         .set(FIELD_EXPORT_DATE, LocalDate.now()),
                 FindAndModifyOptions.options().returnNew(true),
                 RewardOrganizationExport.class
@@ -143,7 +143,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
         return mongoTemplate.upsert(
                 Query.query(
                         Criteria.where(FIELD_INITIATIVE_ID).is(newExport.getInitiativeId())
-                                .and(FIELD_STATUS).in(ExportStatus.TO_DO, ExportStatus.IN_PROGRESS)
+                                .and(FIELD_STATUS).in(RewardOrganizationExportStatus.TO_DO, RewardOrganizationExportStatus.IN_PROGRESS)
                 ),
                 new Update()
                         .setOnInsert(RewardOrganizationExport.Fields.id, newExport.getId())

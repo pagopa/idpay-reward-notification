@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -40,7 +40,7 @@ public class RewardOrganizationExportsFaker {
         out.percentageResultedOk(bias*1000L);
         out.percentageResults((bias*10000L)/50L);
         out.feedbackDate(LocalDateTime.now());
-        out.status(ExportStatus.EXPORTED);
+        out.status(RewardOrganizationExportStatus.EXPORTED);
 
 
         TestUtils.checkNotNullFields(out);

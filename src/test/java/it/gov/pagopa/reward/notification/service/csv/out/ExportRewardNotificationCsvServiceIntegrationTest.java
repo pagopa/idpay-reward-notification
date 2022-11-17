@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
@@ -127,7 +127,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 .percentageResulted(0L)
                 .percentageResultedOk(0L)
                 .percentageResults(0L)
-                .status(ExportStatus.IN_PROGRESS)
+                .status(RewardOrganizationExportStatus.IN_PROGRESS)
                 .build()).block();
     }
 
@@ -251,7 +251,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertEquals(0L, export.getPercentageResultedOk());
         Assertions.assertEquals(0L, export.getPercentageResults());
         Assertions.assertNull(export.getFeedbackDate());
-        Assertions.assertEquals(ExportStatus.EXPORTED, export.getStatus());
+        Assertions.assertEquals(RewardOrganizationExportStatus.EXPORTED, export.getStatus());
 
         List<RewardsNotification> rewards = rewardsRepository.findExportRewards(exportId).collectList().block();
         Assertions.assertNotNull(rewards);

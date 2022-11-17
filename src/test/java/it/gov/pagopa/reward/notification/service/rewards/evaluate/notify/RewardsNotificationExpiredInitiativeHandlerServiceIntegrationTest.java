@@ -52,7 +52,7 @@ class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends 
         initiativesTestData.add(ruleRepository.save(
                 RewardNotificationRuleFaker.mockInstanceBuilder(3)
                         .initiativeId("INITIATIVE3")
-                        .endDate(TODAY.plusDays(30))
+                        .endDate(TODAY.minusDays(5))
                         .accumulatedAmount(null)
                         .build()
         ).block());
@@ -90,12 +90,18 @@ class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends 
         ).block());
         notificationsTestData.add(notificationRepository.save(
                 RewardsNotificationFaker.mockInstanceBuilder(5)
+                        .initiativeId("INITIATIVE3")
+                        .notificationDate(null)
+                        .build()
+        ).block());
+        notificationsTestData.add(notificationRepository.save(
+                RewardsNotificationFaker.mockInstanceBuilder(6)
                         .initiativeId("INITIATIVE4")
                         .notificationDate(TODAY)
                         .build()
         ).block());
         notificationsTestData.add(notificationRepository.save(
-                RewardsNotificationFaker.mockInstanceBuilder(6)
+                RewardsNotificationFaker.mockInstanceBuilder(7)
                         .initiativeId("INITIATIVE4")
                         .notificationDate(null)
                         .build()

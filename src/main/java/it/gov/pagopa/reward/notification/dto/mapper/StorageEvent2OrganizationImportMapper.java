@@ -20,11 +20,10 @@ public class StorageEvent2OrganizationImportMapper implements Function<StorageEv
         }
 
         return RewardOrganizationImport.builder()
-                .id(storageEventDto.getId())
+                .filePath(storageEventDto.getSubject().replace(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX, ""))
                 .initiativeId(pathSplits[7])
                 .organizationId(pathSplits[6])
                 .feedbackDate(storageEventDto.getEventTime().toLocalDateTime())
-                .filePath(storageEventDto.getSubject().replace(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX, ""))
                 .eTag(storageEventDto.getData().getETag())
                 .contentLength(storageEventDto.getData().getContentLength())
                 .url(storageEventDto.getData().getUrl())

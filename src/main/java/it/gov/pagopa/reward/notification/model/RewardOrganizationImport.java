@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.model;
 
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
+import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,11 +24,10 @@ import java.util.List;
 public class RewardOrganizationImport {
 
     @Id
-    private String id;
+    private String filePath;
     private String initiativeId;
     private String organizationId;
     private LocalDateTime feedbackDate;
-    private String filePath;
     private String eTag;
     private Integer contentLength;
     private String url;
@@ -50,5 +51,11 @@ public class RewardOrganizationImport {
         private Integer row;
         private String errorCode;
         private String errorDescription;
+
+        public RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors noRows) {
+            this.row=-1;
+            this.errorCode=noRows.name();
+            this.errorDescription=noRows.description;
+        }
     }
 }

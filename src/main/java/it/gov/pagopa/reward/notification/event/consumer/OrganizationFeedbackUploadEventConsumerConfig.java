@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
-import it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService;
+import it.gov.pagopa.reward.notification.service.feedback.RewardNotificationFeedbackMediatorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;

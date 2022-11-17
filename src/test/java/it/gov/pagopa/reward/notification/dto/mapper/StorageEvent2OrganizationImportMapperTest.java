@@ -56,7 +56,6 @@ class StorageEvent2OrganizationImportMapperTest {
     }
 
     private void checkFields(RewardOrganizationImport result, StorageEventDto dto) {
-        Assertions.assertEquals(dto.getId(), result.getId());
         Assertions.assertEquals("initiativeId", result.getInitiativeId());
         Assertions.assertEquals("orgId", result.getOrganizationId());
         Assertions.assertEquals(dto.getEventTime().toLocalDateTime(), result.getFeedbackDate());

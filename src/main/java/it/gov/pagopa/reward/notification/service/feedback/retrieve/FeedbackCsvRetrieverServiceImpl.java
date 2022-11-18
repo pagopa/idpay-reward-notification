@@ -86,7 +86,14 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
             } else {
                 throw new IllegalStateException("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile %s".formatted(zipLocalPath), e);
             }
+        } finally {
+            try {
+                Files.deleteIfExists(zipLocalPath);
+            } catch (IOException e) {
+                log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot delete local zip file {}", zipLocalPath, e);
+            }
         }
+
     }
 
     private void addError(RewardOrganizationImport importRequest, RewardFeedbackConstants.ImportFileErrors noSize) {

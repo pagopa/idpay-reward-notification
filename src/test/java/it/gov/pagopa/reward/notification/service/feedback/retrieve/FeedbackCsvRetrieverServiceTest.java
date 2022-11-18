@@ -5,10 +5,7 @@ import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotifica
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationImportFaker;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -18,7 +15,10 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class FeedbackCsvRetrieverServiceTest {
@@ -29,7 +29,53 @@ class FeedbackCsvRetrieverServiceTest {
     private FeedbackCsvRetrieverService service;
 
     private final RewardOrganizationImport importRequest = RewardOrganizationImportFaker.mockInstance(0);
-    private final String csvTmpDir = "target/tmp";
+    private static final String csvTmpDir = "target/tmp/feedbackUseCasesZip";
+
+    @BeforeAll
+    static void copySampleToTargetDir() throws IOException {
+        String srcDir = "src/test/resources/feedbackUseCasesZip";
+        Files.createDirectories(Path.of(csvTmpDir));
+        try(Stream<Path> pathStream = Files.walk(Paths.get(srcDir))) {
+            pathStream.forEach(source -> {
+                Path destination = Paths.get(csvTmpDir, source.toString()
+                        .substring(srcDir.length()));
+                try {
+                    Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    @AfterAll
+    static void checkSampleTargetDir() throws IOException {
+        Path sampleTmpDir = Path.of(csvTmpDir);
+        try(Stream<Path> fileListStream = Files.list(sampleTmpDir)){
+            Assertions.assertEquals(
+                    List.of(
+                            sampleTmpDir.resolve("invalid"),
+                            sampleTmpDir.resolve("valid")
+                            ),
+                    fileListStream.toList()
+            );
+        } finally {
+            clearSampleTargetDir(sampleTmpDir);
+        }
+    }
+
+    private static void clearSampleTargetDir(Path sampleTmpDir) throws IOException {
+        try(Stream<Path> pathStream = Files.walk(sampleTmpDir)) {
+            pathStream.forEach(source -> {
+                try {
+                    Files.delete(source);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        Files.delete(sampleTmpDir);
+    }
 
     @BeforeEach
     void init() {
@@ -61,14 +107,14 @@ class FeedbackCsvRetrieverServiceTest {
             mono.block();
             Assertions.fail("Expecting exception when no zip exists");
         } catch (IllegalStateException e) {
-            Assertions.assertEquals("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile target\\tmp\\orgId\\initiativeId\\import\\reward-dispositive-0.zip", e.getMessage());
+            Assertions.assertEquals("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile target\\tmp\\feedbackUseCasesZip\\orgId\\initiativeId\\import\\reward-dispositive-0.zip", e.getMessage());
         }
     }
 
     @Test
     void testZipNoSize() {
         // Given
-        importRequest.setFilePath("../../src/test/resources/feedbackUseCasesZip/invalid/noSizeZip.zip");
+        importRequest.setFilePath("invalid/noSizeZip.zip");
 
         // When
         Path result = service.retrieveCsv(importRequest).block();
@@ -80,7 +126,7 @@ class FeedbackCsvRetrieverServiceTest {
     @Test
     void testZipEmpty() {
         // Given
-        importRequest.setFilePath("../../src/test/resources/feedbackUseCasesZip/invalid/emptyZip.zip");
+        importRequest.setFilePath("invalid/emptyZip.zip");
 
         // When
         Path result = service.retrieveCsv(importRequest).block();
@@ -92,7 +138,7 @@ class FeedbackCsvRetrieverServiceTest {
     @Test
     void testZipInvalidContent() {
         // Given
-        importRequest.setFilePath("../../src/test/resources/feedbackUseCasesZip/invalid/invalidContent.zip");
+        importRequest.setFilePath("invalid/invalidContent.zip");
 
         // When
         Path result = service.retrieveCsv(importRequest).block();
@@ -104,7 +150,7 @@ class FeedbackCsvRetrieverServiceTest {
     @Test
     void testZipInvalidCsvName() {
         // Given
-        importRequest.setFilePath("../../src/test/resources/feedbackUseCasesZip/invalid/invalidCsvName.zip");
+        importRequest.setFilePath("invalid/invalidCsvName.zip");
 
         // When
         Path result = service.retrieveCsv(importRequest).block();
@@ -116,7 +162,7 @@ class FeedbackCsvRetrieverServiceTest {
     @Test
     void testZipInvalidHeader() {
         // Given
-        importRequest.setFilePath("../../src/test/resources/feedbackUseCasesZip/invalid/invalidHeader.zip");
+        importRequest.setFilePath("invalid/invalidHeader.zip");
 
         // When
         Path result = service.retrieveCsv(importRequest).block();
@@ -128,7 +174,7 @@ class FeedbackCsvRetrieverServiceTest {
     @Test
     void testSuccessful() {
         // Given
-        importRequest.setFilePath("../../src/test/resources/feedbackUseCasesZip/valid/validUseCase.zip");
+        importRequest.setFilePath("valid/validUseCase.zip");
         Path expectedCsvPath = buildExpectedCsvLocalPath();
 
         // When

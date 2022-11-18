@@ -1,6 +1,9 @@
 package it.gov.pagopa.reward.notification.dto.rewards.csv;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvIgnore;
+import it.gov.pagopa.reward.notification.utils.csv.LocalDateConverter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,10 +19,12 @@ import java.time.LocalDate;
 @FieldNameConstants
 public class RewardNotificationImportCsvDto {
 
+    @CsvIgnore private Integer rowNumber;
+
     @CsvBindByName(column="uniqueID") private String uniqueID;
     @CsvBindByName(column="result") private String result;
     @CsvBindByName(column="rejectionReason") private String rejectionReason;
     @CsvBindByName(column="cro") private String cro;
-    @CsvBindByName(column="executionDate") private LocalDate executionDate;
+    @CsvCustomBindByName(column="executionDate", converter = LocalDateConverter.class) private LocalDate executionDate;
 
 }

@@ -122,8 +122,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     private Mono<RewardOrganizationImport> retrieveAndElaborateCsv(RewardOrganizationImport importRequest) {
         log.info("[REWARD_NOTIFICATION_FEEDBACK] New request recognized, retrieving and processing it: {}", importRequest.getFilePath());
         return csvRetrieverService.retrieveCsv(importRequest)
-                .flatMapMany(p->importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
-                .then(Mono.just(importRequest))
+                .flatMap(p->importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
 
                 // catch errors
                 .onErrorResume(e -> {

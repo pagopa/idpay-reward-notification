@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRe
 import it.gov.pagopa.reward.notification.test.fakers.StorageEventDtoFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,11 @@ class RewardNotificationFeedbackMediatorServiceTest {
     @BeforeEach
     void init(){
         feedbackMediatorService = new RewardNotificationFeedbackMediatorServiceImpl("APPNAME", 500, mapper, lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
+    }
+
+    @AfterEach
+    void verifyNotMoreMocksInteraction(){
+        Mockito.verifyNoMoreInteractions(lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, errorNotifierServiceMock);
     }
 
     @Test

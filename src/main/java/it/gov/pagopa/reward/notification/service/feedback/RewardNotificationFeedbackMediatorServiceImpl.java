@@ -98,6 +98,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
         return Flux.fromIterable(payload)
                 // consider just organization feedback upload events
                 .filter(this::isOrganizationFeedbackUploadEvent)
+                .doOnNext(i->log.info("[REWARD_NOTIFICATION_FEEDBACK] Processing import request: {}", i.getSubject()))
                 .map(mapper)
                 // trace import request
                 .flatMap(importsRepository::createIfNotExistsOrReturnEmpty)
@@ -105,6 +106,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
                 .flatMap(this::retrieveAndElaborateCsv)
                 // finalize import request state and store it
                 .flatMap(this::finalizeImportRequest)
+                .doOnNext(i->log.info("[REWARD_NOTIFICATION_FEEDBACK] Import request processing results stored: {}", i.getFilePath()))
                 .collectList();
     }
 
@@ -117,37 +119,47 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
                         && rewardOrganizationInputFilePathPattern.matcher(storageEventDto.getSubject()).matches();
     }
 
-    private Mono<RewardOrganizationImport> retrieveAndElaborateCsv(RewardOrganizationImport rewardOrganizationImport) {
-        return csvRetrieverService.retrieveCsv(rewardOrganizationImport)
-                .flatMapMany(p->importRewardNotificationFeedbackCsvService.evaluate(p, rewardOrganizationImport))
-                .then(Mono.just(rewardOrganizationImport))
+    private Mono<RewardOrganizationImport> retrieveAndElaborateCsv(RewardOrganizationImport importRequest) {
+        log.info("[REWARD_NOTIFICATION_FEEDBACK] New request recognized, retrieving and processing it: {}", importRequest.getFilePath());
+        return csvRetrieverService.retrieveCsv(importRequest)
+                .flatMapMany(p->importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
+                .then(Mono.just(importRequest))
+
                 // catch errors
                 .onErrorResume(e -> {
-                    log.error("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while elaborating import request: {}", rewardOrganizationImport.getFilePath(), e);
-                    rewardOrganizationImport.setStatus(RewardOrganizationImportStatus.ERROR);
-                    rewardOrganizationImport.getErrors().add(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.GENERIC_ERROR));
-                    return Mono.just(rewardOrganizationImport);
+                    log.error("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while elaborating import request {}", importRequest.getFilePath(), e);
+                    importRequest.setStatus(RewardOrganizationImportStatus.ERROR);
+                    importRequest.getErrors().add(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.GENERIC_ERROR));
+                    return Mono.just(importRequest);
                 });
     }
 
-    private Mono<RewardOrganizationImport> finalizeImportRequest(RewardOrganizationImport rewardOrganizationImport) {
-        rewardOrganizationImport.setElabDate(LocalDateTime.now());
-        rewardOrganizationImport.setStatus(transcodeStatus(rewardOrganizationImport));
-        rewardOrganizationImport.setErrorsSize(rewardOrganizationImport.getErrors().size());
-        return importsRepository.save(rewardOrganizationImport);
+    private Mono<RewardOrganizationImport> finalizeImportRequest(RewardOrganizationImport importRequest) {
+        importRequest.setElabDate(LocalDateTime.now());
+        importRequest.setStatus(transcodeStatus(importRequest));
+        importRequest.setErrorsSize(importRequest.getErrors().size());
+
+        log.info("[REWARD_NOTIFICATION_FEEDBACK] Import request process completed {} and resulted into status {}, read:{}, rowErrors:{}, errorsSize:{}",
+                importRequest.getFilePath(), importRequest.getStatus(), importRequest.getRewardsResulted(), importRequest.getRewardsResultedError(), importRequest.getErrorsSize());
+
+        // errors potentially could be a big list, printing only when DEBUG
+        if(importRequest.getErrorsSize()>0){
+            log.debug("[REWARD_NOTIFICATION_FEEDBACK] Import request completed with errors {}: {}", importRequest.getFilePath(), importRequest.getErrors());
+        }
+        return importsRepository.save(importRequest);
     }
 
-    private static RewardOrganizationImportStatus transcodeStatus(RewardOrganizationImport rewardOrganizationImport) {
+    private static RewardOrganizationImportStatus transcodeStatus(RewardOrganizationImport importRequest) {
         RewardOrganizationImportStatus status;
-        if(rewardOrganizationImport.getRewardsResulted() == 0){
-            if(rewardOrganizationImport.getErrors().isEmpty()) {
-                rewardOrganizationImport.getErrors().add(
+        if(importRequest.getRewardsResulted() == 0){
+            if(importRequest.getErrors().isEmpty()) {
+                importRequest.getErrors().add(
                         new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.NO_ROWS));
             }
             status=RewardOrganizationImportStatus.ERROR;
-        } else if(!RewardOrganizationImportStatus.IN_PROGRESS.equals(rewardOrganizationImport.getStatus())) {
-            status = rewardOrganizationImport.getStatus();
-        } else if(rewardOrganizationImport.getRewardsResultedError() > 0) {
+        } else if(!RewardOrganizationImportStatus.IN_PROGRESS.equals(importRequest.getStatus())) {
+            status = importRequest.getStatus();
+        } else if(importRequest.getRewardsResultedError() > 0) {
             status = RewardOrganizationImportStatus.WARN;
         } else {
             status =RewardOrganizationImportStatus.COMPLETE;

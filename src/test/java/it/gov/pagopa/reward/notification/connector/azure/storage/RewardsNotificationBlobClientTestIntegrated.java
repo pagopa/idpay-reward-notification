@@ -14,7 +14,7 @@ class RewardsNotificationBlobClientTestIntegrated extends RewardsNotificationBlo
         try(InputStream storageAccountPropertiesIS = new BufferedInputStream(new FileInputStream("src/test/resources/secrets/storageAccount.properties"))){
             Properties props = new Properties();
             props.load(storageAccountPropertiesIS);
-            connectionString=props.getProperty("app.csv.export.storage.connection-string");
+            connectionString=props.getProperty("app.csv.storage.connection-string");
         }
     }
 

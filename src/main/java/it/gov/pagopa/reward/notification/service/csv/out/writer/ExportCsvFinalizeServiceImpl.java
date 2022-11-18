@@ -29,6 +29,7 @@ import java.util.List;
 @Service
 public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
 
+    private final String csvTmpDir;
     private final char csvSeparator;
     private final RewardsNotificationRepository rewardsNotificationRepository;
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
@@ -36,8 +37,10 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     private final RewardsNotificationBlobClient azureBlobClient;
 
     public ExportCsvFinalizeServiceImpl(
+            @Value("${app.csv.tmp-dir}") String csvTmpDir,
             @Value("${app.csv.export.separator}") char csvSeparator,
             RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationBlobClient azureBlobClient) {
+        this.csvTmpDir = csvTmpDir;
         this.csvSeparator = csvSeparator;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
@@ -48,7 +51,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
 
     @Override
     public Mono<RewardOrganizationExport> writeCsvAndFinalize(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
-        log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Writing export of initiative {} having id {} on localPath /tmp{} containing {} rows", export.getInitiativeId(), export.getId(), export.getFilePath(), csvLines.size());
+        log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Writing export of initiative {} having id {} on localPath {}/{} containing {} rows", export.getInitiativeId(), export.getId(), csvTmpDir, export.getFilePath(), csvLines.size());
 
         Path zipFilePath = writeCsv(csvLines, export);
 
@@ -90,7 +93,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     }
 
     private Path writeCsv(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
-        String localZipFileName = "/tmp/%s".formatted(export.getFilePath());
+        String localZipFileName = "%s/%s".formatted(csvTmpDir, export.getFilePath());
         String localCsvFileName = localZipFileName.replaceAll("\\.zip$", ".csv");
 
         log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Writing export CSV of initiative {} having id {} on path {}", export.getInitiativeId(), export.getId(), localCsvFileName);

@@ -40,7 +40,7 @@ public final class ZipUtils {
         }
     }
 
-    /** To zip a list of files */
+    /** To unzip a file */
     public static void unzip(String zipFilePath, String destDirPath) {
         Path destDir = Path.of(destDirPath);
         if(!Files.exists(destDir)){
@@ -53,22 +53,25 @@ public final class ZipUtils {
 
         try (ZipFile zipFile = new ZipFile(zipFilePath)) {
             Stream<? extends ZipEntry> stream = zipFile.stream();
-            stream.forEach(zipEntry -> {
-                try (InputStream inputStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
-                     BufferedInputStream bufferInStream = new BufferedInputStream(inputStream);
-                     BufferedOutputStream bufferOutStream = new BufferedOutputStream(
-                             new FileOutputStream(destDirPath + File.separator + zipEntry.getName()))) {
-                    int bytes;
-                    while ((bytes = bufferInStream.read()) > 0) {
-                        bufferOutStream.write(bytes);
-                        bufferOutStream.flush();
-                    }
-                } catch (IOException e) {
-                    throw new IllegalStateException("Something gone wrong while unzipping entry file %s into %s".formatted(zipEntry, destDirPath), e);
-                }
-            });
+            stream.forEach(zipEntry -> unzipZipEntry(destDirPath, zipFile, zipEntry));
         } catch (IOException e) {
             throw new IllegalStateException("Something gone wrong while unzipping %s into %s".formatted(zipFilePath, destDirPath), e);
+        }
+    }
+
+    /** To unzip a {@link ZipEntry} */
+    public static void unzipZipEntry(String destDirPath, ZipFile zipFile, ZipEntry zipEntry) {
+        try (InputStream inputStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
+             BufferedInputStream bufferInStream = new BufferedInputStream(inputStream);
+             BufferedOutputStream bufferOutStream = new BufferedOutputStream(
+                     new FileOutputStream(destDirPath + File.separator + zipEntry.getName()))) {
+            int bytes;
+            while ((bytes = bufferInStream.read()) > 0) {
+                bufferOutStream.write(bytes);
+                bufferOutStream.flush();
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Something gone wrong while unzipping entry file %s into %s".formatted(zipEntry, destDirPath), e);
         }
     }
 

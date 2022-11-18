@@ -41,6 +41,7 @@ public class RewardOrganizationImport {
     private LocalDateTime elabDate;
     @Builder.Default private List<String> exportIds=new ArrayList<>();
     private RewardOrganizationImportStatus status;
+    @Builder.Default private Integer errorsSize=0;
     @Builder.Default private List<RewardOrganizationImportError> errors = new ArrayList<>();
 
     @Data

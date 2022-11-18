@@ -133,6 +133,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     private Mono<RewardOrganizationImport> finalizeImportRequest(RewardOrganizationImport rewardOrganizationImport) {
         rewardOrganizationImport.setElabDate(LocalDateTime.now());
         rewardOrganizationImport.setStatus(transcodeStatus(rewardOrganizationImport));
+        rewardOrganizationImport.setErrorsSize(rewardOrganizationImport.getErrors().size());
         return importsRepository.save(rewardOrganizationImport);
     }
 

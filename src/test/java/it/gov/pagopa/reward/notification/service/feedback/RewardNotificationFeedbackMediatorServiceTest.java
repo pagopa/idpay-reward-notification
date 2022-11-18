@@ -58,8 +58,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(Collections.emptyList(), result);
+        checkEmptyResult(result);
     }
 
     @Test
@@ -72,8 +71,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(Collections.emptyList(), result);
+        checkEmptyResult(result);
     }
 
     @Test
@@ -88,6 +86,10 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
+        checkEmptyResult(result);
+    }
+
+    private void checkEmptyResult(List<RewardOrganizationImport> result) {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(Collections.emptyList(), result);
     }
@@ -106,11 +108,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(List.of(expectedImportRequest), result);
-
-        Assertions.assertEquals(RewardOrganizationImportStatus.ERROR, expectedImportRequest.getStatus());
-        Assertions.assertEquals(List.of(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.NO_ROWS)), expectedImportRequest.getErrors());
+        checkResult(result, expectedImportRequest, RewardOrganizationImportStatus.ERROR,
+                List.of(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.NO_ROWS)));
     }
 
     @Test
@@ -129,11 +128,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(List.of(expectedImportRequest), result);
-
-        Assertions.assertEquals(List.of(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.NO_ROWS)), expectedImportRequest.getErrors());
-        Assertions.assertEquals(RewardOrganizationImportStatus.ERROR, expectedImportRequest.getStatus());
+        checkResult(result, expectedImportRequest, RewardOrganizationImportStatus.ERROR,
+                List.of(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.NO_ROWS)));
     }
 
     @Test
@@ -160,11 +156,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(List.of(expectedImportRequest), result);
-
-        Assertions.assertEquals(List.of(expectedRowError), expectedImportRequest.getErrors());
-        Assertions.assertEquals(RewardOrganizationImportStatus.WARN, expectedImportRequest.getStatus());
+        checkResult(result, expectedImportRequest, RewardOrganizationImportStatus.WARN, List.of(expectedRowError));
     }
 
     @Test
@@ -198,11 +190,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(List.of(expectedImportRequest), result);
-
-        Assertions.assertEquals(List.of(expectedErrorOnRow1, new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.GENERIC_ERROR)), expectedImportRequest.getErrors());
-        Assertions.assertEquals(RewardOrganizationImportStatus.ERROR, expectedImportRequest.getStatus());
+        checkResult(result, expectedImportRequest, RewardOrganizationImportStatus.ERROR,
+                List.of(expectedErrorOnRow1, new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.GENERIC_ERROR)));
     }
 
     @Test
@@ -224,10 +213,15 @@ class RewardNotificationFeedbackMediatorServiceTest {
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
 
         // Then
+        checkResult(result, expectedImportRequest, RewardOrganizationImportStatus.COMPLETE, Collections.emptyList());
+    }
+
+    private void checkResult(List<RewardOrganizationImport> result, RewardOrganizationImport expectedImportRequest, RewardOrganizationImportStatus expectedStatus, List<RewardOrganizationImport.RewardOrganizationImportError> expectedErrors) {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(List.of(expectedImportRequest), result);
 
-        Assertions.assertEquals(Collections.emptyList(), expectedImportRequest.getErrors());
-        Assertions.assertEquals(RewardOrganizationImportStatus.COMPLETE, expectedImportRequest.getStatus());
+        Assertions.assertEquals(expectedErrors, expectedImportRequest.getErrors());
+        Assertions.assertEquals(expectedImportRequest.getErrorsSize(), expectedImportRequest.getErrors().size());
+        Assertions.assertEquals(expectedStatus, expectedImportRequest.getStatus());
     }
 }

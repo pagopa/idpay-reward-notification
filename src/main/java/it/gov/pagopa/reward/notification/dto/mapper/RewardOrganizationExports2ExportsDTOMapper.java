@@ -27,8 +27,8 @@ public class RewardOrganizationExports2ExportsDTOMapper implements Function<Rewa
     public RewardExportsDTO apply(RewardOrganizationExport rewardOrganizationExport) {
         String filePath = rewardOrganizationExport.getFilePath();
         if(filePath!=null){
-            String[] pathSplitted = filePath.split("/");
-            filePath=pathSplitted[pathSplitted.length-1];
+            String[] pathSplit = filePath.split("/");
+            filePath=pathSplit[pathSplit.length-1];
         }
         return RewardExportsDTO.builder()
                 .id(rewardOrganizationExport.getId())

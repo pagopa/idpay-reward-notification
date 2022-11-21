@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
+import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.ImportElaborationCounters;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
@@ -17,7 +18,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -54,6 +59,8 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
             throw new IllegalStateException("[REWARD_NOTIFICATION_FEEDBACK] Cannot read csv: %s".formatted(csv), e);
         }
 
+        Map<String, RewardOrganizationExport> exportCache = new ConcurrentHashMap<>();
+
         int[] rowNumber = new int[]{1};
         return Flux.fromStream(csvReader.stream())
                 .doOnNext(r -> r.setRowNumber(rowNumber[0]++))
@@ -61,7 +68,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .parallel(parallelism)
                 .runOn(Schedulers.boundedElastic())
 
-                .flatMap(rewardNotificationFeedbackHandlerService::evaluate)
+                .flatMap(line -> rewardNotificationFeedbackHandlerService.evaluate(line, importRequest, exportCache))
                 .map(ImportElaborationCounters::fromElaborationResult)
 
                 .reduce(ImportElaborationCounters::add)
@@ -85,6 +92,9 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     }
 
     private RewardOrganizationImport updateImportRequest(ImportElaborationCounters counter, RewardOrganizationImport importRequest) {
+        importRequest.setExportIds(new ArrayList<>(counter.getExportIds()));
+        importRequest.getExportIds().sort(Comparator.comparing(Function.identity()));
+
         importRequest.setRewardsResulted(counter.getRewardsResulted());
         importRequest.setRewardsResultedError(counter.getRewardsResultedError());
         importRequest.setRewardsResultedOk(counter.getRewardsResultedOk());

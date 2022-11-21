@@ -21,7 +21,9 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,7 +62,8 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
 
         Set<Integer> simulatingErrorRows = Set.of(5,9,11,17); // row 9 is a sample of KO outcome, the other are OK
 
-        Mockito.when(rowHandlerServiceMock.evaluate(Mockito.any())).thenAnswer(r-> {
+        //noinspection unchecked
+        Mockito.when(rowHandlerServiceMock.evaluate(Mockito.any(), Mockito.same(importRequest), Mockito.isA(ConcurrentHashMap.class))).thenAnswer(r-> {
             RewardNotificationImportCsvDto row = r.getArgument(0, RewardNotificationImportCsvDto.class);
             RewardOrganizationImportResult feedbackOutcome = RewardOrganizationImportResult.valueOf(row.getResult());
             RewardOrganizationImport.RewardOrganizationImportError error;
@@ -69,7 +72,7 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
             } else {
                 error=null;
             }
-            return Mono.just(new RewardNotificationFeedbackHandlerOutcome(feedbackOutcome, error));
+            return Mono.just(new RewardNotificationFeedbackHandlerOutcome(feedbackOutcome, error==null? "EXPORTID%d".formatted(row.getRowNumber()%3) : null, error));
         });
 
         // When
@@ -77,6 +80,10 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
 
         // Then
         Assertions.assertNotNull(result);
+
+        Assertions.assertEquals(
+                List.of("EXPORTID0", "EXPORTID1", "EXPORTID2"),
+                result.getExportIds());
 
         Assertions.assertEquals(17, result.getRewardsResulted());
         Assertions.assertEquals(4, result.getRewardsResultedError());
@@ -92,16 +99,19 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
                 result.getErrors()
         );
 
-        Mockito.verify(rowHandlerServiceMock, Mockito.times(result.getRewardsResulted().intValue())).evaluate(Mockito.any());
+        //noinspection unchecked
+        Mockito.verify(rowHandlerServiceMock, Mockito.times(result.getRewardsResulted().intValue())).evaluate(Mockito.any(), Mockito.same(importRequest), Mockito.isA(ConcurrentHashMap.class));
+        //noinspection unchecked
         IntStream.rangeClosed(1, 17)
-                .forEach(i-> Mockito.verify(rowHandlerServiceMock).evaluate(Mockito.argThat(r->{
-                    if(r.getRowNumber() == i){
-                        Assertions.assertEquals("rewardNotificationId%d".formatted(i), r.getUniqueID());
-                        return true;
-                    } else {
-                        return false;
-                    }
-                })));
+                .forEach(i -> Mockito.verify(rowHandlerServiceMock).evaluate(Mockito.argThat(r -> {
+                            if (r.getRowNumber() == i) {
+                                Assertions.assertEquals("rewardNotificationId%d".formatted(i), r.getUniqueID());
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }),
+                        Mockito.same(importRequest), Mockito.isA(ConcurrentHashMap.class)));
     }
 
     private RewardOrganizationImport.RewardOrganizationImportError buildDummyError(Integer rowNumber) {

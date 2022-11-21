@@ -33,7 +33,7 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
                 .switchIfEmpty(Mono.defer(() -> {
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find iban related to user {} and initiative {}", reward.getUserId(), reward.getInitiativeId());
                     reward.setStatus(RewardNotificationStatus.ERROR);
-                    reward.setRejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
+                    reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)

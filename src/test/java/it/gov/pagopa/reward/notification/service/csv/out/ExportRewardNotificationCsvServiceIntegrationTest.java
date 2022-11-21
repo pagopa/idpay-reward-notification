@@ -300,7 +300,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
     private void checkIbanKoUseCases() {
         List<RewardsNotification> expectedIbanKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
-                .rejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
+                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
                 .build())).collectList().block();
 
         Assertions.assertNotNull(expectedIbanKo);
@@ -311,7 +311,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(rule3.getInitiativeId(), r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getRejectionReason());
-            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getRejectionCode());
+            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getResultCode());
             Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
             Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });
@@ -324,7 +324,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
     private void checkCfKoUseCases(List<RewardOrganizationExport> result) {
         List<RewardsNotification> expectedCfKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
-                .rejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND)
+                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND)
                 .build())).collectList().block();
 
         Assertions.assertNotNull(expectedCfKo);
@@ -335,7 +335,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(rule4.getInitiativeId(), r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());
-            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionCode());
+            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getResultCode());
             Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
             Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });

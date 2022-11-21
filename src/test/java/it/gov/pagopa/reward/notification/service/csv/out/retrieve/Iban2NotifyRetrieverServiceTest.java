@@ -50,7 +50,7 @@ class Iban2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.ERROR, reward.getStatus());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, reward.getRejectionReason());
-        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, reward.getRejectionCode());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, reward.getResultCode());
         Assertions.assertNotNull(reward.getExportDate());
 
         Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock,errorNotifierServiceMock);
@@ -75,7 +75,7 @@ class Iban2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getStatus());
         Assertions.assertNull(result.getRejectionReason());
-        Assertions.assertNull(result.getRejectionCode());
+        Assertions.assertNull(result.getResultCode());
 
         Mockito.verifyNoMoreInteractions(ibanRepositoryMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }

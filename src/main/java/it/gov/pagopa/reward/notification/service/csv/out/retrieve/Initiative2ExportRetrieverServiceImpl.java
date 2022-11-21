@@ -29,7 +29,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
 
 
     public Initiative2ExportRetrieverServiceImpl(
-            @Value("${app.csv.export.storage.base-path}") String exportBasePath,
+            @Value("${app.csv.storage.base-path}") String exportBasePath,
             RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationRepository rewardsNotificationRepository, RewardNotificationRuleRepository rewardNotificationRuleRepository) {
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;

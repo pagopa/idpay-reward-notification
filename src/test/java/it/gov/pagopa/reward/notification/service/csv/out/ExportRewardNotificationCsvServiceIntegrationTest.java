@@ -75,6 +75,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
     @Autowired
     private ExportRewardNotificationCsvService exportRewardNotificationCsvService;
+    @Value("${app.csv.tmp-dir}")
+    private String csvTmpDir;
 
     private void storeTestData() {
         N = (long) splitSize * 2 + 8; // use multiple of 4
@@ -263,7 +265,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(LocalDate.now(), r.getExportDate().toLocalDate());
         });
 
-        Path originalZipFile = Paths.get("/tmp", export.getFilePath());
+        Path originalZipFile = Paths.get(csvTmpDir, export.getFilePath());
         Assertions.assertFalse(Files.exists(originalZipFile));
 
         Path uploadedZipPath = Paths.get(originalZipFile.toString().replace(".zip", ".uploaded.zip"));

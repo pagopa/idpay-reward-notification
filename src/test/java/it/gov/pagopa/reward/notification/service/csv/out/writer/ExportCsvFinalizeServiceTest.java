@@ -46,7 +46,7 @@ class ExportCsvFinalizeServiceTest {
     void init() {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         char csvSeparator = ';';
-        service = new ExportCsvFinalizeServiceImpl(csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock);
+        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock);
     }
 
     @Test
@@ -87,7 +87,7 @@ class ExportCsvFinalizeServiceTest {
 
         Mockito.when(rewardOrganizationExportsRepositoryMock.save(Mockito.same(export))).thenReturn(Mono.just(export));
 
-        File zipFile = new File("/tmp", export.getFilePath());
+        File zipFile = new File("target/tmp", export.getFilePath());
         Mockito.when(rewardsNotificationBlobClientMock.uploadFile(zipFile, export.getFilePath(), "application/zip"))
                 .thenAnswer(i->{
                     Path zipPath = Path.of(zipFile.getAbsolutePath());
@@ -121,10 +121,10 @@ class ExportCsvFinalizeServiceTest {
         Assertions.assertEquals(10, result.getRewardNotified());
         Assertions.assertEquals(1000L, result.getRewardsExportedCents());
 
-        Assertions.assertFalse(Files.exists(Paths.get("/tmp/result.zip")));
-        Path zipPath = Paths.get("/tmp/result.uploaded.zip");
+        Assertions.assertFalse(Files.exists(Paths.get("target/tmp/result.zip")));
+        Path zipPath = Paths.get("target/tmp/result.uploaded.zip");
         Assertions.assertTrue(Files.exists(zipPath));
-        Path csvPath = Paths.get("/tmp/result.csv");
+        Path csvPath = Paths.get("target/tmp/result.csv");
         Assertions.assertFalse(Files.exists(csvPath));
 
         ZipUtils.unzip(zipPath.toString(), csvPath.getParent().toString());
@@ -180,7 +180,7 @@ class ExportCsvFinalizeServiceTest {
 
         @SuppressWarnings("unchecked") Response<BlockBlobItem> responseMocked = Mockito.mock(Response.class);
         Mockito.when(responseMocked.getStatusCode()).thenReturn(404);
-        Mockito.when(rewardsNotificationBlobClientMock.uploadFile(new File("/tmp",export.getFilePath()), export.getFilePath(), "application/zip"))
+        Mockito.when(rewardsNotificationBlobClientMock.uploadFile(new File("target/tmp",export.getFilePath()), export.getFilePath(), "application/zip"))
                 .thenReturn(Mono.just(responseMocked));
 
         // When

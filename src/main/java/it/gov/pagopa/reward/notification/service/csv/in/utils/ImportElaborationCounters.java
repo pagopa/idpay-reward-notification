@@ -3,13 +3,13 @@ package it.gov.pagopa.reward.notification.service.csv.in.utils;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ImportElaborationCounters {
@@ -38,10 +38,10 @@ public class ImportElaborationCounters {
         boolean isError = outcome.getError() != null;
 
         ImportElaborationCounters out = new ImportElaborationCounters();
-        out.setRewardsResulted(1);
-        out.setRewardsResultedError(isError ? 1 : 0);
-        out.setRewardsResultedOk(isOkOutcome ? 1 : 0);
-        out.setRewardsResultedOkError(isOkOutcome && isError ? 1 : 0);
+        out.rewardsResulted = 1;
+        out.rewardsResultedError = isError ? 1 : 0;
+        out.rewardsResultedOk = isOkOutcome ? 1 : 0;
+        out.rewardsResultedOkError = isOkOutcome && isError ? 1 : 0;
         if(isError){
             out.getErrors().add(outcome.getError());
         }

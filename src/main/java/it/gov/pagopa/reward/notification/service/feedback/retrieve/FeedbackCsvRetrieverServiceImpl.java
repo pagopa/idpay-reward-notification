@@ -112,6 +112,7 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
             return null;
         }
 
+        @SuppressWarnings("squid:S5042") // ignoring zip resource consumption alert: we are already checking that there will be just 1 entry, when unzipping it, we are checking also its size
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
 
         ZipEntry zipEntry = entries.nextElement();

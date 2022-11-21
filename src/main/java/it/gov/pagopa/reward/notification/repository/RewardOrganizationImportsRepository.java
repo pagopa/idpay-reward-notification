@@ -12,7 +12,7 @@ public interface RewardOrganizationImportsRepository extends ReactiveMongoReposi
     default Mono<RewardOrganizationImport> createIfNotExistsOrReturnEmpty(RewardOrganizationImport entity) {
         return insert(entity)
                 .onErrorResume(DuplicateKeyException.class, e-> {
-                    log.info("Organization feedback import request already exists: {}", entity.getFilePath());
+                    log.info("[REWARD_NOTIFICATION_FEEDBACK] Organization feedback import request already exists: {}", entity.getFilePath());
                     return Mono.empty();
                 });
     }

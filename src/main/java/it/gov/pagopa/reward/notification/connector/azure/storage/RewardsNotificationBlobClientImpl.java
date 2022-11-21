@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class RewardsNotificationBlobClientImpl extends BaseAzureBlobClientImpl implements RewardsNotificationBlobClient {
     public RewardsNotificationBlobClientImpl(
-            @Value("${app.csv.export.storage.connection-string}") String storageConnectionString,
-            @Value("${app.csv.export.storage.blob-container-name}") String blobContainerName
+            @Value("${app.csv.storage.connection-string}") String storageConnectionString,
+            @Value("${app.csv.storage.blob-container-name}") String blobContainerName
     ) {
         super(storageConnectionString, blobContainerName);
     }

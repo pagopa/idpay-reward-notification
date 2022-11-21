@@ -87,6 +87,7 @@ import static org.awaitility.Awaitility.await;
 
                 //region common feature disabled
                 "app.csv.export.schedule=-",
+                "app.csv.tmp-dir=target/tmp",
                 "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
                 //endregion
@@ -233,6 +234,25 @@ public abstract class BaseIntegrationTest {
                     //noinspection rawtypes
                     Response responseMocked = Mockito.mock(Response.class);
                     Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
+                    return Mono.just(responseMocked);
+                });
+
+        Mockito.lenient().when(rewardsNotificationBlobClientMock.downloadFile(Mockito.any(), Mockito.any()))
+                .thenAnswer(i->{
+                    Path zipFile = Path.of("src/test/resources/feedbackUseCasesZip", i.getArgument(0, String.class));
+                    Path destination = i.getArgument(1);
+
+                    Path destinationDir = destination.getParent();
+                    if(!Files.exists(destinationDir)) {
+                        Files.createDirectories(destinationDir);
+                    }
+
+                    Files.copy(zipFile,
+                            destination,
+                            StandardCopyOption.REPLACE_EXISTING);
+                    //noinspection rawtypes
+                    Response responseMocked = Mockito.mock(Response.class);
+                    Mockito.when(responseMocked.getStatusCode()).thenReturn(206);
                     return Mono.just(responseMocked);
                 });
     }
@@ -417,7 +437,7 @@ public abstract class BaseIntegrationTest {
             final Matcher matcher = errorUseCaseIdPatternMatch.matcher(record.value());
             int useCaseId = matcher.find() ? Integer.parseInt(matcher.group(1)) : -1;
             if (useCaseId == -1) {
-                throw new IllegalStateException("UseCaseId not recognized! " + record.value());
+                throw new IllegalStateException("UseCaseId not recognized! %s\nStackTrace: %s".formatted(record.value(), TestUtils.getHeaderValue(record, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE)));
             }
             errorUseCases.get(useCaseId).getSecond().accept(record);
         }

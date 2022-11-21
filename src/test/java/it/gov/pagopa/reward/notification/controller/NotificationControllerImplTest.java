@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.config.JsonConfig;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.ImportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -146,7 +146,7 @@ class NotificationControllerImplTest {
     void testGetImportsOk() {
         RewardImportsDTO rewardImportsDTO = RewardImportsDTOFaker.mockInstance(1);
 
-        Mockito.when(organizationImportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ImportFilter()))
+        Mockito.when(organizationImportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter()))
                 .thenReturn(Flux.just(rewardImportsDTO));
 
         webClient.get()
@@ -156,13 +156,13 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBodyList(RewardImportsDTO.class).isEqualTo(List.of(rewardImportsDTO));
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ImportFilter());
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter());
     }
 
     @Test
     void testGetImportsEmpty() {
         RewardImportsDTO rewardImportsDTO = RewardImportsDTOFaker.mockInstance(1);
-        Mockito.when(organizationImportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ImportFilter()))
+        Mockito.when(organizationImportsServiceMock.findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter()))
                 .thenReturn(Flux.empty());
 
         webClient.get()
@@ -172,13 +172,13 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBodyList(RewardExportsDTO.class).isEqualTo(Collections.emptyList());
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ImportFilter());
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllBy("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter());
     }
 
     @Test
     void testGetImportsCountOk() {
         Long count = 1L;
-        Mockito.when(organizationImportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ImportFilter()))
+        Mockito.when(organizationImportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new FeedbackImportFilter()))
                 .thenReturn(Mono.just(count));
 
         webClient.get()
@@ -188,12 +188,12 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBody(Long.class).isEqualTo(count);
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ImportFilter());
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new FeedbackImportFilter());
     }
 
     @Test
     void testGetImportsCountEmpty() {
-        Mockito.when(organizationImportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ImportFilter()))
+        Mockito.when(organizationImportsServiceMock.countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new FeedbackImportFilter()))
                 .thenReturn(Mono.empty());
 
         webClient.get()
@@ -203,7 +203,7 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBody(Long.class).isEqualTo(0L);
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new ImportFilter());
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).countAll("ORGANIZATION_ID_1", "INITIATIVE_ID_1", new FeedbackImportFilter());
     }
 
     @Test
@@ -212,7 +212,7 @@ class NotificationControllerImplTest {
         PageImpl<RewardImportsDTO> pageMock = new PageImpl<>(List.of(rewardImportsDTO), TEST_PAGE_REQUEST, 1);
 
 
-        Mockito.when(organizationImportsServiceMock.findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ImportFilter()))
+        Mockito.when(organizationImportsServiceMock.findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter()))
                 .thenReturn(Mono.just(pageMock));
 
         webClient.get()
@@ -223,6 +223,6 @@ class NotificationControllerImplTest {
                 .expectBody(new ParameterizedTypeReference<Page<RewardImportsDTO>>() {})
                 .isEqualTo(pageMock);
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new ImportFilter());
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter());
     }
 }

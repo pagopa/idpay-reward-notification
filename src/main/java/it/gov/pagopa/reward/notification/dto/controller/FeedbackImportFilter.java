@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImportFilter {
+public class FeedbackImportFilter {
 
     private String status;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

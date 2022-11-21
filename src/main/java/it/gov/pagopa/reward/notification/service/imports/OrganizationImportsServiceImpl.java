@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.service.imports;
 
-import it.gov.pagopa.reward.notification.dto.controller.ImportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationImport2ImportsDTOMapper;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationImportsRepository;
@@ -25,19 +25,19 @@ public class OrganizationImportsServiceImpl implements OrganizationImportsServic
     }
 
     @Override
-    public Flux<RewardImportsDTO> findAllBy(String organizationId, String initiativeId, Pageable pageable, ImportFilter filters) {
+    public Flux<RewardImportsDTO> findAllBy(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters) {
         return importsRepository
                 .findAllBy(organizationId, initiativeId, pageable, filters)
                 .map(rewardOrganizationImport2ImportsDTOMapper);
     }
 
     @Override
-    public Mono<Long> countAll(String organizationId, String initiativeId, ImportFilter filters) {
+    public Mono<Long> countAll(String organizationId, String initiativeId, FeedbackImportFilter filters) {
         return importsRepository.countAll(organizationId, initiativeId, filters);
     }
 
     @Override
-    public Mono<Page<RewardImportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable, ImportFilter filters) {
+    public Mono<Page<RewardImportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters) {
 
         return findAllBy(organizationId, initiativeId, pageable, filters)
                 .collectList()

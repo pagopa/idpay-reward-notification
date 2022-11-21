@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.dto.controller.ImportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -26,15 +26,9 @@ public class RewardOrganizationImportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Flux<RewardOrganizationImport> findAllBy(String organizationId, String initiativeId, Pageable pageable, ImportFilter filters) {
-        Criteria criteria = Criteria
-                .where(FIELD_ORGANIZATION_ID).is(organizationId)
-                .and(FIELD_INITIATIVE_ID).is(initiativeId);
+    public Flux<RewardOrganizationImport> findAllBy(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters) {
 
-        // if filters are set, update the criteria; else, use default query
-        updateCriteriaWithFilters(criteria, filters);
-
-        Query query = new Query().addCriteria(criteria);
+        Query query = new Query().addCriteria(getCriteria(organizationId, initiativeId, filters));
         query.fields().exclude(FIELD_ERRORS);
 
         return mongoTemplate
@@ -46,24 +40,27 @@ public class RewardOrganizationImportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Mono<Long> countAll(String organizationId, String initiativeId, ImportFilter filters) {
+    public Mono<Long> countAll(String organizationId, String initiativeId, FeedbackImportFilter filters) {
 
+        return mongoTemplate
+                .count(
+                        Query.query(getCriteria(organizationId, initiativeId, filters)),
+                        RewardOrganizationImport.class
+                );
+
+    }
+
+    private Criteria getCriteria(String organizationId, String initiativeId, FeedbackImportFilter filters) {
         Criteria criteria = Criteria
                 .where(FIELD_ORGANIZATION_ID).is(organizationId)
                 .and(FIELD_INITIATIVE_ID).is(initiativeId);
 
         // if filters are set, update the criteria; else, use default query
         updateCriteriaWithFilters(criteria, filters);
-
-        return mongoTemplate
-                .count(
-                        Query.query(criteria),
-                        RewardOrganizationImport.class
-                );
-
+        return criteria;
     }
 
-    private void updateCriteriaWithFilters(Criteria criteria, ImportFilter filters) {
+    private void updateCriteriaWithFilters(Criteria criteria, FeedbackImportFilter filters) {
         if (filters != null){
             List<Criteria> criteriaList = new ArrayList<>();
 

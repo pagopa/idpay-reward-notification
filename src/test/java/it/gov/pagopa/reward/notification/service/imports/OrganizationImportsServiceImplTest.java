@@ -1,14 +1,10 @@
 package it.gov.pagopa.reward.notification.service.imports;
 
-import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.ImportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardOrganizationImport2ImportsDTOMapper;
-import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationImportsRepository;
-import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationExportsFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationImportFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,10 +40,10 @@ class OrganizationImportsServiceImplTest {
         // Given
         RewardOrganizationImport rewardOrganizationImport = RewardOrganizationImportFaker.mockInstance(1);
 
-        Mockito.when(rewardOrganizationImportsRepository.findAllBy("orgId", "initiativeId", PageRequest.of(0,10), new ImportFilter())).thenReturn(Flux.just(rewardOrganizationImport));
+        Mockito.when(rewardOrganizationImportsRepository.findAllBy("orgId", "initiativeId", PageRequest.of(0,10), new FeedbackImportFilter())).thenReturn(Flux.just(rewardOrganizationImport));
 
         // When
-        List<RewardImportsDTO> result = organizationImportsService.findAllBy(rewardOrganizationImport.getOrganizationId(), rewardOrganizationImport.getInitiativeId(), PageRequest.of(0,10), new ImportFilter()).collectList().block();
+        List<RewardImportsDTO> result = organizationImportsService.findAllBy(rewardOrganizationImport.getOrganizationId(), rewardOrganizationImport.getInitiativeId(), PageRequest.of(0,10), new FeedbackImportFilter()).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -62,11 +58,11 @@ class OrganizationImportsServiceImplTest {
         PageRequest pageRequest = PageRequest.of(0,10);
         Page<RewardImportsDTO> expectedPage = new PageImpl<>(List.of(expectedResultDTO), pageRequest, 1);
 
-        Mockito.when(rewardOrganizationImportsRepository.findAllBy("orgId", "initiativeId", pageRequest, new ImportFilter())).thenReturn(Flux.just(rewardOrganizationImport));
-        Mockito.when(rewardOrganizationImportsRepository.countAll("orgId", "initiativeId", new ImportFilter())).thenReturn(Mono.just(1L));
+        Mockito.when(rewardOrganizationImportsRepository.findAllBy("orgId", "initiativeId", pageRequest, new FeedbackImportFilter())).thenReturn(Flux.just(rewardOrganizationImport));
+        Mockito.when(rewardOrganizationImportsRepository.countAll("orgId", "initiativeId", new FeedbackImportFilter())).thenReturn(Mono.just(1L));
 
         // When
-        Page<RewardImportsDTO> result = organizationImportsService.findAllPaged(rewardOrganizationImport.getOrganizationId(), rewardOrganizationImport.getInitiativeId(), PageRequest.of(0,10), new ImportFilter()).block();
+        Page<RewardImportsDTO> result = organizationImportsService.findAllPaged(rewardOrganizationImport.getOrganizationId(), rewardOrganizationImport.getInitiativeId(), PageRequest.of(0,10), new FeedbackImportFilter()).block();
 
         // Then
         Assertions.assertNotNull(result);

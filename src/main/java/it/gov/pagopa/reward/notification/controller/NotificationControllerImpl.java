@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.ImportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -60,20 +60,20 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Flux<RewardImportsDTO> getImports(String organizationId, String initiativeId, Pageable pageable, ImportFilter filters) {
+    public Flux<RewardImportsDTO> getImports(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters) {
         return organizationImportsService
                 .findAllBy(organizationId, initiativeId, pageable, filters);
     }
 
     @Override
-    public Mono<Long> getImportsCount(String organizationId, String initiativeId, ImportFilter filters) {
+    public Mono<Long> getImportsCount(String organizationId, String initiativeId, FeedbackImportFilter filters) {
         return organizationImportsService
                 .countAll(organizationId, initiativeId, filters)
                 .switchIfEmpty(Mono.just(0L));
     }
 
     @Override
-    public Mono<Page<RewardImportsDTO>> getImportsPaged(String organizationId, String initiativeId, Pageable pageable, ImportFilter filters) {
+    public Mono<Page<RewardImportsDTO>> getImportsPaged(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters) {
         return organizationImportsService
                 .findAllPaged(organizationId, initiativeId, pageable, filters)
                 .switchIfEmpty(Mono.just(Page.empty(pageable)));

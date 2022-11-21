@@ -35,7 +35,6 @@ public class RewardImportsDTOFaker {
         out.feedbackDate(CHOSEN_DATE);
         out.eTag("ETAG");
         out.contentLength(bias);
-        out.url("URL_%d".formatted(bias));
 
         out.rewardsResulted(bias + 1L);
         out.rewardsResultedError(0L);

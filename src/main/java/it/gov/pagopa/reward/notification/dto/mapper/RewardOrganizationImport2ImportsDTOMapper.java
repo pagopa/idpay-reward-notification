@@ -32,7 +32,6 @@ public class RewardOrganizationImport2ImportsDTOMapper  implements Function<Rewa
                 .feedbackDate(rewardOrganizationImport.getFeedbackDate())
                 .eTag(rewardOrganizationImport.getETag())
                 .contentLength(rewardOrganizationImport.getContentLength())
-                .url(rewardOrganizationImport.getUrl())
 
                 .rewardsResulted(rewardOrganizationImport.getRewardsResulted())
                 .rewardsResultedError(rewardOrganizationImport.getRewardsResultedError())

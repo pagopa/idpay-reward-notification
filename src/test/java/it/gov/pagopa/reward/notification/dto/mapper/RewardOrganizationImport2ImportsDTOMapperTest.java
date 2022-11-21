@@ -60,7 +60,6 @@ class RewardOrganizationImport2ImportsDTOMapperTest {
         Assertions.assertEquals(input.getFeedbackDate(), result.getFeedbackDate());
         Assertions.assertEquals(input.getETag(), result.getETag());
         Assertions.assertEquals(input.getContentLength(), result.getContentLength());
-        Assertions.assertEquals(input.getUrl(), result.getUrl());
         Assertions.assertEquals(input.getRewardsResulted(), result.getRewardsResulted());
         Assertions.assertEquals(input.getRewardsResultedOk(), result.getRewardsResultedOk());
         Assertions.assertEquals(input.getRewardsResultedError(), result.getRewardsResultedOkError());

@@ -28,8 +28,6 @@ public class RewardImportsDTO {
     private String eTag;
     @JsonProperty("contentLength")
     private Integer contentLength;
-    @JsonProperty("url")
-    private String url;
     @JsonProperty("rewardsResulted")
     private Long rewardsResulted;
     @JsonProperty("rewardsResultedError")

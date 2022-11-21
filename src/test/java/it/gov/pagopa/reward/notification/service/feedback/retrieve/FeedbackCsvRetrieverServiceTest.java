@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.FileSystemUtils;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -85,7 +86,7 @@ class FeedbackCsvRetrieverServiceTest {
             mono.block();
             Assertions.fail("Expecting exception when no zip exists");
         } catch (IllegalStateException e) {
-            Assertions.assertEquals("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile target\\tmp\\feedbackUseCasesZip\\NOT\\EXISTENT\\PATH.zip", e.getMessage());
+            Assertions.assertEquals("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile target/tmp/feedbackUseCasesZip/NOT/EXISTENT/PATH.zip".replace('/', File.separatorChar), e.getMessage());
         }
     }
 

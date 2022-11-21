@@ -139,6 +139,18 @@ class FeedbackCsvRetrieverServiceTest {
     }
 
     @Test
+    void testEmptyFile() {
+        // Given
+        importRequest.setFilePath("invalid/emptyFile.zip");
+
+        // When
+        Path result = service.retrieveCsv(importRequest).block();
+
+        // Then
+        checkInvalidZip(result, RewardFeedbackConstants.ImportFileErrors.INVALID_HEADERS);
+    }
+
+    @Test
     void testZipInvalidHeader() {
         // Given
         importRequest.setFilePath("invalid/invalidHeader.zip");

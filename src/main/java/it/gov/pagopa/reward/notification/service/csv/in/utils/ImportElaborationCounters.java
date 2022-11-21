@@ -25,10 +25,10 @@ public class ImportElaborationCounters {
         errors.addAll(c2.getErrors());
 
         return new ImportElaborationCounters(
-                c1.rewardsResulted + c2.rewardsResulted,
-                c1.rewardsResultedError + c2.rewardsResultedError,
-                c1.rewardsResultedOk + c2.rewardsResultedOk,
-                c1.rewardsResultedOkError + c2.rewardsResultedOkError,
+                c1.getRewardsResulted() + c2.getRewardsResulted(),
+                c1.getRewardsResultedError() + c2.getRewardsResultedError(),
+                c1.getRewardsResultedOk() + c2.getRewardsResultedOk(),
+                c1.getRewardsResultedOkError() + c2.getRewardsResultedOkError(),
                 errors
         );
     }

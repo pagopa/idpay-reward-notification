@@ -123,6 +123,10 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
         log.info("[REWARD_NOTIFICATION_FEEDBACK] New request recognized, retrieving and processing it: {}", importRequest.getFilePath());
         return csvRetrieverService.retrieveCsv(importRequest)
                 .flatMap(p->importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
+                .switchIfEmpty(Mono.fromSupplier(()->{
+                    log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot retrieve csv from filePath: {}", importRequest.getFilePath());
+                    return importRequest;
+                }))
 
                 // catch errors
                 .onErrorResume(e -> {

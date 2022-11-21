@@ -10,13 +10,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.FileSystemUtils;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -34,18 +34,7 @@ class FeedbackCsvRetrieverServiceTest {
     @BeforeAll
     static void copySampleToTargetDir() throws IOException {
         String srcDir = "src/test/resources/feedbackUseCasesZip";
-        Files.createDirectories(Path.of(csvTmpDir));
-        try(Stream<Path> pathStream = Files.walk(Paths.get(srcDir))) {
-            pathStream.forEach(source -> {
-                Path destination = Paths.get(csvTmpDir, source.toString()
-                        .substring(srcDir.length()));
-                try {
-                    Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
+        FileSystemUtils.copyRecursively(Paths.get(srcDir), Paths.get(csvTmpDir));
     }
 
     @AfterAll
@@ -55,26 +44,14 @@ class FeedbackCsvRetrieverServiceTest {
             Assertions.assertEquals(
                     List.of(
                             sampleTmpDir.resolve("invalid"),
+                            sampleTmpDir.resolve("orgId"),
                             sampleTmpDir.resolve("valid")
                             ),
                     fileListStream.toList()
             );
         } finally {
-            clearSampleTargetDir(sampleTmpDir);
+            FileSystemUtils.deleteRecursively(sampleTmpDir.toFile());
         }
-    }
-
-    private static void clearSampleTargetDir(Path sampleTmpDir) throws IOException {
-        try(Stream<Path> pathStream = Files.walk(sampleTmpDir)) {
-            pathStream.forEach(source -> {
-                try {
-                    Files.delete(source);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
-        Files.delete(sampleTmpDir);
     }
 
     @BeforeEach
@@ -102,12 +79,13 @@ class FeedbackCsvRetrieverServiceTest {
 
     @Test
     void testLocalZipNotExistent() {
+        importRequest.setFilePath("NOT/EXISTENT/PATH.zip");
         Mono<Path> mono = service.retrieveCsv(importRequest);
         try {
             mono.block();
             Assertions.fail("Expecting exception when no zip exists");
         } catch (IllegalStateException e) {
-            Assertions.assertEquals("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile target\\tmp\\feedbackUseCasesZip\\orgId\\initiativeId\\import\\reward-dispositive-0.zip", e.getMessage());
+            Assertions.assertEquals("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling local zipFile target\\tmp\\feedbackUseCasesZip\\NOT\\EXISTENT\\PATH.zip", e.getMessage());
         }
     }
 
@@ -181,7 +159,7 @@ class FeedbackCsvRetrieverServiceTest {
         Path result = service.retrieveCsv(importRequest).block();
 
         // Then
-        Assertions.assertNotNull(result);
+        Assertions.assertNotNull(result, "retrieveCsv resulted into error: %s".formatted(importRequest.getErrors()));
         Assertions.assertEquals(expectedCsvPath, result);
     }
 

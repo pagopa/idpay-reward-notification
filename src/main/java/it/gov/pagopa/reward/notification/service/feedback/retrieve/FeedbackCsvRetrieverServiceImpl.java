@@ -47,7 +47,7 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
                 .map(f-> Objects.requireNonNull(ReflectionUtils.findField(RewardNotificationImportCsvDto.class, f)))
                 .map(f->Objects.requireNonNull(f.getAnnotation(CsvBindByName.class)))
                 .map(CsvBindByName::column)
-                .map(columnName -> Pattern.compile("(?:^|%s)\"%s\"(?:$|%s)".formatted(csvColumnSeparator, columnName, csvColumnSeparator)))
+                .map(columnName -> Pattern.compile("(?:^|%s)\"?%s\"?(?:$|%s)".formatted(csvColumnSeparator, columnName, csvColumnSeparator)))
                 .toList();
     }
 
@@ -129,7 +129,11 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
         try(Stream<String> linesStream = Files.lines(csvLocalPath)) {
             String headerLine = linesStream.limit(1).findFirst().orElse(null);
             if(StringUtils.hasText(headerLine)){
-                return mandatoryHeadersPattern.stream().allMatch(p-> p.matcher(headerLine).find());
+                boolean validHeader = mandatoryHeadersPattern.stream().allMatch(p -> p.matcher(headerLine).find());
+                if(!validHeader){
+                    log.info("[REWARD_NOTIFICATION_FEEDBACK] csv header is not valid: {}, path: {}", headerLine, csvLocalPath);
+                }
+                return validHeader;
             } else {
                 log.info("[REWARD_NOTIFICATION_FEEDBACK] csv has no lines {}", csvLocalPath);
                 return false;

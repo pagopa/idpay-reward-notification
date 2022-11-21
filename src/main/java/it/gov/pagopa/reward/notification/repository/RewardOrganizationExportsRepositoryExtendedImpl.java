@@ -32,40 +32,27 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     @Override
     public Flux<RewardOrganizationExport> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
 
-        Criteria criteria = Criteria
-                .where(RewardOrganizationExport.Fields.organizationId).is(organizationId)
-                .and(RewardOrganizationExport.Fields.initiativeId).is(initiativeId);
-
-        // if filters are set, update the criteria; else, use default query
-        updateCriteriaWithFilters(criteria, filters);
-
         if (filters != null && filters.getStatus() != null && checkStatusNotInExported(filters.getStatus())) {
             return Flux.empty();
         } else {
             return mongoTemplate
                     .find(
-                            Query.query(criteria).with(getPageable(pageable)),
+                            Query.query(getCriteria(organizationId, initiativeId, filters)).with(getPageable(pageable)),
                             RewardOrganizationExport.class
                     );
         }
     }
 
+
     @Override
     public Mono<Long> countAll(String organizationId, String initiativeId, ExportFilter filters) {
-
-        Criteria criteria = Criteria
-                .where(RewardOrganizationExport.Fields.organizationId).is(organizationId)
-                .and(RewardOrganizationExport.Fields.initiativeId).is(initiativeId);
-
-        // if filters are set, update the criteria; else, use default query
-        updateCriteriaWithFilters(criteria, filters);
 
         if (filters != null && filters.getStatus() != null && checkStatusNotInExported(filters.getStatus())) {
             return Mono.just(0L);
         } else {
             return mongoTemplate
                     .count(
-                            Query.query(criteria),
+                            Query.query(getCriteria(organizationId, initiativeId, filters)),
                             RewardOrganizationExport.class
                     );
         }
@@ -73,6 +60,17 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
 
     private boolean checkStatusNotInExported(String status) {
         return !ExportConstants.EXPORT_EXPOSED_STATUSES.contains(RewardOrganizationExportStatus.valueOf(status));
+    }
+
+
+    private Criteria getCriteria(String organizationId, String initiativeId, ExportFilter filters) {
+        Criteria criteria = Criteria
+                .where(RewardOrganizationExport.Fields.organizationId).is(organizationId)
+                .and(RewardOrganizationExport.Fields.initiativeId).is(initiativeId);
+
+        // if filters are set, update the criteria; else, use default query
+        updateCriteriaWithFilters(criteria, filters);
+        return criteria;
     }
 
     private Pageable getPageable(Pageable pageable) {

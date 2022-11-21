@@ -197,7 +197,7 @@ class ExportInitiativeRewardsServiceTest {
             invocationOrder.add("writing export %s".formatted(invocationExport.getId()));
             return Mono.fromSupplier(() ->{
                 // first splits will wait more time
-                BaseIntegrationTest.wait((maxProgressive-invocationExport.getProgressive())*2, TimeUnit.SECONDS);
+                BaseIntegrationTest.wait((maxProgressive-invocationExport.getProgressive()), TimeUnit.SECONDS);
                 invocationOrder.add("export %s completed".formatted(invocationExport.getId()));
                 return invocationExport;
             });

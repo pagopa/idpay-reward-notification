@@ -101,21 +101,20 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
     }
 
     private ZipEntry validateZipContent(ZipFile zipFile, String csvFileName, RewardOrganizationImport importRequest) {
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-
-        if (!entries.hasMoreElements()) {
+        int nEntries = zipFile.size();
+        if(nEntries ==0){
             log.info("[REWARD_NOTIFICATION_FEEDBACK] user uploaded an empty zip file: {}", importRequest.getFilePath());
             addError(importRequest, RewardFeedbackConstants.ImportFileErrors.EMPTY_ZIP);
             return null;
-        }
-
-        ZipEntry zipEntry = entries.nextElement();
-
-        if (entries.hasMoreElements()) {
+        } else if(nEntries >1) {
             log.info("[REWARD_NOTIFICATION_FEEDBACK] user uploaded a zip having more than one entry: entries:[{}], zipFile={}", zipFile.stream().map(ZipEntry::getName).collect(Collectors.joining(",")), importRequest.getFilePath());
             addError(importRequest, RewardFeedbackConstants.ImportFileErrors.INVALID_CONTENT);
             return null;
         }
+
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+        ZipEntry zipEntry = entries.nextElement();
 
         if (!zipEntry.getName().equals(csvFileName)) {
             log.info("[REWARD_NOTIFICATION_FEEDBACK] zipped file has not the expected name: entryName={}, expected={}", zipEntry.getName(), csvFileName);

@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationNotifierService;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.FeedbackEvaluationException;
@@ -22,10 +23,12 @@ public class RewardNotificationFeedbackHandlerServiceImpl implements RewardNotif
 
     private final RewardNotificationFeedbackRetrieverService notificationFeedbackRetrieverService;
     private final RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService;
+    private final RewardNotificationNotifierService notificationNotifierService;
 
-    public RewardNotificationFeedbackHandlerServiceImpl(RewardNotificationFeedbackRetrieverService notificationFeedbackRetrieverService, RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService) {
+    public RewardNotificationFeedbackHandlerServiceImpl(RewardNotificationFeedbackRetrieverService notificationFeedbackRetrieverService, RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService, RewardNotificationNotifierService notificationNotifierService) {
         this.notificationFeedbackRetrieverService = notificationFeedbackRetrieverService;
         this.exportFeedbackRetrieverService = exportFeedbackRetrieverService;
+        this.notificationNotifierService = notificationNotifierService;
     }
 
     @Override
@@ -63,9 +66,8 @@ public class RewardNotificationFeedbackHandlerServiceImpl implements RewardNotif
                 .flatMap(toNotify -> {
                     Mono<RewardsNotification> notificationMono;
                     if (Boolean.TRUE.equals(toNotify)) {
-                        // TODO send notification to topic
-                        // TODO inc export counters
-                        notificationMono = Mono.just(notification);
+                        notificationMono = exportFeedbackRetrieverService.updateCounters(notification, export)
+                                .flatMap(deltaReward -> notificationNotifierService.notify(notification, deltaReward));
                     } else {
                         notificationMono = Mono.just(notification);
                     }

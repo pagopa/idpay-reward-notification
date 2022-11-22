@@ -8,8 +8,6 @@ import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-
 public interface RewardOrganizationExportsRepositoryExtended {
 
     Flux<RewardOrganizationExport> findAllBy(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters);
@@ -22,5 +20,6 @@ public interface RewardOrganizationExportsRepositoryExtended {
     /** It will retrieve an export having status {@link RewardOrganizationExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getExportDate()} < today, updating it to today, and allowing the current process to handle it */
     Mono<RewardOrganizationExport> reserveStuckExport();
 
-    Mono<UpdateResult> updateCounters(long incCount, BigDecimal incReward, long incOkCount, RewardOrganizationExport export);
+    Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaRewardCents, RewardOrganizationExport export);
+    Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export);
 }

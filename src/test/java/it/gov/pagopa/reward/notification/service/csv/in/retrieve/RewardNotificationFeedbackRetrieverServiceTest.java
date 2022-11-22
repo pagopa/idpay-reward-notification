@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -178,6 +179,8 @@ class RewardNotificationFeedbackRetrieverServiceTest {
 
         notification.getFeedbackHistory().add(feedbackStored);
         notification.setFeedbackDate(feedbackStored.getFeedbackDate());
+        notification.setExecutionDate(LocalDate.now());
+        notification.setCro("PREVIOUSCRO");
         notification.setStatus(RewardNotificationStatus.COMPLETED_OK);
         notification.setResultCode(RewardOrganizationImportResult.OK.value);
         notification.setRejectionReason("PREVIOUS");
@@ -199,6 +202,8 @@ class RewardNotificationFeedbackRetrieverServiceTest {
 
         Assertions.assertEquals(feedbackStored.getFeedbackDate(), notification.getFeedbackDate());
         Assertions.assertEquals(RewardNotificationStatus.COMPLETED_OK, notification.getStatus());
+        Assertions.assertEquals(LocalDate.now(), notification.getExecutionDate());
+        Assertions.assertEquals("PREVIOUSCRO", notification.getCro());
         Assertions.assertEquals(RewardOrganizationImportResult.OK.value, notification.getResultCode());
         Assertions.assertEquals("PREVIOUS", notification.getRejectionReason());
     }
@@ -211,6 +216,8 @@ class RewardNotificationFeedbackRetrieverServiceTest {
         RewardNotificationImportCsvDto row = new RewardNotificationImportCsvDto();
         row.setResult("NEWRESULTCODE");
         row.setRejectionReason("NEWREJECTIONREASON");
+        row.setExecutionDate(LocalDate.now().plusDays(2));
+        row.setCro("CRO");
 
         RewardsNotification.RewardNotificationHistory feedbackStored = RewardsNotification.RewardNotificationHistory.fromImportRow(row, RewardOrganizationImportResult.OK, importRequest);
         feedbackStored.setFeedbackFilePath("OTHER/FILE");
@@ -218,6 +225,8 @@ class RewardNotificationFeedbackRetrieverServiceTest {
 
         notification.getFeedbackHistory().add(feedbackStored);
         notification.setFeedbackDate(feedbackStored.getFeedbackDate());
+        notification.setExecutionDate(LocalDate.now());
+        notification.setCro("PREVIOUSCRO");
         notification.setStatus(RewardNotificationStatus.COMPLETED_KO);
         notification.setResultCode(RewardOrganizationImportResult.KO.value);
         notification.setRejectionReason("PREVIOUS_KO");
@@ -239,6 +248,8 @@ class RewardNotificationFeedbackRetrieverServiceTest {
 
         Assertions.assertEquals(importRequest.getFeedbackDate(), notification.getFeedbackDate());
         Assertions.assertEquals(RewardNotificationStatus.COMPLETED_OK, notification.getStatus());
+        Assertions.assertEquals(LocalDate.now().plusDays(2), notification.getExecutionDate());
+        Assertions.assertEquals("CRO", notification.getCro());
         Assertions.assertEquals("NEWRESULTCODE", notification.getResultCode());
         Assertions.assertEquals("NEWREJECTIONREASON", notification.getRejectionReason());
     }

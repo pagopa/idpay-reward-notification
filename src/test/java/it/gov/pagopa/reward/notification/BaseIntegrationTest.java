@@ -79,6 +79,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.rewardNotificationFeedback-out-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -110,6 +111,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-reward-notification-upload.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-reward-notification-feedback.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
                 //region mongodb
@@ -159,6 +161,8 @@ public abstract class BaseIntegrationTest {
     protected String topicIbanOutcome;
     @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}")
     protected String topicRewardNotificationUpload;
+    @Value("${spring.cloud.stream.bindings.rewardNotificationFeedback-out-0.destination}")
+    protected String topicRewardNotificationFeedback;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
 

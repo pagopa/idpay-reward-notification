@@ -5,7 +5,6 @@ import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.ExportConstants;
-import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -15,7 +14,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -182,8 +180,21 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Mono<UpdateResult> updateCounters(long incCount, BigDecimal incReward, long incOkCount, RewardOrganizationExport export) {
-        boolean reward2update = incReward.compareTo(BigDecimal.ZERO) != 0;
+    public Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
+        long incOk;
+        if(deltaReward>0L) { // is ok result
+            incOk=1L;
+        } else if(deltaReward<0L) { // is ko preceded by ok result
+            incOk=-1L;
+        } else {
+            incOk=0L;
+        }
+        return updateCounters(firstFeedback? 1L : 0L, deltaReward, incOk, export);
+    }
+
+    @Override
+    public Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export) {
+        boolean reward2update = incRewardCents != 0L;
         boolean count2update = incCount != 0L;
         boolean countOk2update = incOkCount != 0L;
 
@@ -191,7 +202,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
             Update increments = new Update();
 
             if (reward2update) {
-                buildRewardIncrements(increments, incReward, export);
+                buildRewardIncrements(increments, incRewardCents, export);
             }
 
             if (count2update) {
@@ -212,8 +223,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
         }
     }
 
-    private void buildRewardIncrements(Update increments, BigDecimal incReward, RewardOrganizationExport export) {
-        Long incRewardCents = Utils.euro2Cents(incReward);
+    private void buildRewardIncrements(Update increments, long incRewardCents, RewardOrganizationExport export) {
         increments.inc(RewardOrganizationExport.Fields.rewardsResultsCents, incRewardCents)
                 .inc(RewardOrganizationExport.Fields.percentageResults, calcPercentage(incRewardCents, export.getRewardsExportedCents()));
     }

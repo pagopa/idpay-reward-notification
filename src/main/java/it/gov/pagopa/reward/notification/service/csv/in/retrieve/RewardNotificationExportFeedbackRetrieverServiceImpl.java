@@ -1,8 +1,9 @@
 package it.gov.pagopa.reward.notification.service.csv.in.retrieve;
 
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 @Slf4j
@@ -27,7 +27,7 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
     @Override
     public Mono<RewardOrganizationExport> retrieve(RewardsNotification notification, RewardNotificationImportCsvDto row, RewardOrganizationImport importRequest, Map<String, RewardOrganizationExport> exportCache) {
         RewardOrganizationExport exportCached = exportCache.get(notification.getExportId());
-        if(exportCached!=null){
+        if (exportCached != null) {
             return Mono.just(exportCached);
         } else {
             return repository.findById(notification.getExportId())
@@ -54,7 +54,25 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
     }
 
     @Override
-    public Mono<UpdateResult> updateCounters(long incCount, BigDecimal incReward, long incOkCount, RewardOrganizationExport export) {
-        return repository.updateCounters(incCount, incReward, incOkCount, export);
+    public Mono<Long> updateCounters(RewardsNotification notification, RewardOrganizationExport export) {
+        boolean firstFeedback = notification.getFeedbackHistory().size() == 1;
+
+        // is first feedback  or previous feedback was a KO
+        boolean isFirstFeedbackOrPreviousWasKo = firstFeedback
+                || !RewardOrganizationImportResult.OK.equals(notification.getFeedbackHistory().get(notification.getFeedbackHistory().size() - 2).getResult());
+
+        long deltaRewardCents;
+        if (RewardNotificationStatus.COMPLETED_OK.equals(notification.getStatus())) {
+            deltaRewardCents = isFirstFeedbackOrPreviousWasKo
+                    ? notification.getRewardCents()
+                    : 0L;
+        } else {
+            deltaRewardCents = isFirstFeedbackOrPreviousWasKo
+                    ? 0L
+                    : -notification.getRewardCents();
+        }
+
+        return repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export)
+                .map(x -> deltaRewardCents);
     }
 }

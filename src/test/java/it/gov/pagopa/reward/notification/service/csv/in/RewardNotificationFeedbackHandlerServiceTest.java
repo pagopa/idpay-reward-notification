@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationNotifierService;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.FeedbackEvaluationException;
@@ -29,17 +30,18 @@ class RewardNotificationFeedbackHandlerServiceTest {
 
     @Mock private RewardNotificationFeedbackRetrieverService notificationFeedbackRetrieverServiceMock;
     @Mock private RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverServiceMock;
+    @Mock private RewardNotificationNotifierService notificationNotifierServiceMock;
 
     private RewardNotificationFeedbackHandlerService service;
 
     @BeforeEach
     void init(){
-        service = new RewardNotificationFeedbackHandlerServiceImpl(notificationFeedbackRetrieverServiceMock, exportFeedbackRetrieverServiceMock);
+        service = new RewardNotificationFeedbackHandlerServiceImpl(notificationFeedbackRetrieverServiceMock, exportFeedbackRetrieverServiceMock, notificationNotifierServiceMock);
     }
 
     @AfterEach
     void checkMocks(){
-        Mockito.verifyNoMoreInteractions(notificationFeedbackRetrieverServiceMock, exportFeedbackRetrieverServiceMock);
+        Mockito.verifyNoMoreInteractions(notificationFeedbackRetrieverServiceMock, exportFeedbackRetrieverServiceMock, notificationNotifierServiceMock);
     }
 
     @Test
@@ -104,6 +106,15 @@ class RewardNotificationFeedbackHandlerServiceTest {
 
     @Test
     void testNotToNotify(){
+        testNotification(false);
+    }
+
+    @Test
+    void testToNotify(){
+        testNotification(true);
+    }
+
+    void testNotification(boolean expectedNotification){
         // Given
         RewardOrganizationImport importRequest = new RewardOrganizationImport();
         HashMap<String, RewardOrganizationExport> exportCache = new HashMap<>();
@@ -118,7 +129,12 @@ class RewardNotificationFeedbackHandlerServiceTest {
         Mockito.when(notificationFeedbackRetrieverServiceMock.retrieve(Mockito.same(row), Mockito.same(importRequest))).thenReturn(Mono.just(notification));
         Mockito.when(exportFeedbackRetrieverServiceMock.retrieve(Mockito.same(notification), Mockito.same(row), Mockito.same(importRequest), Mockito.same(exportCache))).thenReturn(Mono.just(export));
 
-        Mockito.when(notificationFeedbackRetrieverServiceMock.updateFeedbackHistory(Mockito.same(notification), Mockito.same(row), Mockito.eq(RewardOrganizationImportResult.OK), Mockito.same(importRequest))).thenReturn(Mono.just(false));
+        Mockito.when(notificationFeedbackRetrieverServiceMock.updateFeedbackHistory(Mockito.same(notification), Mockito.same(row), Mockito.eq(RewardOrganizationImportResult.OK), Mockito.same(importRequest))).thenReturn(Mono.just(expectedNotification));
+
+        if(expectedNotification) {
+            Mockito.when(exportFeedbackRetrieverServiceMock.updateCounters(Mockito.same(notification), Mockito.same(export))).thenReturn(Mono.just(notification.getRewardCents()));
+            Mockito.when(notificationNotifierServiceMock.notify(Mockito.same(notification), Mockito.eq(notification.getRewardCents()))).thenReturn(Mono.just(notification));
+        }
 
         RewardNotificationFeedbackHandlerOutcome expectedResult = new RewardNotificationFeedbackHandlerOutcome(RewardOrganizationImportResult.OK, export.getId(), null);
 
@@ -128,10 +144,5 @@ class RewardNotificationFeedbackHandlerServiceTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedResult, result);
-    }
-
-    @Test
-    void testToNotify(){
-        // TODO
     }
 }

@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationNotifierService;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ class Iban2NotifyRetrieverServiceTest {
 
     @Mock private RewardIbanRepository ibanRepositoryMock;
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
-    @Mock private RewardNotificationErrorNotifierService errorNotifierServiceMock;
+    @Mock private RewardNotificationNotifierService errorNotifierServiceMock;
 
     private Iban2NotifyRetrieverService service;
 
@@ -40,7 +40,7 @@ class Iban2NotifyRetrieverServiceTest {
 
         Mockito.when(ibanRepositoryMock.findById("USERIDINITIATIATIVEID")).thenReturn(Mono.empty());
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.same(reward))).thenReturn(Mono.just(reward));
-        Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward))).thenReturn(Mono.just(reward));
+        Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward), Mockito.eq(0L))).thenReturn(Mono.just(reward));
 
         // When
         RewardsNotification result = service.retrieveIban(reward).block();

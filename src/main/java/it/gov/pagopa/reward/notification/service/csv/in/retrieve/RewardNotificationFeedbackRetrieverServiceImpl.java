@@ -64,6 +64,8 @@ public class RewardNotificationFeedbackRetrieverServiceImpl implements RewardNot
             notification.getFeedbackHistory().add(history);
 
             notification.setFeedbackDate(importRequest.getFeedbackDate());
+            notification.setExecutionDate(row.getExecutionDate());
+            notification.setCro(row.getCro());
             notification.setStatus(rowResult.toRewardNotificationStatus());
             notification.setResultCode(row.getResult());
             notification.setRejectionReason(row.getRejectionReason());

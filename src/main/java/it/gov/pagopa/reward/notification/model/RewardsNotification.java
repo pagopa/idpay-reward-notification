@@ -51,12 +51,13 @@ public class RewardsNotification {
     private String rejectionReason;
     private LocalDateTime feedbackDate;
     @Builder.Default private List<RewardNotificationHistory> feedbackHistory = new ArrayList<>();
-    private LocalDateTime executionDate;
+    private LocalDate executionDate;
     private String cro;
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    @Builder
     public static class RewardNotificationHistory{
         private String feedbackFilePath;
         private LocalDateTime feedbackDate;

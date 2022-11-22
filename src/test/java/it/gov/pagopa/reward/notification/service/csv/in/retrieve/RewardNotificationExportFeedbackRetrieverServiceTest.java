@@ -2,7 +2,9 @@ package it.gov.pagopa.reward.notification.service.csv.in.retrieve;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -19,8 +21,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -129,22 +131,162 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
     }
     //endregion
 
+    //region test updateCounters
     @Test
-    void testUpdateCounters(){
+    void testUpdateCounters_firstFeedbackOK(){
         // Given
-        BigDecimal incReward = BigDecimal.ONE;
-        long incCount = 5L;
-        long incOkCount = 7L;
         RewardOrganizationExport export = new RewardOrganizationExport();
 
-        UpdateResult expectedResult = Mockito.mock(UpdateResult.class);
+        RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setStatus(RewardNotificationStatus.COMPLETED_OK);
+        rn.setFeedbackHistory(List.of(new RewardsNotification.RewardNotificationHistory()));
+        rn.setRewardCents(10_00L);
 
-        Mockito.when(repositoryMock.updateCounters(Mockito.same(incCount), Mockito.same(incReward), Mockito.same(incOkCount), Mockito.same(export))).thenReturn(Mono.just(expectedResult));
+        long expectedDeltaRewardCents = rn.getRewardCents();
+
+        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(true), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        UpdateResult result = service.updateCounters(incCount, incReward, incOkCount, export).block();
+        Long result = service.updateCounters(rn, export).block();
 
         // Then
-        Assertions.assertSame(expectedResult, result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedDeltaRewardCents, result);
     }
+
+    @Test
+    void testUpdateCounters_firstFeedbackKO(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+
+        RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setStatus(RewardNotificationStatus.COMPLETED_KO);
+        rn.setFeedbackHistory(List.of(new RewardsNotification.RewardNotificationHistory()));
+        rn.setRewardCents(10_00L);
+
+        long expectedDeltaRewardCents = 0L;
+
+        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(true), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+
+        // When
+        Long result = service.updateCounters(rn, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedDeltaRewardCents, result);
+    }
+
+    @Test
+    void testUpdateCounters_Ko2Ko(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+
+        RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setStatus(RewardNotificationStatus.COMPLETED_KO);
+        rn.setFeedbackHistory(List.of(
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.KO)
+                        .build(),
+                new RewardsNotification.RewardNotificationHistory()));
+        rn.setRewardCents(10_00L);
+
+        long expectedDeltaRewardCents = 0L;
+
+        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+
+        // When
+        Long result = service.updateCounters(rn, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedDeltaRewardCents, result);
+    }
+
+    @Test
+    void testUpdateCounters_Ok2Ok(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+
+        RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setStatus(RewardNotificationStatus.COMPLETED_OK);
+        rn.setFeedbackHistory(List.of(
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.KO)
+                        .build(),
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.OK)
+                        .build(),
+                new RewardsNotification.RewardNotificationHistory()));
+        rn.setRewardCents(10_00L);
+
+        long expectedDeltaRewardCents = 0L;
+
+        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+
+        // When
+        Long result = service.updateCounters(rn, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedDeltaRewardCents, result);
+    }
+
+    @Test
+    void testUpdateCounters_Ko2Ok(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+
+        RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setStatus(RewardNotificationStatus.COMPLETED_OK);
+        rn.setFeedbackHistory(List.of(
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.KO)
+                        .build(),
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.KO)
+                        .build(),
+                new RewardsNotification.RewardNotificationHistory()));
+        rn.setRewardCents(10_00L);
+
+        long expectedDeltaRewardCents = rn.getRewardCents();
+
+        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+
+        // When
+        Long result = service.updateCounters(rn, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedDeltaRewardCents, result);
+    }
+
+    @Test
+    void testUpdateCounters_Ok2Ko(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+
+        RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setStatus(RewardNotificationStatus.COMPLETED_KO);
+        rn.setFeedbackHistory(List.of(
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.KO)
+                        .build(),
+                RewardsNotification.RewardNotificationHistory.builder()
+                        .result(RewardOrganizationImportResult.OK)
+                        .build(),
+                new RewardsNotification.RewardNotificationHistory()));
+        rn.setRewardCents(10_00L);
+
+        long expectedDeltaRewardCents = -rn.getRewardCents();
+
+        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+
+        // When
+        Long result = service.updateCounters(rn, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedDeltaRewardCents, result);
+    }
+    //endregion
 }

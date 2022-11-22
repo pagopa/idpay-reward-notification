@@ -1,9 +1,11 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.ExportConstants;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -13,12 +15,14 @@ import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended{
+public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended {
 
+    public static final String FIELD_ID = RewardOrganizationExport.Fields.id;
     public static final String FIELD_INITIATIVE_ID = RewardOrganizationExport.Fields.initiativeId;
     public static final String FIELD_EXPORT_DATE = RewardOrganizationExport.Fields.exportDate;
     public static final String FIELD_STATUS = RewardOrganizationExport.Fields.status;
@@ -88,7 +92,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
      * {@link ExportConstants#EXPORT_EXPOSED_STATUSES} collection.
      */
     private void updateCriteriaWithFilters(Criteria criteria, ExportFilter filters) {
-        if (filters != null){
+        if (filters != null) {
             List<Criteria> criteriaList = new ArrayList<>();
 
             // status
@@ -166,15 +170,68 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                         .setOnInsert(RewardOrganizationExport.Fields.percentageResulted, newExport.getPercentageResulted())
                         .setOnInsert(RewardOrganizationExport.Fields.percentageResultedOk, newExport.getPercentageResultedOk())
 
-                        ,
+                ,
                 RewardOrganizationExport.class
-        ).flatMap(r->{
-            if(r.getMatchedCount()>0) {
+        ).flatMap(r -> {
+            if (r.getMatchedCount() > 0) {
                 return Mono.empty();
-            }
-            else {
+            } else {
                 return Mono.just(newExport);
             }
         });
+    }
+
+    @Override
+    public Mono<UpdateResult> updateCounters(long incCount, BigDecimal incReward, long incOkCount, RewardOrganizationExport export) {
+        boolean reward2update = incReward.compareTo(BigDecimal.ZERO) != 0;
+        boolean count2update = incCount != 0L;
+        boolean countOk2update = incOkCount != 0L;
+
+        if (reward2update || count2update || countOk2update) {
+            Update increments = new Update();
+
+            if (reward2update) {
+                buildRewardIncrements(increments, incReward, export);
+            }
+
+            if (count2update) {
+                buildCountIncrements(increments, incCount, export);
+            }
+
+            if (countOk2update) {
+                buildCountOkIncrements(increments, incOkCount, export);
+            }
+
+            return mongoTemplate.updateFirst(
+                    Query.query(Criteria.where(FIELD_ID).is(export.getId())),
+                    increments,
+                    RewardOrganizationExport.class
+            );
+        } else {
+            return Mono.just(UpdateResult.acknowledged(0, null, null));
+        }
+    }
+
+    private void buildRewardIncrements(Update increments, BigDecimal incReward, RewardOrganizationExport export) {
+        Long incRewardCents = Utils.euro2Cents(incReward);
+        increments.inc(RewardOrganizationExport.Fields.rewardsResultsCents, incRewardCents)
+                .inc(RewardOrganizationExport.Fields.percentageResults, calcPercentage(incRewardCents, export.getRewardsExportedCents()));
+    }
+
+    private void buildCountIncrements(Update increments, long incCount, RewardOrganizationExport export) {
+        increments.inc(RewardOrganizationExport.Fields.rewardsResulted, incCount)
+                .inc(RewardOrganizationExport.Fields.percentageResulted, calcPercentage(incCount, export.getRewardNotified()));
+    }
+
+    private void buildCountOkIncrements(Update increments, long incOkCount, RewardOrganizationExport export) {
+        increments.inc(RewardOrganizationExport.Fields.rewardsResultedOk, incOkCount)
+                .inc(RewardOrganizationExport.Fields.percentageResultedOk, calcPercentage(incOkCount, export.getRewardNotified()));
+    }
+
+    /**
+     * It will return the percentage of value compared to total, multiplied by 100 in order to return an integer representing the percentage having scale 2
+     */
+    private long calcPercentage(long value, long total) {
+        return (long) (((double) value) / total * 100_00);
     }
 }

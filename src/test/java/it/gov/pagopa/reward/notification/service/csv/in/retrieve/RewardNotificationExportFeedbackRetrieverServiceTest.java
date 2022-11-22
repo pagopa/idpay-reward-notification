@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.service.csv.in.retrieve;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -18,6 +19,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,8 +41,9 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         Mockito.verifyNoMoreInteractions(repositoryMock);
     }
 
+    //region test retrieve
     @Test
-    void testNotFound(){
+    void testRetrieve_NotFound(){
         // Given
         RewardOrganizationImport importRequest = new RewardOrganizationImport();
         importRequest.setInitiativeId("INITITATIVEID");
@@ -89,7 +92,7 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
     }
 
     @Test
-    void testSuccess(){
+    void testRetrieve_Success(){
         // Given
         RewardOrganizationImport importRequest = new RewardOrganizationImport();
         importRequest.setInitiativeId("INITITATIVEID");
@@ -99,6 +102,7 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         row.setUniqueID("EXTERNALID");
 
         RewardsNotification rn = RewardsNotificationFaker.mockInstance(0);
+        rn.setExportId("EXPORTID");
         rn.setInitiativeId("INITITATIVEID");
         rn.setOrganizationId("ORGANIZATIONID");
         rn.setExportDate(LocalDateTime.now());
@@ -122,5 +126,25 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         Assertions.assertSame(result, exportCache.get(rn.getExportId()));
 
         Mockito.verify(repositoryMock).findById(Mockito.anyString());
+    }
+    //endregion
+
+    @Test
+    void testUpdateCounters(){
+        // Given
+        BigDecimal incReward = BigDecimal.ONE;
+        long incCount = 5L;
+        long incOkCount = 7L;
+        RewardOrganizationExport export = new RewardOrganizationExport();
+
+        UpdateResult expectedResult = Mockito.mock(UpdateResult.class);
+
+        Mockito.when(repositoryMock.updateCounters(Mockito.same(incCount), Mockito.same(incReward), Mockito.same(incOkCount), Mockito.same(export))).thenReturn(Mono.just(expectedResult));
+
+        // When
+        UpdateResult result = service.updateCounters(incCount, incReward, incOkCount, export).block();
+
+        // Then
+        Assertions.assertSame(expectedResult, result);
     }
 }

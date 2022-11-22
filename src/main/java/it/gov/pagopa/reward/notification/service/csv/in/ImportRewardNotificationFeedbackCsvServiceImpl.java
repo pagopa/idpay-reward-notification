@@ -80,7 +80,9 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                         log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot close local csv {}", csv, e);
                     }
                 })
-                .map(c -> updateImportRequest(c, importRequest));
+                .map(c -> updateImportRequest(c, importRequest))
+                // TODO update exports status
+                ;
     }
 
     private CsvToBean<RewardNotificationImportCsvDto> buildCsvReader(Reader reader) {

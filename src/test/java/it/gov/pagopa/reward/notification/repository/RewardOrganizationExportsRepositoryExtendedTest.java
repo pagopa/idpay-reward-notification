@@ -1,11 +1,13 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +54,18 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
                         .organizationId("ORGANIZATIONID")
                         .notificationDate(LocalDate.now())
                         .status(RewardOrganizationExportStatus.EXPORTED)
+
+                        .rewardNotified(100L)
+                        .rewardsExportedCents(100_00L)
+
+                        .rewardsResulted(10L)
+                        .rewardsResultedOk(5L)
+                        .rewardsResultsCents(3_00L)
+
+                        .percentageResulted(10_00L)  // 10%
+                        .percentageResultedOk(5_00L) // 5%
+                        .percentageResults(3_00L)    // 3%
+
                         .build()
         ));
 
@@ -143,6 +158,71 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
 
         Assertions.assertNull(repository.findById(newExport.getId()).block());
         Assertions.assertEquals(1L, repository.count(Example.of(RewardOrganizationExport.builder().initiativeId("INITIATIVEID2").build())).block());
+    }
+//endregion
+
+//region test updateCounters
+    @Test
+    void testUpdateCounters_noChanges(){
+        // Given
+        BigDecimal reward = BigDecimal.ZERO;
+        int inc = 0;
+        int incOk = 0;
+        RewardOrganizationExport export = testData.get(2);
+
+        // When
+        UpdateResult result = repository.updateCounters(inc, reward, incOk, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(UpdateResult.acknowledged(0, null, null), result);
+
+        Assertions.assertEquals(export, repository.findById(export.getId()).block());
+    }
+
+    @Test
+    void testUpdateCounters_incRewardCents(){
+        testUpdateCounters(BigDecimal.TEN, 0, 0, 13_00, 10_00L, 5_00L);
+    }
+
+    @Test
+    void testUpdateCounters_incCount(){
+        testUpdateCounters(BigDecimal.ZERO, 10, 0, 3_00, 20_00L, 5_00L);
+    }
+
+    @Test
+    void testUpdateCounters_incCountOk(){
+        testUpdateCounters(BigDecimal.ZERO, 0, 10, 3_00, 10_00L, 15_00L);
+    }
+
+    @Test
+    void testUpdateCounters_incAll(){
+        testUpdateCounters(BigDecimal.ONE.negate(), -1, -1, 2_00, 9_00L, 4_00L);
+    }
+
+    void testUpdateCounters(BigDecimal reward, int inc, int incOk, long expectedPercentageRewardsCents, long expectedPercentageResulted, long expectedPercentageResultedOk){
+        // Given
+        RewardOrganizationExport export = testData.get(2);
+
+        // When
+        UpdateResult result = repository.updateCounters(inc, reward, incOk, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(UpdateResult.acknowledged(1, 1L, null), result);
+
+        Assertions.assertEquals(
+                export.toBuilder()
+                        .rewardsResulted(export.getRewardsResulted() + inc)
+                        .rewardsResultedOk(export.getRewardsResultedOk() + incOk)
+                        .rewardsResultsCents(export.getRewardsResultsCents() + Utils.euro2Cents(reward))
+
+                        .percentageResulted(expectedPercentageResulted)
+                        .percentageResultedOk(expectedPercentageResultedOk)
+                        .percentageResults(expectedPercentageRewardsCents)
+
+                        .build(),
+                repository.findById(export.getId()).block());
     }
 //endregion
 }

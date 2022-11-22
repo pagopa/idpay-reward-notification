@@ -1,11 +1,14 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 public interface RewardOrganizationExportsRepositoryExtended {
 
@@ -18,4 +21,6 @@ public interface RewardOrganizationExportsRepositoryExtended {
     Mono<RewardOrganizationExport> reserveExport();
     /** It will retrieve an export having status {@link RewardOrganizationExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getExportDate()} < today, updating it to today, and allowing the current process to handle it */
     Mono<RewardOrganizationExport> reserveStuckExport();
+
+    Mono<UpdateResult> updateCounters(long incCount, BigDecimal incReward, long incOkCount, RewardOrganizationExport export);
 }

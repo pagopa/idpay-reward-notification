@@ -16,6 +16,7 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRep
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
+import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.file.Files;
@@ -379,6 +381,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(0, n.getFeedbackProgressive());
             Assertions.assertEquals(0L, n.getEffectiveRewardCents());
             Assertions.assertEquals(n.getRejectionCode(), n.getRejectionReason());
+
+            Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), TestUtils.getHeaderValue(msg, KafkaHeaders.MESSAGE_KEY));
         }
 
         Assertions.assertEquals(3, ibanKo);

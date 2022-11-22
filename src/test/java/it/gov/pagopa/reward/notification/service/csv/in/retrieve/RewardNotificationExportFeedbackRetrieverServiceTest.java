@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -289,4 +290,69 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         Assertions.assertEquals(expectedDeltaRewardCents, result);
     }
     //endregion
+
+    @Test
+    void testUpdateExportStatus(){
+        // Given
+        List<String> exportIds=List.of("EXPORTID1", "EXPORTID2", "EXPORTID3", "EXPORTID4");
+
+        //region useCase1 EXPORTED -> COMPLETED
+        RewardOrganizationExport export1 = RewardOrganizationExport.builder()
+                .percentageResultedOk(100_00L)
+                .status(RewardOrganizationExportStatus.EXPORTED)
+                .build();
+        UpdateResult expectedUpdateResult1 = Mockito.mock(UpdateResult.class);
+
+        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.COMPLETE), Mockito.same(export1)))
+                .thenReturn(Mono.just(expectedUpdateResult1));
+        //endregion
+
+        //region useCase2 EXPORTED -> PARTIAL
+        RewardOrganizationExport export2 = RewardOrganizationExport.builder()
+                .percentageResultedOk(99_99L)
+                .status(RewardOrganizationExportStatus.EXPORTED)
+                .build();
+        UpdateResult expectedUpdateResult2 = Mockito.mock(UpdateResult.class);
+
+        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.PARTIAL), Mockito.same(export2)))
+                .thenReturn(Mono.just(expectedUpdateResult2));
+        //endregion
+
+        //region useCase3 PARTIAL -> COMPLETED
+        RewardOrganizationExport export3 = RewardOrganizationExport.builder()
+                .percentageResultedOk(100_00L)
+                .status(RewardOrganizationExportStatus.PARTIAL)
+                .build();
+        UpdateResult expectedUpdateResult3 = Mockito.mock(UpdateResult.class);
+
+        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.COMPLETE), Mockito.same(export3)))
+                .thenReturn(Mono.just(expectedUpdateResult3));
+        //endregion
+
+
+        //region useCase4 PARTIAL -> PARTIAL
+        RewardOrganizationExport export4 = RewardOrganizationExport.builder()
+                .percentageResultedOk(99_99L)
+                .status(RewardOrganizationExportStatus.PARTIAL)
+                .build();
+        //endregion
+
+        Mockito.when(repositoryMock.findAllById(exportIds)).thenReturn(Flux.just(export1, export2, export3, export4));
+
+        // When
+        List<UpdateResult> results = service.updateExportStatus(exportIds).collectList().block();
+
+        // Then
+        Assertions.assertNotNull(results);
+
+        Assertions.assertEquals(
+                List.of(
+                    expectedUpdateResult1,
+                    expectedUpdateResult2,
+                    expectedUpdateResult3,
+                    UpdateResult.acknowledged(0, null, null)
+                ),
+                results
+        );
+    }
 }

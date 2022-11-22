@@ -182,14 +182,14 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     @Override
     public Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
         long incOk;
-        if(deltaReward>0L) { // is ok result
-            incOk=1L;
-        } else if(deltaReward<0L) { // is ko preceded by ok result
-            incOk=-1L;
+        if (deltaReward > 0L) { // is ok result
+            incOk = 1L;
+        } else if (deltaReward < 0L) { // is ko preceded by ok result
+            incOk = -1L;
         } else {
-            incOk=0L;
+            incOk = 0L;
         }
-        return updateCounters(firstFeedback? 1L : 0L, deltaReward, incOk, export);
+        return updateCounters(firstFeedback ? 1L : 0L, deltaReward, incOk, export);
     }
 
     @Override
@@ -243,5 +243,13 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
      */
     private long calcPercentage(long value, long total) {
         return (long) (((double) value) / total * 100_00);
+    }
+
+    @Override
+    public Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, RewardOrganizationExport export) {
+        return mongoTemplate.updateFirst(
+                new Query(Criteria.where(FIELD_ID).is(export.getId())),
+                new Update().set(FIELD_STATUS, nextStatus),
+                RewardOrganizationExport.class);
     }
 }

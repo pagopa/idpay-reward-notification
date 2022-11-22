@@ -340,4 +340,39 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
                 , export, result);
     }
 //endregion
+
+//region test updateStatus
+    @Test
+    void testUpdateStatus_NotExists(){
+        // Given
+        RewardOrganizationExport export = new RewardOrganizationExport();
+        export.setId("NEVERSEENID");
+        export.setRewardNotified(10L);
+        export.setRewardsExportedCents(10_00L);
+
+        // When
+        UpdateResult result = repository.updateStatus(RewardOrganizationExportStatus.COMPLETE, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(UpdateResult.acknowledged(0, 0L, null), result);
+    }
+
+    @Test
+    void testUpdateStatus_Successful(){
+        // Given
+        RewardOrganizationExport export = testData.get(2);
+
+        // When
+        UpdateResult result = repository.updateStatus(RewardOrganizationExportStatus.COMPLETE, export).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(UpdateResult.acknowledged(1, 1L, null), result);
+
+        RewardOrganizationExport storedExport = repository.findById(export.getId()).block();
+        Assertions.assertNotNull(storedExport);
+        Assertions.assertEquals(RewardOrganizationExportStatus.COMPLETE, storedExport.getStatus());
+    }
+//endregion
 }

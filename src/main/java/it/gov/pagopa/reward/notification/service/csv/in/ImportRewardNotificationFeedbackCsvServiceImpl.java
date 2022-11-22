@@ -5,6 +5,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
+import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.ImportElaborationCounters;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     private final Integer parallelism;
 
     private final RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService;
+    private final RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService;
 
     private final HeaderColumnNameStrategy<RewardNotificationImportCsvDto> mappingStrategy;
 
@@ -39,10 +41,11 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
             @Value("${app.csv.import.separator}") char csvSeparator,
             @Value("${app.csv.import.parallelism}") Integer parallelism,
 
-            RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService) {
+            RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService, RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService) {
         this.csvSeparator = csvSeparator;
         this.parallelism = parallelism;
         this.rewardNotificationFeedbackHandlerService = rewardNotificationFeedbackHandlerService;
+        this.exportFeedbackRetrieverService = exportFeedbackRetrieverService;
 
         this.mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationImportCsvDto.class);
     }
@@ -81,8 +84,8 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                     }
                 })
                 .map(c -> updateImportRequest(c, importRequest))
-                // TODO update exports status
-                ;
+                .flatMap(i -> exportFeedbackRetrieverService.updateExportStatus(i.getExportIds())
+                        .then(Mono.just(i)));
     }
 
     private CsvToBean<RewardNotificationImportCsvDto> buildCsvReader(Reader reader) {

@@ -49,7 +49,7 @@ public class RewardNotificationFeedbackRetrieverServiceImpl implements RewardNot
         int nextFeedbackIndex = 0;
         for (RewardsNotification.RewardNotificationHistory h : notification.getFeedbackHistory()) {
             if (h.getFeedbackFilePath().equals(importRequest.getFilePath())) {
-                log.debug("[REWARD_NOTIFICATION_FEEDBACK] Feedback already elaborated: rewardNotificationId {}, exportId {}, rowNumber: {}, filePath {}", notification.getId(), notification.getExportId(), row.getRowNumber(), importRequest.getFilePath());
+                log.debug("[REWARD_NOTIFICATION_FEEDBACK] Feedback already elaborated: rewardNotificationId {}, exportId {}, rowNumber {}, filePath {}", notification.getId(), notification.getExportId(), row.getRowNumber(), importRequest.getFilePath());
                 return Mono.just(false);
             } else if (h.getFeedbackDate().isAfter(importRequest.getFeedbackDate())) {
                 break;
@@ -72,6 +72,8 @@ public class RewardNotificationFeedbackRetrieverServiceImpl implements RewardNot
         } else {
             notification.getFeedbackHistory().add(nextFeedbackIndex, history);
         }
+
+        log.debug("[REWARD_NOTIFICATION_FEEDBACK] storing feedback on rewardNotificationId {}, exportId {}, rowNumber {}, rowStatus {}, filePath {}, toNotify {}", notification.getId(), notification.getExportId(), row.getRowNumber(), rowResult, importRequest.getFilePath(), newestFeedback);
 
         return repository.save(notification)
                 .map(x -> newestFeedback);

@@ -25,6 +25,8 @@ public class RewardNotificationNotifierServiceImpl implements RewardNotification
 
     @Override
     public Mono<RewardsNotification> notify(RewardsNotification notification, long deltaRewardCents) {
+        log.debug("[REWARD_NOTIFICATION_FEEDBACK] Notifying reward feedback {} of export {} with status {} and deltaRewardCents {}", notification.getId(), notification.getExportId(), notification.getStatus(), deltaRewardCents);
+
         Message<RewardFeedbackDTO> message = MessageBuilder.withPayload(mapper.apply(notification, deltaRewardCents))
                 .setHeader(KafkaHeaders.MESSAGE_KEY, "%s_%s".formatted(notification.getUserId(), notification.getInitiativeId()))
                 .build();

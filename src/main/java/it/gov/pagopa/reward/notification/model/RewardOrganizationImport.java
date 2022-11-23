@@ -58,5 +58,11 @@ public class RewardOrganizationImport {
             this.errorCode=noRows.name();
             this.errorDescription=noRows.description;
         }
+
+        public RewardOrganizationImportError(int row, RewardFeedbackConstants.ImportFeedbackRowErrors noRows) {
+            this.row=row;
+            this.errorCode=noRows.name();
+            this.errorDescription=noRows.description;
+        }
     }
 }

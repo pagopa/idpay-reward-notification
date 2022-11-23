@@ -2,9 +2,13 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
+import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
+import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.ImportElaborationCounters;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +21,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -27,6 +35,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     private final Integer parallelism;
 
     private final RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService;
+    private final RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService;
 
     private final HeaderColumnNameStrategy<RewardNotificationImportCsvDto> mappingStrategy;
 
@@ -34,10 +43,11 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
             @Value("${app.csv.import.separator}") char csvSeparator,
             @Value("${app.csv.import.parallelism}") Integer parallelism,
 
-            RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService) {
+            RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService, RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService) {
         this.csvSeparator = csvSeparator;
         this.parallelism = parallelism;
         this.rewardNotificationFeedbackHandlerService = rewardNotificationFeedbackHandlerService;
+        this.exportFeedbackRetrieverService = exportFeedbackRetrieverService;
 
         this.mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationImportCsvDto.class);
     }
@@ -54,6 +64,8 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
             throw new IllegalStateException("[REWARD_NOTIFICATION_FEEDBACK] Cannot read csv: %s".formatted(csv), e);
         }
 
+        Map<String, RewardOrganizationExport> exportCache = new ConcurrentHashMap<>();
+
         int[] rowNumber = new int[]{1};
         return Flux.fromStream(csvReader.stream())
                 .doOnNext(r -> r.setRowNumber(rowNumber[0]++))
@@ -61,7 +73,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .parallel(parallelism)
                 .runOn(Schedulers.boundedElastic())
 
-                .flatMap(rewardNotificationFeedbackHandlerService::evaluate)
+                .flatMap(line -> rewardNotificationFeedbackHandlerService.evaluate(line, importRequest, exportCache))
                 .map(ImportElaborationCounters::fromElaborationResult)
 
                 .reduce(ImportElaborationCounters::add)
@@ -73,7 +85,9 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                         log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot close local csv {}", csv, e);
                     }
                 })
-                .map(c -> updateImportRequest(c, importRequest));
+                .map(c -> updateImportRequest(c, importRequest))
+                .flatMap(i -> exportFeedbackRetrieverService.updateExportStatus(i.getExportIds())
+                        .then(Mono.just(i)));
     }
 
     private CsvToBean<RewardNotificationImportCsvDto> buildCsvReader(Reader reader) {
@@ -81,10 +95,16 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .withType(RewardNotificationImportCsvDto.class)
                 .withMappingStrategy(mappingStrategy)
                 .withSeparator(csvSeparator)
+                .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
                 .build();
     }
 
     private RewardOrganizationImport updateImportRequest(ImportElaborationCounters counter, RewardOrganizationImport importRequest) {
+        log.debug("[REWARD_NOTIFICATION_FEEDBACK] updating importRequest {} with counters {}", importRequest.getFilePath(), counter);
+
+        importRequest.setExportIds(new ArrayList<>(counter.getExportIds()));
+        importRequest.getExportIds().sort(Comparator.comparing(Function.identity()));
+
         importRequest.setRewardsResulted(counter.getRewardsResulted());
         importRequest.setRewardsResultedError(counter.getRewardsResultedError());
         importRequest.setRewardsResultedOk(counter.getRewardsResultedOk());
@@ -93,17 +113,13 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
         long successfulProcess = importRequest.getRewardsResulted() - counter.getRewardsResultedError();
         long successfulOkOutcomes = counter.getRewardsResultedOk() - counter.getRewardsResultedOkError();
 
-        importRequest.setPercentageResulted(calcPercentage(successfulProcess, importRequest.getRewardsResulted()));
-        importRequest.setPercentageResultedOk(calcPercentage(counter.getRewardsResultedOk(), importRequest.getRewardsResulted()));
-        importRequest.setPercentageResultedOkElab(calcPercentage(successfulOkOutcomes, successfulProcess));
+        importRequest.setPercentageResulted(Utils.calcPercentage(successfulProcess, importRequest.getRewardsResulted()));
+        importRequest.setPercentageResultedOk(Utils.calcPercentage(counter.getRewardsResultedOk(), importRequest.getRewardsResulted()));
+        importRequest.setPercentageResultedOkElab(Utils.calcPercentage(successfulOkOutcomes, successfulProcess));
 
         counter.getErrors().sort(Comparator.comparing(RewardOrganizationImport.RewardOrganizationImportError::getRow));
         importRequest.setErrors(counter.getErrors());
 
         return importRequest;
-    }
-
-    private long calcPercentage(long value, long total) {
-        return (long) ((((double) value) / total) * 100_00); // storing into a 2 decimal percentage, multiplied by 100 in order to keep it an integer
     }
 }

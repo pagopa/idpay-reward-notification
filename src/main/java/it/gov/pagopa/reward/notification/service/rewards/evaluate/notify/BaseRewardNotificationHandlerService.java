@@ -29,6 +29,7 @@ public abstract class BaseRewardNotificationHandlerService implements RewardNoti
         query.setUserId(trx.getUserId());
         query.setInitiativeId(rule.getInitiativeId());
         query.setTrxIds(null);
+        query.setFeedbackHistory(null);
 
         return rewardsNotificationRepository.count(Example.of(query))
                 .defaultIfEmpty(0L)

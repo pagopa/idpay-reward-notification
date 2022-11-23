@@ -2,17 +2,18 @@ package it.gov.pagopa.reward.notification.service.csv.in.utils;
 
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class ImportElaborationCounters {
+    private Set<String> exportIds;
+
     private long rewardsResulted;
     private long rewardsResultedError;
     private long rewardsResultedOk;
@@ -21,10 +22,15 @@ public class ImportElaborationCounters {
     private List<RewardOrganizationImport.RewardOrganizationImportError> errors = new ArrayList<>();
 
     public static ImportElaborationCounters add(ImportElaborationCounters c1, ImportElaborationCounters c2) {
+        HashSet<String> exportIds = new HashSet<>(c1.getExportIds());
+        exportIds.addAll(c2.getExportIds());
+
         ArrayList<RewardOrganizationImport.RewardOrganizationImportError> errors = new ArrayList<>(c1.getErrors());
         errors.addAll(c2.getErrors());
 
         return new ImportElaborationCounters(
+                exportIds,
+
                 c1.getRewardsResulted() + c2.getRewardsResulted(),
                 c1.getRewardsResultedError() + c2.getRewardsResultedError(),
                 c1.getRewardsResultedOk() + c2.getRewardsResultedOk(),
@@ -38,6 +44,7 @@ public class ImportElaborationCounters {
         boolean isError = outcome.getError() != null;
 
         ImportElaborationCounters out = new ImportElaborationCounters();
+        out.exportIds=outcome.getExportId()!=null? Set.of(outcome.getExportId()) : Collections.emptySet();
         out.rewardsResulted = 1;
         out.rewardsResultedError = isError ? 1 : 0;
         out.rewardsResultedOk = isOkOutcome ? 1 : 0;

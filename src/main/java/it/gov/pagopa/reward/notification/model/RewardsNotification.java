@@ -1,7 +1,9 @@
 package it.gov.pagopa.reward.notification.model;
 
+import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,23 +47,31 @@ public class RewardsNotification {
     private String iban;
     private String checkIbanResult;
     private RewardNotificationStatus status;
-    private String rejectionCode;
+    private String resultCode;
     private String rejectionReason;
     private LocalDateTime feedbackDate;
-    private List<RewardNotificationHistory> feedbackHistory;
-    private LocalDateTime orderDate;
-    private LocalDateTime executionDate;
-    private String trn;
+    @Builder.Default private List<RewardNotificationHistory> feedbackHistory = new ArrayList<>();
+    private LocalDate executionDate;
     private String cro;
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    @Builder
     public static class RewardNotificationHistory{
-        private LocalDateTime timestamp;
-        private String status;
-        private String rejectionCode;
+        private String feedbackFilePath;
+        private LocalDateTime feedbackDate;
+        private RewardOrganizationImportResult result;
         private String rejectionReason;
+
+        public static RewardNotificationHistory fromImportRow(RewardNotificationImportCsvDto row, RewardOrganizationImportResult rowResult, RewardOrganizationImport importRequest){
+            RewardNotificationHistory out = new RewardNotificationHistory();
+            out.setFeedbackFilePath(importRequest.getFilePath());
+            out.setFeedbackDate(importRequest.getFeedbackDate());
+            out.setResult(rowResult);
+            out.setRejectionReason(row.getRejectionReason());
+            return out;
+        }
     }
 
 }

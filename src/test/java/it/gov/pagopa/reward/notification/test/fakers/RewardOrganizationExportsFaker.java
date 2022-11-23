@@ -24,11 +24,14 @@ public class RewardOrganizationExportsFaker {
 
         FakeValuesService fakeValuesService = InitiativeRefundDTOFaker.getFakeValuesService(bias);
 
+        String organizationId = "ORGANIZATION_ID_%d".formatted(bias);
+        String initiativeId = "INITIATIVE_ID_%d".formatted(bias);
+
         out.id("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.initiativeId("INITIATIVE_ID_%d".formatted(bias));
+        out.initiativeId(initiativeId);
         out.initiativeName("INITIATIVE_NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.organizationId("ORGANIZATION_ID_%d".formatted(bias));
-        out.filePath("/%s/%d".formatted(fakeValuesService.bothify("???"), bias));
+        out.organizationId(organizationId);
+        out.filePath("%s/%s/export/dispositive-rewards-%d.zip".formatted(organizationId, initiativeId, bias));
         out.notificationDate(CHOSEN_DATE);
         out.exportDate(CHOSEN_DATE);
         out.rewardsExportedCents(bias*10000L);

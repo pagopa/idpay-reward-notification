@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -18,4 +19,9 @@ public interface RewardOrganizationExportsRepositoryExtended {
     Mono<RewardOrganizationExport> reserveExport();
     /** It will retrieve an export having status {@link RewardOrganizationExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getExportDate()} < today, updating it to today, and allowing the current process to handle it */
     Mono<RewardOrganizationExport> reserveStuckExport();
+
+    Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaRewardCents, RewardOrganizationExport export);
+    Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export);
+
+    Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExport export);
 }

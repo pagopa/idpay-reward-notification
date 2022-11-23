@@ -6,7 +6,12 @@ import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import java.time.OffsetDateTime;
 
 public class StorageEventDtoFaker {
+
     public static StorageEventDto mockInstance(Integer bias) {
+        return mockInstanceBuilder(bias).build();
+    }
+
+    public static StorageEventDto.StorageEventDtoBuilder mockInstanceBuilder(Integer bias) {
         return StorageEventDto.builder()
                 .id("ID%d".formatted(bias))
                 .eventType(RewardFeedbackConstants.AZURE_STORAGE_EVENT_TYPE_BLOB_CREATED)
@@ -16,7 +21,6 @@ public class StorageEventDtoFaker {
                         .contentLength(1000)
                         .url("https://STORAGEACCOUNT.blob.core.windows.net/CONTAINERNAME/orgId/initiativeId/import/reward-dispositive-%d.zip".formatted(bias))
                         .build())
-                .eventTime(OffsetDateTime.now().plusSeconds(bias))
-                .build();
+                .eventTime(OffsetDateTime.now().plusSeconds(bias));
     }
 }

@@ -50,6 +50,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.PostConstruct;
 import javax.management.*;
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
@@ -229,36 +230,46 @@ public abstract class BaseIntegrationTest {
 
     protected void mockAzureBlobClient() {
         Mockito.lenient().when(rewardsNotificationBlobClientMock.uploadFile(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenAnswer(i->{
+                .thenAnswer(i-> Mono.fromSupplier(() -> {
                     File zipFile = i.getArgument(0);
                     Path zipPath = Path.of(zipFile.getAbsolutePath());
-                    Files.copy(zipPath,
-                            zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
-                            StandardCopyOption.REPLACE_EXISTING);
-                    //noinspection rawtypes
+                    Path destination = zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip"));
+                    try {
+                            Files.copy(zipPath,
+                                    destination,
+                                    StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Something gone wrong simulating upload of test file %s into %s".formatted(zipPath, destination), e);
+                        }
+                        //noinspection rawtypes
                     Response responseMocked = Mockito.mock(Response.class);
                     Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
-                    return Mono.just(responseMocked);
-                });
+                    return responseMocked;
+                }));
 
         Mockito.lenient().when(rewardsNotificationBlobClientMock.downloadFile(Mockito.any(), Mockito.any()))
-                .thenAnswer(i->{
+                .thenAnswer(i-> Mono.fromSupplier(()->{
                     Path zipFile = Path.of("src/test/resources/feedbackUseCasesZip", i.getArgument(0, String.class));
                     Path destination = i.getArgument(1);
 
                     Path destinationDir = destination.getParent();
-                    if(!Files.exists(destinationDir)) {
-                        Files.createDirectories(destinationDir);
-                    }
 
-                    Files.copy(zipFile,
-                            destination,
-                            StandardCopyOption.REPLACE_EXISTING);
+                    try {
+                        if (!Files.exists(destinationDir)) {
+                            Files.createDirectories(destinationDir);
+                        }
+
+                        Files.copy(zipFile,
+                                destination,
+                                StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Something gone wrong simulating donwlonad of test file from %s into %s".formatted(zipFile, destination), e);
+                    }
                     //noinspection rawtypes
                     Response responseMocked = Mockito.mock(Response.class);
                     Mockito.when(responseMocked.getStatusCode()).thenReturn(206);
-                    return Mono.just(responseMocked);
-                });
+                    return responseMocked;
+                }));
     }
 
     @Test

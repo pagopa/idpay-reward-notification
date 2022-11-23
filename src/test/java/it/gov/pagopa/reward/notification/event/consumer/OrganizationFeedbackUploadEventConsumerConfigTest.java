@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN"
@@ -46,23 +47,28 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
     @Autowired
     private RewardOrganizationImportsRepository rewardOrganizationImportsRepository;
 
-    private final int messages = 2;
-    private final List<String> rewardNotificationImportIds = IntStream.range(0, messages)
-            .mapToObj(StorageEventDtoFaker::mockInstance)
-            .map(e -> e.getSubject().replace(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX, ""))
+    private final int messages = 3;
+    private final String notExistentFileUseCase = "orgId/initiativeId/import/notExistentFile.zip";
+    private final List<String> rewardNotificationImportIds = Stream.concat(
+                    IntStream.range(0, messages)
+                            .mapToObj(StorageEventDtoFaker::mockInstance)
+                            .map(e -> e.getSubject().replace(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX, "")),
+
+                    Stream.of(notExistentFileUseCase)
+            )
             .toList();
     private List<RewardsNotification> testDataRewardsNotifications;
     private List<RewardOrganizationExport> testDataRewardsOrganizationExport;
 
     @AfterEach
     void clearTestData() {
-        if(testDataRewardsNotifications!=null) {
+        if (testDataRewardsNotifications != null) {
             rewardsNotificationRepository.deleteAll(testDataRewardsNotifications).block();
         }
-        if(testDataRewardsOrganizationExport!=null){
+        if (testDataRewardsOrganizationExport != null) {
             rewardOrganizationExportsRepository.deleteAll(testDataRewardsOrganizationExport).block();
         }
-        if(rewardNotificationImportIds!=null){
+        if (rewardNotificationImportIds != null) {
             rewardOrganizationImportsRepository.deleteAllById(rewardNotificationImportIds).block();
         }
     }
@@ -70,14 +76,30 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
     @Test
     void test() {
         int notValidMessages = errorUseCases.size();
+        String messageKey = "orgId=orgId;initiativeId=initiativeId";
 
         storeTestData();
 
-        List<Pair<String, String>> payloads = new ArrayList<>(IntStream.range(0, messages)
-                .mapToObj(StorageEventDtoFaker::mockInstance)
-                .map(p->Pair.of("orgId=orgId;initiativeId=initiativeId", "[%s]".formatted(TestUtils.jsonSerializer(p))))
+        List<Pair<String, String>> payloads = new ArrayList<>(Stream.concat(
+                        IntStream.range(0, messages)
+                                .mapToObj(StorageEventDtoFaker::mockInstance),
+
+                        Stream.of(
+                                // not existentFile
+                                StorageEventDtoFaker.mockInstanceBuilder(0)
+                                        .subject(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX + notExistentFileUseCase).build()
+                        )
+                )
+                .map(p -> Pair.of(messageKey, "[%s]".formatted(TestUtils.jsonSerializer(p))))
                 .toList());
-        payloads.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> Pair.<String,String>of(null, errorUseCases.get(i).getKey().get())).toList());
+
+        // ignored message cause not an upload
+        payloads.add(Pair.of(null, "[{\"id\":\"FAKEID\",\"eventType\":\"Microsoft.Storage.BlobDeleted\",\"subject\":\"/blobServices/default/containers/refund/blobs/orgId/initiativeId/import/tmpFile.zip\",\"eventTime\":\"2022-11-23T00:00Z\"}]"));
+        // ignored message cause not in the import directory
+        payloads.add(Pair.of(null, "[{\"id\":\"FAKEID\",\"eventType\":\"%s\",\"subject\":\"%sorgId/initiativeId/unexpectedDir/tmpFile.zip\",\"eventTime\":\"2022-11-23T00:00Z\"}]"
+                .formatted(RewardFeedbackConstants.AZURE_STORAGE_EVENT_TYPE_BLOB_CREATED, RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX)));
+
+        payloads.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> Pair.<String, String>of(null, errorUseCases.get(i).getKey().get())).toList());
 
         long timeStart = System.currentTimeMillis();
         payloads.forEach(p -> publishIntoEmbeddedKafka(topicRewardNotificationUpload, null, p.getKey(), p.getValue()));
@@ -103,7 +125,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         Test Completed in %d millis
                         ************************
                         """,
-                messages + notValidMessages,
+                payloads.size(),
                 messages,
                 errorUseCases.size(),
                 timePublishingEnd - timeStart,
@@ -128,18 +150,30 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
     }
 
     private void storeTestData() {
-        testDataRewardsNotifications = rewardsNotificationRepository.saveAll(IntStream.rangeClosed(1, 17)
+        testDataRewardsNotifications = new ArrayList<>(Objects.requireNonNull(rewardsNotificationRepository.saveAll(IntStream.rangeClosed(1, 17)
                 .mapToObj(i -> RewardsNotificationFaker.mockInstanceBuilder(i)
                         .id("rewardNotificationId%d".formatted(i))
                         .externalId("rewardNotificationExternalId%d".formatted(i))
-                        .organizationId("orgId") // TODO add use case
-                        .initiativeId("initiativeId") // TODO add use case
+                        .organizationId("orgId")
+                        .initiativeId("initiativeId")
                         .exportId("exportId%d".formatted(i % 3))
                         .exportDate(LocalDateTime.now().minusDays(1))
                         .status(RewardNotificationStatus.EXPORTED)
                         .rewardCents(i * 100L)
                         .build())
-                .toList()).collectList().block();
+                .toList()).collectList().block()));
+
+        testDataRewardsNotifications.add(rewardsNotificationRepository.save(RewardsNotificationFaker.mockInstanceBuilder(0)
+                .id("rewardNotificationOnWrongInitiative")
+                .externalId("rewardNotificationOnWrongInitiativeExternalId")
+                .organizationId("orgId")
+                .initiativeId("initiativeIdUnexpected")
+                .exportId("exportId")
+                .exportDate(LocalDateTime.now().minusDays(1))
+                .status(RewardNotificationStatus.EXPORTED)
+                .rewardCents(10_0L)
+                .build()
+        ).block());
 
         testDataRewardsOrganizationExport = rewardOrganizationExportsRepository.saveAll(List.of(
                 RewardOrganizationExportsFaker.mockInstanceBuilder(0)
@@ -219,10 +253,11 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                 RewardOrganizationImportStatus.WARN,
                 RewardOrganizationImportStatus.ERROR);
         long[] countSaved = {0};
+        int expectedImportMessages = rewardNotificationImportIds.size();
         //noinspection ConstantConditions
         waitFor(() -> (countSaved[0] = rewardOrganizationImportsRepository.findAllById(rewardNotificationImportIds)
-                .filter(i-> finalStatuses.contains(i.getStatus()))
-                .count().block()) == messages, () -> "Expected %d saved feedback operations, read %d".formatted(messages, countSaved[0]), 60, 1000);
+                .filter(i -> finalStatuses.contains(i.getStatus()))
+                .count().block()) == expectedImportMessages, () -> "Expected %d saved feedback operations, read %d".formatted(expectedImportMessages, countSaved[0]), 60, 1000);
     }
 
     //region errorUseCases
@@ -231,6 +266,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
     protected Pattern getErrorUseCaseIdPatternMatch() {
         return Pattern.compile("\"id\":\"id_([0-9]+)_?[^\"]*\"");
     }
+
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
 
     {
@@ -307,21 +343,93 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .contentLength(1000)
                             .url("https://STORAGEACCOUNT.blob.core.windows.net/CONTAINERNAME/orgId/initiativeId/import/reward-dispositive-1.zip")
 
-                            .rewardsResulted(3L)
-                            .rewardsResultedError(0L)
-                            .rewardsResultedOk(2L)
-                            .rewardsResultedOkError(0L)
+                            .rewardsResulted(4L)
+                            .rewardsResultedError(1L)
+                            .rewardsResultedOk(3L)
+                            .rewardsResultedOkError(1L)
 
-                            .percentageResulted(100_00L)
-                            .percentageResultedOk(66_66L)
+                            .percentageResulted(75_00L)
+                            .percentageResultedOk(75_00L)
                             .percentageResultedOkElab(66_66L)
                             .elabDate(stored1.getElabDate())
                             .exportIds(List.of("exportId0", "exportId1", "exportId2"))
-                            .status(RewardOrganizationImportStatus.COMPLETE)
-                            .errorsSize(0)
-                            .errors(Collections.emptyList())
+                            .status(RewardOrganizationImportStatus.WARN)
+                            .errorsSize(1)
+                            .errors(List.of(new RewardOrganizationImport.RewardOrganizationImportError(4, RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND)))
                             .build(),
                     stored1
+            );
+        }
+        //endregion
+
+        //region reward-dispositive-2
+        {
+            RewardOrganizationImport stored2 = rewardOrganizationImportsRepository.findById("orgId/initiativeId/import/reward-dispositive-2.zip").block();
+            Assertions.assertNotNull(stored2);
+            Assertions.assertTrue(stored2.getFeedbackDate().isAfter(LocalDateTime.now().minusHours(1)));
+            Assertions.assertTrue(stored2.getElabDate().isAfter(LocalDateTime.now().minusHours(1)));
+
+            Assertions.assertEquals(
+                    RewardOrganizationImport.builder()
+                            .filePath("orgId/initiativeId/import/reward-dispositive-2.zip")
+                            .organizationId("orgId")
+                            .initiativeId("initiativeId")
+                            .feedbackDate(stored2.getFeedbackDate())
+                            .eTag("ETAG2")
+                            .contentLength(1000)
+                            .url("https://STORAGEACCOUNT.blob.core.windows.net/CONTAINERNAME/orgId/initiativeId/import/reward-dispositive-2.zip")
+
+                            .rewardsResulted(1L)
+                            .rewardsResultedError(1L)
+                            .rewardsResultedOk(0L)
+                            .rewardsResultedOkError(0L)
+
+                            .percentageResulted(0L)
+                            .percentageResultedOk(0L)
+                            .percentageResultedOkElab(0L)
+                            .elabDate(stored2.getElabDate())
+                            .exportIds(Collections.emptyList())
+                            .status(RewardOrganizationImportStatus.WARN)
+                            .errorsSize(1)
+                            .errors(List.of(new RewardOrganizationImport.RewardOrganizationImportError(1, RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND)))
+                            .build(),
+                    stored2
+            );
+        }
+        //endregion
+
+        //region notExistentFileUseCase
+        {
+            RewardOrganizationImport storedNotExistentFileUseCase = rewardOrganizationImportsRepository.findById(notExistentFileUseCase).block();
+            Assertions.assertNotNull(storedNotExistentFileUseCase);
+            Assertions.assertTrue(storedNotExistentFileUseCase.getFeedbackDate().isAfter(LocalDateTime.now().minusHours(1)));
+            Assertions.assertTrue(storedNotExistentFileUseCase.getElabDate().isAfter(LocalDateTime.now().minusHours(1)));
+
+            Assertions.assertEquals(
+                    RewardOrganizationImport.builder()
+                            .filePath(notExistentFileUseCase)
+                            .organizationId("orgId")
+                            .initiativeId("initiativeId")
+                            .feedbackDate(storedNotExistentFileUseCase.getFeedbackDate())
+                            .eTag("ETAG0")
+                            .contentLength(1000)
+                            .url("https://STORAGEACCOUNT.blob.core.windows.net/CONTAINERNAME/orgId/initiativeId/import/reward-dispositive-0.zip")
+
+                            .rewardsResulted(0L)
+                            .rewardsResultedError(0L)
+                            .rewardsResultedOk(0L)
+                            .rewardsResultedOkError(0L)
+
+                            .percentageResulted(0L)
+                            .percentageResultedOk(0L)
+                            .percentageResultedOkElab(0L)
+                            .elabDate(storedNotExistentFileUseCase.getElabDate())
+                            .exportIds(Collections.emptyList())
+                            .status(RewardOrganizationImportStatus.ERROR)
+                            .errorsSize(1)
+                            .errors(List.of(new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.GENERIC_ERROR)))
+                            .build(),
+                    storedNotExistentFileUseCase
             );
         }
         //endregion
@@ -445,7 +553,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         List<RewardsNotification> rewards = rewardsNotificationRepository.findAllById(ids).collectList().block();
 
         Assertions.assertNotNull(rewards);
-        Assertions.assertEquals(17, rewards.size(), "Unexpected number of rewards: expected %s, retrieved %s".formatted(ids, rewards.stream().map(RewardsNotification::getId).toList()));
+        Assertions.assertEquals(17 + 1, rewards.size(), "Unexpected number of rewards: expected %s, retrieved %s".formatted(ids, rewards.stream().map(RewardsNotification::getId).toList()));
 
         Set<String> expectedRewardKo = Set.of(
                 "rewardNotificationId7",
@@ -455,61 +563,62 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         Map<String, RewardsNotification.RewardNotificationHistory> expected2FeedbackRewards2Previous = Map.of(
                 "rewardNotificationId6", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.KO).rejectionReason("IBAN NOT VALID").build(),
                 "rewardNotificationId7", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build(),
-                "rewardNotificationId8",  RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build()
+                "rewardNotificationId8", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build()
         );
-        rewards.forEach(r->{
-            try {
-                Assertions.assertTrue(r.getFeedbackDate().isAfter(LocalDateTime.now().minusHours(1)));
+        rewards.stream().filter(r -> !"rewardNotificationOnWrongInitiative".equals(r.getId()))
+                .forEach(r -> {
+                    try {
+                        Assertions.assertTrue(r.getFeedbackDate().isAfter(LocalDateTime.now().minusHours(1)));
 
-                RewardsNotification.RewardNotificationHistory expectedPreviousOp = expected2FeedbackRewards2Previous.get(r.getId());
-                if (!expectedRewardKo.contains(r.getId())) {
-                    Assertions.assertEquals(RewardNotificationStatus.COMPLETED_OK, r.getStatus());
-                    Assertions.assertEquals(RewardOrganizationImportResult.OK.value, r.getResultCode());
-                    Assertions.assertNull(r.getRejectionReason());
+                        RewardsNotification.RewardNotificationHistory expectedPreviousOp = expected2FeedbackRewards2Previous.get(r.getId());
+                        if (!expectedRewardKo.contains(r.getId())) {
+                            Assertions.assertEquals(RewardNotificationStatus.COMPLETED_OK, r.getStatus());
+                            Assertions.assertEquals(RewardOrganizationImportResult.OK.value, r.getResultCode());
+                            Assertions.assertNull(r.getRejectionReason());
 
-                    if ("rewardNotificationId8".equals(r.getId())) {
-                        Assertions.assertEquals("qwertyuiopa8-2", r.getCro());
-                    } else {
-                        Assertions.assertEquals("qwertyuiopa%s".formatted(r.getId().substring(20)), r.getCro());
+                            if ("rewardNotificationId8".equals(r.getId())) {
+                                Assertions.assertEquals("qwertyuiopa8-2", r.getCro());
+                            } else {
+                                Assertions.assertEquals("qwertyuiopa%s".formatted(r.getId().substring(20)), r.getCro());
+                            }
+
+                            if (expectedPreviousOp != null) {
+                                Assertions.assertEquals(LocalDate.of(2022, 11, 19), r.getExecutionDate());
+                            } else {
+                                Assertions.assertEquals(LocalDate.of(2022, 11, 18), r.getExecutionDate());
+                            }
+                        } else {
+                            Assertions.assertEquals(RewardNotificationStatus.COMPLETED_KO, r.getStatus());
+                            Assertions.assertEquals(RewardOrganizationImportResult.KO.value, r.getResultCode());
+                            Assertions.assertEquals("IBAN NOT VALID", r.getRejectionReason());
+                            Assertions.assertNull(r.getCro());
+                            Assertions.assertNull(r.getExecutionDate());
+                        }
+
+                        if (expectedPreviousOp != null) {
+                            Assertions.assertEquals(2, r.getFeedbackHistory().size());
+
+                            RewardsNotification.RewardNotificationHistory previousOp = r.getFeedbackHistory().get(0);
+
+                            Assertions.assertTrue(previousOp.getFeedbackDate().isAfter(LocalDateTime.now().minusHours(1)));
+
+                            Assertions.assertEquals("orgId/initiativeId/import/reward-dispositive-0.zip", previousOp.getFeedbackFilePath());
+                            Assertions.assertEquals(expectedPreviousOp.getResult(), previousOp.getResult());
+                            Assertions.assertEquals(expectedPreviousOp.getRejectionReason(), previousOp.getRejectionReason());
+                        } else {
+                            Assertions.assertEquals(1, r.getFeedbackHistory().size());
+                        }
+
+                        RewardsNotification.RewardNotificationHistory lastNotificiationHistory = r.getFeedbackHistory().get(r.getFeedbackHistory().size() - 1);
+
+                        Assertions.assertEquals(RewardOrganizationImportResult.OK.equals(lastNotificiationHistory.getResult()) ? RewardNotificationStatus.COMPLETED_OK : RewardNotificationStatus.COMPLETED_KO, r.getStatus());
+                        Assertions.assertEquals(lastNotificiationHistory.getResult().value, r.getResultCode());
+                        Assertions.assertEquals(lastNotificiationHistory.getRejectionReason(), r.getRejectionReason());
+                        Assertions.assertEquals(lastNotificiationHistory.getFeedbackDate(), r.getFeedbackDate());
+                    } catch (Error e) {
+                        System.err.printf("Error occurred for reward: %s%n", r);
+                        throw e;
                     }
-
-                    if (expectedPreviousOp != null) {
-                        Assertions.assertEquals(LocalDate.of(2022, 11, 19), r.getExecutionDate());
-                    } else {
-                        Assertions.assertEquals(LocalDate.of(2022, 11, 18), r.getExecutionDate());
-                    }
-                } else {
-                    Assertions.assertEquals(RewardNotificationStatus.COMPLETED_KO, r.getStatus());
-                    Assertions.assertEquals(RewardOrganizationImportResult.KO.value, r.getResultCode());
-                    Assertions.assertEquals("IBAN NOT VALID", r.getRejectionReason());
-                    Assertions.assertNull(r.getCro());
-                    Assertions.assertNull(r.getExecutionDate());
-                }
-
-                if (expectedPreviousOp != null) {
-                    Assertions.assertEquals(2, r.getFeedbackHistory().size());
-
-                    RewardsNotification.RewardNotificationHistory previousOp = r.getFeedbackHistory().get(0);
-
-                    Assertions.assertTrue(previousOp.getFeedbackDate().isAfter(LocalDateTime.now().minusHours(1)));
-
-                    Assertions.assertEquals("orgId/initiativeId/import/reward-dispositive-0.zip", previousOp.getFeedbackFilePath());
-                    Assertions.assertEquals(expectedPreviousOp.getResult(), previousOp.getResult());
-                    Assertions.assertEquals(expectedPreviousOp.getRejectionReason(), previousOp.getRejectionReason());
-                } else {
-                    Assertions.assertEquals(1, r.getFeedbackHistory().size());
-                }
-
-                RewardsNotification.RewardNotificationHistory lastNotificiationHistory = r.getFeedbackHistory().get(r.getFeedbackHistory().size() - 1);
-
-                Assertions.assertEquals(RewardOrganizationImportResult.OK.equals(lastNotificiationHistory.getResult()) ? RewardNotificationStatus.COMPLETED_OK : RewardNotificationStatus.COMPLETED_KO, r.getStatus());
-                Assertions.assertEquals(lastNotificiationHistory.getResult().value, r.getResultCode());
-                Assertions.assertEquals(lastNotificiationHistory.getRejectionReason(), r.getRejectionReason());
-                Assertions.assertEquals(lastNotificiationHistory.getFeedbackDate(), r.getFeedbackDate());
-            } catch (AssertionError e){
-                System.err.printf("Error occurred for reward: %s%n", r);
-                throw e;
-            }
-        });
+                });
     }
 }

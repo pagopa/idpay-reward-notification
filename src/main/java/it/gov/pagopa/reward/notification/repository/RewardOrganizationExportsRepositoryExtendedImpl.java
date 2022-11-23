@@ -110,7 +110,10 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).lte(filters.getNotificationDateTo()));
             }
 
-            criteria.andOperator(criteriaList);
+            //add all criteria
+            if (!criteriaList.isEmpty()) {
+                criteria.andOperator(criteriaList);
+            }
         } else {
             criteria.and(RewardOrganizationExport.Fields.status).in(ExportConstants.EXPORT_EXPOSED_STATUSES);
         }

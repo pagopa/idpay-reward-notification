@@ -77,7 +77,10 @@ public class RewardOrganizationImportsRepositoryExtendedImpl implements RewardOr
                 criteriaList.add(Criteria.where(FIELD_ELAB_DATE).lte(filters.getElabDateTo()));
             }
 
-            criteria.andOperator(criteriaList);
+            //add all criteria
+            if(!criteriaList.isEmpty()) {
+                criteria.andOperator(criteriaList);
+            }
         }
     }
 

@@ -100,6 +100,8 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     }
 
     private RewardOrganizationImport updateImportRequest(ImportElaborationCounters counter, RewardOrganizationImport importRequest) {
+        log.debug("[REWARD_NOTIFICATION_FEEDBACK] updating importRequest {} with counters {}", importRequest.getFilePath(), counter);
+
         importRequest.setExportIds(new ArrayList<>(counter.getExportIds()));
         importRequest.getExportIds().sort(Comparator.comparing(Function.identity()));
 

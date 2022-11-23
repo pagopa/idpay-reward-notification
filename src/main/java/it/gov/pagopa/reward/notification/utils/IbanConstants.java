@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.utils;
+package it.gov.pagopa.reward.notification.utils;
 
 public class IbanConstants {
     public static final String STATUS_UNKNOWN_PSP ="UNKNOWN_PSP";

@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.utils.Utils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -37,7 +37,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
 
     @BeforeEach
     void init(){
-        service = new RewardNotificationTemporalHandlerServiceImpl(DayOfWeek.SUNDAY, repositoryMock, mapperSpy);
+        service = new RewardNotificationTemporalHandlerServiceImpl(DayOfWeek.MONDAY, repositoryMock, mapperSpy);
     }
 
     private static RewardNotificationRule buildRule(TimeParameterDTO.TimeTypeEnum type) {
@@ -81,7 +81,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         // Given
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.WEEKLY);
 
-        LocalDate date = LocalDate.of(2022, 10, 2); // a SUNDAY
+        LocalDate date = LocalDate.of(2022, 10, 3); // a MONDAY
         LocalDate expectedNotificationDate = date.plusDays(7);
         for(int i=0; i<30; i++){
             // When

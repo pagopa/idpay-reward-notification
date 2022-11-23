@@ -1,17 +1,17 @@
 package it.gov.pagopa.reward.notification;
 
+import com.azure.core.http.rest.Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
-import it.gov.pagopa.reward.notification.test.utils.RestTestUtils;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
-import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -27,32 +27,36 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.util.ReflectionUtils;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import javax.management.*;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.util.*;
@@ -81,8 +85,15 @@ import static org.awaitility.Awaitility.await;
                 "spring.jmx.enabled=true",
 
                 //region common feature disabled
+                "app.csv.export.schedule=-",
+                "app.rewards-notification.expired-initiatives.schedule=-",
                 "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
+                //endregion
+
+                //region pdv
+                "app.pdv.retry.delay-millis=5000",
+                "app.pdv.retry.max-attempts=3",
                 //endregion
 
                 //region kafka brokers
@@ -105,14 +116,17 @@ import static org.awaitility.Awaitility.await;
                 "spring.mongodb.embedded.version=4.0.21",
                 //endregion
 
-                //region pdv
-                "app.pdv.retry.delay-millis=5000",
-                "app.pdv.retry.max-attempts=3",
+                //region wiremock
+                "logging.level.WireMock=OFF",
+                "app.pdv.base-url=http://localhost:${wiremock.server.port}"
                 //endregion
         })
-@ContextConfiguration(initializers = BaseIntegrationTest.PdvInitializer.class)
 @AutoConfigureDataMongo
+@AutoConfigureWireMock(stubs = "classpath:/stub/pdv", port = 0)
+@AutoConfigureWebTestClient
 public abstract class BaseIntegrationTest {
+    public static final String APPLICATION_NAME = "idpay-reward-notification";
+
     @Autowired
     protected EmbeddedKafkaBroker kafkaBroker;
     @Autowired
@@ -151,6 +165,12 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
 
+    @Autowired
+    private WireMockServer wireMockServer;
+
+    @MockBean
+    private RewardsNotificationBlobClient rewardsNotificationBlobClientMock;
+
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
@@ -185,10 +205,31 @@ public abstract class BaseIntegrationTest {
                         ************************
                         Embedded mongo: %s
                         Embedded kafka: %s
+                        Wiremock HTTP: http://localhost:%s
+                        Wiremock HTTPS: %s
                         ************************
                         """,
                 mongoUrl,
-                "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes));
+                "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes),
+                wireMockServer.getOptions().portNumber(),
+                wireMockServer.baseUrl());
+
+        mockAzureBlobClient();
+    }
+
+    protected void mockAzureBlobClient() {
+        Mockito.lenient().when(rewardsNotificationBlobClientMock.uploadFile(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenAnswer(i->{
+                    File zipFile = i.getArgument(0);
+                    Path zipPath = Path.of(zipFile.getAbsolutePath());
+                    Files.copy(zipPath,
+                            zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    //noinspection rawtypes
+                    Response responseMocked = Mockito.mock(Response.class);
+                    Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
+                    return Mono.just(responseMocked);
+                });
     }
 
     @Test
@@ -268,7 +309,7 @@ public abstract class BaseIntegrationTest {
     private int totaleMessageSentCounter =0;
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
         final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes(StandardCharsets.UTF_8));
-        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "idpay-reward-notification".getBytes(StandardCharsets.UTF_8));
+        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, APPLICATION_NAME.getBytes(StandardCharsets.UTF_8));
 
         AtomicBoolean containAppNameHeader = new AtomicBoolean(false);
         if(headers!= null){
@@ -305,7 +346,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Map<TopicPartition, OffsetAndMetadata> checkCommittedOffsets(String topic, String groupId, long expectedCommittedMessages){
-        return checkCommittedOffsets(topic, groupId, expectedCommittedMessages, 10, 500);
+        return checkCommittedOffsets(topic, groupId, expectedCommittedMessages, 20, 500);
     }
 
     // Cannot use directly Awaitility cause the Callable condition is performed on separate thread, which will go into conflict with the consumer Kafka access
@@ -351,9 +392,9 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    protected static void wait(long timeout, TimeUnit timeoutUnit) {
+    public static void wait(long timeout, TimeUnit timeoutUnit) {
         try{
-            Awaitility.await().atLeast(timeout, timeoutUnit).until(()->false);
+            Awaitility.await().timeout(timeout, timeoutUnit).until(()->false);
         } catch (ConditionTimeoutException ex){
             // Do Nothing
         }
@@ -382,10 +423,9 @@ public abstract class BaseIntegrationTest {
         checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true);
     }
     protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
-        if(expectedAppNameHeader) {
-            Assertions.assertEquals("idpay-reward-notification", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
-            Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
-        }
+        Assertions.assertEquals(expectedAppNameHeader? APPLICATION_NAME : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+        Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
+
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
@@ -398,21 +438,4 @@ public abstract class BaseIntegrationTest {
         Assertions.assertEquals(expectedKey, errorMessage.key());
     }
 
-    //Setting WireMock
-    @RegisterExtension
-    static WireMockExtension pdvWireMock = WireMockExtension.newInstance()
-            .options(RestTestUtils.getWireMockConfiguration("/stub/pdv"))
-            .build();
-    public static class PdvInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        @SneakyThrows
-        @Override
-        public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-                    String.format("app.pdv.base-url=%s", pdvWireMock.getRuntimeInfo().getHttpBaseUrl())
-            );
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-                    String.format("app.pdv.headers.x-api-key=%s", "x_api_key")
-            );
-        }
-    }
 }

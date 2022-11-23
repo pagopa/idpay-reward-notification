@@ -32,9 +32,9 @@ import java.util.List;
 abstract class BaseRewardNotificationThresholdHandlerTest {
 
     public static final LocalDate TOMORROW = LocalDate.now().plusDays(1);
-    public static final LocalDate NEXT_SUNDAY = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+    public static final LocalDate NEXT_MONDAY = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
     public static final String NOTIFICATION_DAY_TOMORROW = "TOMORROW";
-    public static final String NOTIFICATION_DAY_NEXTDAYOFWEEK = "NEXT_SUNDAY";
+    public static final String NOTIFICATION_DAY_NEXTDAYOFWEEK = "NEXT_MONDAY";
 
     @Mock
     protected RewardsNotificationRepository repositoryMock;
@@ -83,7 +83,7 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
 
         BaseRewardNotificationThresholdBasedHandler configurationNextDayOfWeek = buildService(NOTIFICATION_DAY_NEXTDAYOFWEEK);
         Assertions.assertFalse(fieldNotificateNextDay.getBoolean(configurationNextDayOfWeek));
-        Assertions.assertEquals(DayOfWeek.SUNDAY, fieldNotificateNextDayOfWeek.get(configurationNextDayOfWeek));
+        Assertions.assertEquals(DayOfWeek.MONDAY, fieldNotificateNextDayOfWeek.get(configurationNextDayOfWeek));
     }
 
     @Test void testHandleNewNotifyCharge_TOMORROW() {testHandleNewNotifyNotOverflowing(false, NOTIFICATION_DAY_TOMORROW);}
@@ -165,7 +165,7 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         rule.setEndDate(LocalDate.now());
         Reward reward = testHandleNewNotifyRefundWithFutureNotification_buildOverFlowingReward(isStillOverflowing);
 
-        LocalDate notificationDate = NOTIFICATION_DAY_TOMORROW.equals(notificationDay) ? TOMORROW : NEXT_SUNDAY;
+        LocalDate notificationDate = NOTIFICATION_DAY_TOMORROW.equals(notificationDay) ? TOMORROW : NEXT_MONDAY;
         long expectedProgressive = 5L;
         RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), notificationDate);
         expectedResult.setProgressive(expectedProgressive);

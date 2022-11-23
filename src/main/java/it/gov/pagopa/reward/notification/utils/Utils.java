@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.utils;
+package it.gov.pagopa.reward.notification.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;

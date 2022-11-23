@@ -20,7 +20,7 @@ class RewardFeedbackMapperTest {
     @Test
     void testStatusOK() {
         // Given
-        RewardsNotification notification = RewardsNotificationFaker.mockInstance(0);
+        RewardsNotification notification = RewardsNotificationFaker.mockInstance(1);
         notification.setStatus(RewardNotificationStatus.COMPLETED_OK);
         notification.setFeedbackDate(LocalDateTime.now());
         notification.setExecutionDate(LocalDate.now().plusDays(2));
@@ -107,8 +107,8 @@ class RewardFeedbackMapperTest {
         Assertions.assertEquals(expectedStatus, result.getStatus());
         Assertions.assertEquals(RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED.equals(expectedStatus) ? null : notification.getResultCode(), result.getRejectionCode());
         Assertions.assertEquals(notification.getRejectionReason(), result.getRejectionReason());
-        Assertions.assertEquals(notification.getRewardCents(), result.getRewardCents());
-        Assertions.assertEquals(deltaRewardCents, result.getEffectiveRewardCents());
+        Assertions.assertEquals(notification.getRewardCents(), result.getEffectiveRewardCents());
+        Assertions.assertEquals(deltaRewardCents, result.getRewardCents());
         Assertions.assertEquals(notification.getFeedbackDate(), result.getFeedbackDate());
         Assertions.assertEquals(notification.getFeedbackHistory().size(), result.getFeedbackProgressive());
         Assertions.assertEquals(notification.getExecutionDate(), result.getExecutionDate());

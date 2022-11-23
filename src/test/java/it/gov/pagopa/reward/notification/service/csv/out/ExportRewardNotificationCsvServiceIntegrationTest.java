@@ -16,7 +16,6 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRep
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
@@ -29,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.file.Files;
@@ -372,17 +370,17 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
             Assertions.assertNotNull(n.getRewardNotificationId());
             Assertions.assertNotNull(n.getUserId());
-            Assertions.assertNotNull(n.getRewardCents());
+            Assertions.assertNotEquals(0, n.getEffectiveRewardCents());
 
             Assertions.assertNull(n.getCro());
             Assertions.assertNull(n.getExecutionDate());
 
             Assertions.assertEquals(LocalDate.now(), n.getFeedbackDate().toLocalDate());
             Assertions.assertEquals(0, n.getFeedbackProgressive());
-            Assertions.assertEquals(0L, n.getEffectiveRewardCents());
+            Assertions.assertEquals(0L, n.getRewardCents());
             Assertions.assertEquals(n.getRejectionCode(), n.getRejectionReason());
 
-            Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), TestUtils.getHeaderValue(msg, KafkaHeaders.MESSAGE_KEY));
+            Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), msg.key());
         }
 
         Assertions.assertEquals(3, ibanKo);

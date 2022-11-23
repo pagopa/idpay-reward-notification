@@ -1,6 +1,9 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
+import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
@@ -28,6 +31,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -46,6 +50,9 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
     private RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
     @Autowired
     private RewardOrganizationImportsRepository rewardOrganizationImportsRepository;
+
+    @Autowired
+    private RewardFeedbackMapper feedbackMapper;
 
     private final int messages = 3;
     private final String notExistentFileUseCase = "orgId/initiativeId/import/notExistentFile.zip";
@@ -113,7 +120,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         checkRewardOrganizationExports();
         checkRewardNotificationFeedbacks();
 
-        //TODO check notification
+        checkNotifications();
 
         checkErrorsPublished(notValidMessages, 5000, errorUseCases);
 
@@ -260,8 +267,8 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                 .count().block()) == expectedImportMessages, () -> "Expected %d saved feedback operations, read %d".formatted(expectedImportMessages, countSaved[0]), 60, 1000);
     }
 
-    //region errorUseCases
 
+    //region errorUseCases
     @Override
     protected Pattern getErrorUseCaseIdPatternMatch() {
         return Pattern.compile("\"id\":\"id_([0-9]+)_?[^\"]*\"");
@@ -287,8 +294,8 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         checkErrorMessageHeaders(topicRewardNotificationUpload, groupIdRewardNotificationUpload, errorMessage, errorDescription, expectedPayload, null);
     }
 
-    //endregion
 
+    //endregion
     private void checkRewardOrganizationImports() {
         //region reward-dispositive-0
         {
@@ -548,6 +555,18 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         //endregion
     }
 
+
+    private final Set<String> expectedRewardKo = Set.of(
+            "rewardNotificationId7",
+            "rewardNotificationId9",
+            "rewardNotificationId13"
+    );
+    private final Map<String, RewardsNotification.RewardNotificationHistory> expected2FeedbackRewards2Previous = Map.of(
+            "rewardNotificationId6", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.KO).rejectionReason("IBAN NOT VALID").build(),
+            "rewardNotificationId7", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build(),
+            "rewardNotificationId8", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build()
+    );
+
     private void checkRewardNotificationFeedbacks() {
         List<String> ids = testDataRewardsNotifications.stream().map(RewardsNotification::getId).toList();
         List<RewardsNotification> rewards = rewardsNotificationRepository.findAllById(ids).collectList().block();
@@ -555,16 +574,6 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         Assertions.assertNotNull(rewards);
         Assertions.assertEquals(17 + 1, rewards.size(), "Unexpected number of rewards: expected %s, retrieved %s".formatted(ids, rewards.stream().map(RewardsNotification::getId).toList()));
 
-        Set<String> expectedRewardKo = Set.of(
-                "rewardNotificationId7",
-                "rewardNotificationId9",
-                "rewardNotificationId13"
-        );
-        Map<String, RewardsNotification.RewardNotificationHistory> expected2FeedbackRewards2Previous = Map.of(
-                "rewardNotificationId6", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.KO).rejectionReason("IBAN NOT VALID").build(),
-                "rewardNotificationId7", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build(),
-                "rewardNotificationId8", RewardsNotification.RewardNotificationHistory.builder().result(RewardOrganizationImportResult.OK).build()
-        );
         rewards.stream().filter(r -> !"rewardNotificationOnWrongInitiative".equals(r.getId()))
                 .forEach(r -> {
                     try {
@@ -620,5 +629,64 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         throw e;
                     }
                 });
+    }
+
+    private void checkNotifications() {
+        List<ConsumerRecord<String, String>> msgs = consumeMessages(topicRewardNotificationFeedback, rewardNotificationImportIds.size() - 1 + expected2FeedbackRewards2Previous.size(), 5000); // -1 due to useCase unexpected initiativeId, +X due to resubmit of rewards in import1
+
+        List<String> ids = testDataRewardsNotifications.stream().map(RewardsNotification::getId).toList();
+        List<RewardsNotification> rewards = rewardsNotificationRepository.findAllById(ids).collectList().block();
+        Assertions.assertNotNull(rewards);
+
+        Comparator<RewardFeedbackDTO> comparator = Comparator.comparing(RewardFeedbackDTO::getRewardNotificationId).thenComparing(RewardFeedbackDTO::getFeedbackProgressive);
+
+        List<RewardFeedbackDTO> expectedNotifications = rewards.stream().filter(r -> !"rewardNotificationOnWrongInitiative".equals(r.getId()))
+                .map(rn -> feedbackMapper.apply(rn, RewardNotificationStatus.COMPLETED_OK.equals(rn.getStatus()) ? rn.getRewardCents() : 0L))
+                .flatMap(r -> Optional.ofNullable(expected2FeedbackRewards2Previous.get(r.getRewardNotificationId()))
+                        .map(
+                                previous -> {
+                                    boolean wasOk = RewardOrganizationImportResult.OK.equals(previous.getResult());
+                                    boolean isOk = RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED.equals(r.getStatus());
+                                    String croIfOk = "qwertyuiopa%s".formatted(r.getRewardNotificationId().substring(20));
+                                    return Stream.of(
+                                            r.toBuilder()
+                                                    .feedbackProgressive(1)
+                                                    .status(wasOk ? RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED : RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_REJECTED)
+                                                    .rejectionCode(wasOk ? null : previous.getResult().value)
+                                                    .feedbackDate(r.getFeedbackDate().truncatedTo(ChronoUnit.HOURS))
+                                                    .rejectionReason(previous.getRejectionReason())
+                                                    .rewardCents(!wasOk ? 0L : r.getEffectiveRewardCents())
+                                                    .cro(wasOk? croIfOk : null)
+                                                    .executionDate(wasOk? LocalDate.of(2022,11,18) : null)
+                                                    .build(),
+                                            r.toBuilder()
+                                                    .rewardCents(wasOk == isOk ? 0L : isOk ? r.getEffectiveRewardCents() : -r.getEffectiveRewardCents())
+                                                    .cro(isOk? "rewardNotificationId8".equals(r.getRewardNotificationId()) ? "qwertyuiopa8-2" : croIfOk : null)
+                                                    .executionDate(isOk? LocalDate.of(2022,11,19) : null)
+                                                    .build());
+                                }
+                        ).orElse(Stream.of(r))
+                )
+                .sorted(comparator)
+                .toList();
+
+        List<RewardFeedbackDTO> notifications = msgs.stream()
+                .map(msg -> {
+                    try {
+                        RewardFeedbackDTO n = objectMapper.readValue(msg.value(), RewardFeedbackDTO.class);
+                        n.setFeedbackDate(n.getFeedbackDate().truncatedTo(ChronoUnit.MILLIS));
+                        if(n.getFeedbackProgressive()==1 && expected2FeedbackRewards2Previous.containsKey(n.getRewardNotificationId())){
+                            n.setFeedbackDate(n.getFeedbackDate().truncatedTo(ChronoUnit.HOURS));
+                        }
+                        Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), msg.key());
+                        return n;
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException("Cannot deserialize payload as %s: %s".formatted(RewardFeedbackDTO.class, msg.value()), e);
+                    }
+                })
+                .sorted(comparator)
+                .toList();
+
+        Assertions.assertEquals(expectedNotifications, notifications);
     }
 }

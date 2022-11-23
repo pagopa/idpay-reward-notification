@@ -48,4 +48,9 @@ public final class Utils {
         byte[] headerValue = message.getHeaders().get(headerName, byte[].class);
         return headerValue!=null? new String(headerValue, StandardCharsets.UTF_8) : null;
     }
+
+    /** It will return the percentage of value compared to total, multiplied by 100 in order to return an integer representing the percentage having scale 2 */
+    public static long calcPercentage(long value, long total) {
+        return (long) ((((double) value) / total) * 100_00);
+    }
 }

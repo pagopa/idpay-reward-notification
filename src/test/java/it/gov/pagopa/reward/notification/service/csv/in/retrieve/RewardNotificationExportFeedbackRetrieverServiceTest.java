@@ -296,43 +296,91 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         // Given
         List<String> exportIds=List.of("EXPORTID1", "EXPORTID2", "EXPORTID3", "EXPORTID4");
 
-        //region useCase1 EXPORTED -> COMPLETED
+        //region useCase1 EXPORTED -> COMPLETED, no percentage to fix
         RewardOrganizationExport export1 = RewardOrganizationExport.builder()
+                .id("useCase1")
+
+                .rewardNotified(10L)
+                .rewardsExportedCents(10_00L)
+
+                .rewardsResulted(10L)
+                .rewardsResultedOk(10L)
+                .rewardsResultsCents(10_00L)
+
+                .percentageResulted(100_00L)
                 .percentageResultedOk(100_00L)
+                .percentageResults(100_00L)
+
                 .status(RewardOrganizationExportStatus.EXPORTED)
                 .build();
         UpdateResult expectedUpdateResult1 = Mockito.mock(UpdateResult.class);
 
-        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.COMPLETE), Mockito.same(export1)))
+        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.COMPLETE), Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.same(export1)))
                 .thenReturn(Mono.just(expectedUpdateResult1));
         //endregion
 
-        //region useCase2 EXPORTED -> PARTIAL
+        //region useCase2 EXPORTED -> PARTIAL, percentage OK to fix
         RewardOrganizationExport export2 = RewardOrganizationExport.builder()
-                .percentageResultedOk(99_99L)
+                .id("useCase2")
+
+                .rewardNotified(10L)
+                .rewardsExportedCents(10_00L)
+
+                .rewardsResulted(10L)
+                .rewardsResultedOk(9L)
+                .rewardsResultsCents(9_00L)
+
+                .percentageResulted(100_00L)
+                .percentageResultedOk(90_01L)
+                .percentageResults(90_00L)
+
                 .status(RewardOrganizationExportStatus.EXPORTED)
                 .build();
         UpdateResult expectedUpdateResult2 = Mockito.mock(UpdateResult.class);
 
-        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.PARTIAL), Mockito.same(export2)))
+        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.PARTIAL), Mockito.isNull(), Mockito.eq(90_00L), Mockito.isNull(), Mockito.same(export2)))
                 .thenReturn(Mono.just(expectedUpdateResult2));
         //endregion
 
-        //region useCase3 PARTIAL -> COMPLETED
+        //region useCase3 PARTIAL -> COMPLETED, all percentage but OK to fix
         RewardOrganizationExport export3 = RewardOrganizationExport.builder()
+                .id("useCase3")
+
+                .rewardNotified(10L)
+                .rewardsExportedCents(10_00L)
+
+                .rewardsResulted(10L)
+                .rewardsResultedOk(10L)
+                .rewardsResultsCents(10_00L)
+
+                .percentageResulted(99_98L)
                 .percentageResultedOk(100_00L)
+                .percentageResults(99_98L)
+
                 .status(RewardOrganizationExportStatus.PARTIAL)
                 .build();
         UpdateResult expectedUpdateResult3 = Mockito.mock(UpdateResult.class);
 
-        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.COMPLETE), Mockito.same(export3)))
+        Mockito.when(repositoryMock.updateStatus(Mockito.eq(RewardOrganizationExportStatus.COMPLETE), Mockito.eq(100_00L), Mockito.isNull(), Mockito.eq(100_00L), Mockito.same(export3)))
                 .thenReturn(Mono.just(expectedUpdateResult3));
         //endregion
 
 
         //region useCase4 PARTIAL -> PARTIAL
         RewardOrganizationExport export4 = RewardOrganizationExport.builder()
-                .percentageResultedOk(99_99L)
+                .id("useCase4")
+
+                .rewardNotified(10L)
+                .rewardsExportedCents(10_00L)
+
+                .rewardsResulted(10L)
+                .rewardsResultedOk(9L)
+                .rewardsResultsCents(9_00L)
+
+                .percentageResulted(100_00L)
+                .percentageResultedOk(90_00L)
+                .percentageResults(90_00L)
+
                 .status(RewardOrganizationExportStatus.PARTIAL)
                 .build();
         //endregion

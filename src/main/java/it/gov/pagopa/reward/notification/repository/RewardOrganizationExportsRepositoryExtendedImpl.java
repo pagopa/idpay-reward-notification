@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.ExportConstants;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -24,6 +25,9 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     public static final String FIELD_INITIATIVE_ID = RewardOrganizationExport.Fields.initiativeId;
     public static final String FIELD_EXPORT_DATE = RewardOrganizationExport.Fields.exportDate;
     public static final String FIELD_STATUS = RewardOrganizationExport.Fields.status;
+    public static final String FIELD_PERCENTAGE_RESULTED = RewardOrganizationExport.Fields.percentageResulted;
+    public static final String FIELD_PERCENTAGE_RESULTED_OK = RewardOrganizationExport.Fields.percentageResultedOk;
+    public static final String FIELD_PERCENTAGE_RESULTS = RewardOrganizationExport.Fields.percentageResults;
 
     private final ReactiveMongoTemplate mongoTemplate;
 
@@ -225,31 +229,37 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
 
     private void buildRewardIncrements(Update increments, long incRewardCents, RewardOrganizationExport export) {
         increments.inc(RewardOrganizationExport.Fields.rewardsResultsCents, incRewardCents)
-                .inc(RewardOrganizationExport.Fields.percentageResults, calcPercentage(incRewardCents, export.getRewardsExportedCents()));
+                .inc(RewardOrganizationExport.Fields.percentageResults, Utils.calcPercentage(incRewardCents, export.getRewardsExportedCents()));
     }
 
     private void buildCountIncrements(Update increments, long incCount, RewardOrganizationExport export) {
         increments.inc(RewardOrganizationExport.Fields.rewardsResulted, incCount)
-                .inc(RewardOrganizationExport.Fields.percentageResulted, calcPercentage(incCount, export.getRewardNotified()));
+                .inc(RewardOrganizationExport.Fields.percentageResulted, Utils.calcPercentage(incCount, export.getRewardNotified()));
     }
 
     private void buildCountOkIncrements(Update increments, long incOkCount, RewardOrganizationExport export) {
         increments.inc(RewardOrganizationExport.Fields.rewardsResultedOk, incOkCount)
-                .inc(RewardOrganizationExport.Fields.percentageResultedOk, calcPercentage(incOkCount, export.getRewardNotified()));
-    }
-
-    /**
-     * It will return the percentage of value compared to total, multiplied by 100 in order to return an integer representing the percentage having scale 2
-     */
-    private long calcPercentage(long value, long total) {
-        return (long) (((double) value) / total * 100_00);
+                .inc(RewardOrganizationExport.Fields.percentageResultedOk, Utils.calcPercentage(incOkCount, export.getRewardNotified()));
     }
 
     @Override
-    public Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, RewardOrganizationExport export) {
+    public Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExport export) {
+        Update update = new Update();
+        if(nextStatus!=null){
+            update.set(FIELD_STATUS, nextStatus);
+        }
+        if (percentageResultedFix != null) {
+            update.set(FIELD_PERCENTAGE_RESULTED, percentageResultedFix);
+        }
+        if (percentageResultedOkFix != null) {
+            update.set(FIELD_PERCENTAGE_RESULTED_OK, percentageResultedOkFix);
+        }
+        if (percentageResultsFix != null) {
+            update.set(FIELD_PERCENTAGE_RESULTS, percentageResultsFix);
+        }
         return mongoTemplate.updateFirst(
                 new Query(Criteria.where(FIELD_ID).is(export.getId())),
-                new Update().set(FIELD_STATUS, nextStatus),
+                update,
                 RewardOrganizationExport.class);
     }
 }

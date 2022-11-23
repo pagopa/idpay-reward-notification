@@ -9,7 +9,9 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -87,20 +89,38 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
 
         return repository.findAllById(exportIds)
                 .flatMap(e->{
+                    Long percentageResultedFix = checkPercentageValue(e.getRewardsResulted(), e.getRewardNotified(), e.getPercentageResulted());
+                    Long percentageResultedOkFix = checkPercentageValue(e.getRewardsResultedOk(), e.getRewardNotified(), e.getPercentageResultedOk());
+                    Long percentageResultsFix = checkPercentageValue(e.getRewardsResultsCents(), e.getRewardsExportedCents(), e.getPercentageResults());
+
                     RewardOrganizationExportStatus nextStatus=null;
-                    if(e.getPercentageResultedOk()>=100_00L){
+                    if(ObjectUtils.firstNonNull(percentageResultedOkFix, e.getPercentageResultedOk())>=100_00L){
                         nextStatus = RewardOrganizationExportStatus.COMPLETE;
                     } else if(RewardOrganizationExportStatus.EXPORTED.equals(e.getStatus())){
                         nextStatus=RewardOrganizationExportStatus.PARTIAL;
                     }
 
-                    if(nextStatus!=null){
-                        log.info("[REWARD_NOTIFICATION_FEEDBACK] Updating status of involved export {} to {}", e.getId(), nextStatus);
-
-                        return repository.updateStatus(nextStatus, e);
+                    if(nextStatus!=null || percentageResultedFix!=null || percentageResultedOkFix!=null || percentageResultsFix!=null){
+                        logUpdateStatusOp(e, percentageResultedFix, percentageResultedOkFix, percentageResultsFix, nextStatus);
+                        return repository.updateStatus(nextStatus, percentageResultedFix, percentageResultedOkFix, percentageResultsFix, e);
                     } else {
                         return Mono.just(UpdateResult.acknowledged(0, null, null));
                     }
                 });
+    }
+
+    private void logUpdateStatusOp(RewardOrganizationExport e, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExportStatus nextStatus) {
+        log.info("[REWARD_NOTIFICATION_FEEDBACK] Updating status and percentage of involved export{}{}{}{}{}", e.getId()
+                , nextStatus !=null? ". Status from %s to %s".formatted(e.getStatus(), nextStatus) : ""
+                , percentageResultedFix !=null? ". PercentageResulted from %s to %s".formatted(e.getPercentageResulted() , percentageResultedFix) : ""
+                , percentageResultedOkFix !=null? ". PercentageResultedOk from %s to %s".formatted(e.getPercentageResultedOk() , percentageResultedOkFix) : ""
+                , percentageResultsFix !=null? ". PercentageResults from %s to %s".formatted(e.getPercentageResults() , percentageResultsFix) : ""
+                );
+    }
+
+    /** It will recalculate the percentage, if different, it will return the fixed value. It could differ caused by rounding to 2 decimal */
+    private Long checkPercentageValue(long actual, long total, long percentageStored) {
+        long value = Utils.calcPercentage(actual, total);
+        return value == percentageStored? null : value;
     }
 }

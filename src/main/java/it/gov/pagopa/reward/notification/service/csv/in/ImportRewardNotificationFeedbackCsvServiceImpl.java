@@ -2,11 +2,13 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.ImportElaborationCounters;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,6 +95,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .withType(RewardNotificationImportCsvDto.class)
                 .withMappingStrategy(mappingStrategy)
                 .withSeparator(csvSeparator)
+                .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
                 .build();
     }
 
@@ -108,17 +111,13 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
         long successfulProcess = importRequest.getRewardsResulted() - counter.getRewardsResultedError();
         long successfulOkOutcomes = counter.getRewardsResultedOk() - counter.getRewardsResultedOkError();
 
-        importRequest.setPercentageResulted(calcPercentage(successfulProcess, importRequest.getRewardsResulted()));
-        importRequest.setPercentageResultedOk(calcPercentage(counter.getRewardsResultedOk(), importRequest.getRewardsResulted()));
-        importRequest.setPercentageResultedOkElab(calcPercentage(successfulOkOutcomes, successfulProcess));
+        importRequest.setPercentageResulted(Utils.calcPercentage(successfulProcess, importRequest.getRewardsResulted()));
+        importRequest.setPercentageResultedOk(Utils.calcPercentage(counter.getRewardsResultedOk(), importRequest.getRewardsResulted()));
+        importRequest.setPercentageResultedOkElab(Utils.calcPercentage(successfulOkOutcomes, successfulProcess));
 
         counter.getErrors().sort(Comparator.comparing(RewardOrganizationImport.RewardOrganizationImportError::getRow));
         importRequest.setErrors(counter.getErrors());
 
         return importRequest;
-    }
-
-    private long calcPercentage(long value, long total) {
-        return (long) ((((double) value) / total) * 100_00); // storing into a 2 decimal percentage, multiplied by 100 in order to keep it an integer
     }
 }

@@ -351,7 +351,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         export.setRewardsExportedCents(10_00L);
 
         // When
-        UpdateResult result = repository.updateStatus(RewardOrganizationExportStatus.COMPLETE, export).block();
+        UpdateResult result = repository.updateStatus(RewardOrganizationExportStatus.COMPLETE, null, null, null, export).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -364,7 +364,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport export = testData.get(2);
 
         // When
-        UpdateResult result = repository.updateStatus(RewardOrganizationExportStatus.COMPLETE, export).block();
+        UpdateResult result = repository.updateStatus(RewardOrganizationExportStatus.COMPLETE, 50_00L, 40_00L, 100_00L, export).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -373,6 +373,9 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport storedExport = repository.findById(export.getId()).block();
         Assertions.assertNotNull(storedExport);
         Assertions.assertEquals(RewardOrganizationExportStatus.COMPLETE, storedExport.getStatus());
+        Assertions.assertEquals(50_00L, storedExport.getPercentageResulted());
+        Assertions.assertEquals(40_00L, storedExport.getPercentageResultedOk());
+        Assertions.assertEquals(100_00L, storedExport.getPercentageResults());
     }
 //endregion
 }

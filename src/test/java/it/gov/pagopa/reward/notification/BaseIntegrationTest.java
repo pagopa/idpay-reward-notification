@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotifica
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,7 +38,6 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
@@ -443,7 +443,7 @@ public abstract class BaseIntegrationTest {
             if (useCaseId == -1) {
                 throw new IllegalStateException("UseCaseId not recognized! %s\nStackTrace: %s".formatted(record.value(), TestUtils.getHeaderValue(record, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE)));
             }
-            errorUseCases.get(useCaseId).getSecond().accept(record);
+            errorUseCases.get(useCaseId).getValue().accept(record);
         }
         checkPublishedOffsets(topicErrors,expectedErrorMessagesNumber);
     }

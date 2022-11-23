@@ -23,5 +23,5 @@ public interface RewardOrganizationExportsRepositoryExtended {
     Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaRewardCents, RewardOrganizationExport export);
     Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export);
 
-    Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, RewardOrganizationExport export);
+    Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExport export);
 }

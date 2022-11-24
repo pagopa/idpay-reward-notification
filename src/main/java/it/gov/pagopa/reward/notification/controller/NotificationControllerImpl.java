@@ -82,9 +82,13 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<String> getImportErrors(String organizationId, String initiativeId, String importId) {
+    public Mono<String> getImportErrors(String organizationId, String initiativeId, String fileName) {
         return organizationImportsService
-                .getErrorsCsvByImportId(organizationId, initiativeId, importId)
+                .getErrorsCsvByImportId(organizationId, initiativeId, buildImportId(organizationId, initiativeId, fileName))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
+    }
+
+    private String buildImportId(String organizationId, String initiativeId, String fileName) {
+        return "%s/%s/import/%s".formatted(organizationId, initiativeId, fileName);
     }
 }

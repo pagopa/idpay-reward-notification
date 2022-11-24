@@ -229,31 +229,34 @@ class NotificationControllerImplTest {
     @Test
     void testGetImportErrorsCsvOk() {
         String expectedCsvString = "";
+        String importId = "orgId/initiativeId/import/test.zip";
 
-        Mockito.when(organizationImportsServiceMock.getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip"))
+        Mockito.when(organizationImportsServiceMock.getErrorsCsvByImportId("orgId", "initiativeId", importId))
                 .thenReturn(Mono.just(expectedCsvString));
 
         webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors")
-                        .build("orgId", "initiativeId", "reward-dispositive-1.zip"))
+                        .build("orgId", "initiativeId", "test.zip"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class).isEqualTo(expectedCsvString);
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip");
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", importId);
     }
 
     @Test
     void testGetImportErrorsEmpty() {
-        Mockito.when(organizationImportsServiceMock.getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip"))
+        String importId = "orgId/initiativeId/import/test.zip";
+
+        Mockito.when(organizationImportsServiceMock.getErrorsCsvByImportId("orgId", "initiativeId", importId))
                 .thenReturn(Mono.empty());
 
         webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors")
-                        .build("orgId", "initiativeId", "reward-dispositive-1.zip"))
+                        .build("orgId", "initiativeId", "test.zip"))
                 .exchange()
                 .expectStatus().isNotFound();
 
-        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip");
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", importId);
     }
 }

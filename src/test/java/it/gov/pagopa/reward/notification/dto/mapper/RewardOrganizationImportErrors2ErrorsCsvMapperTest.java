@@ -14,26 +14,22 @@ class RewardOrganizationImportErrors2ErrorsCsvMapperTest {
     @Test
     void test() {
         // Given
-        List<RewardOrganizationImport.RewardOrganizationImportError> errors = List.of(
+        RewardOrganizationImport.RewardOrganizationImportError error =
                 RewardOrganizationImport.RewardOrganizationImportError.builder()
                         .row(1)
                         .errorCode("CODE")
                         .errorDescription("ERROR")
-                        .build()
-        );
+                        .build();
 
         // When
-        List<FeedbackImportErrorsCsvDTO> resultList = mapper.apply(errors);
+        FeedbackImportErrorsCsvDTO result = mapper.apply(error);
 
         // Then
-        Assertions.assertNotNull(resultList);
-        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertNotNull(result);
 
-        RewardOrganizationImport.RewardOrganizationImportError expected = errors.get(0);
-        FeedbackImportErrorsCsvDTO result = resultList.get(0);
-        Assertions.assertEquals(expected.getRow(), result.getRow());
-        Assertions.assertEquals(expected.getErrorCode(), result.getErrorCode());
-        Assertions.assertEquals(expected.getErrorDescription(), result.getErrorDescription());
+        Assertions.assertEquals(error.getRow(), result.getRow());
+        Assertions.assertEquals(error.getErrorCode(), result.getErrorCode());
+        Assertions.assertEquals(error.getErrorDescription(), result.getErrorDescription());
     }
 
 }

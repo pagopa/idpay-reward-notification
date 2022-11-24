@@ -59,7 +59,9 @@ public class OrganizationImportsServiceImpl implements OrganizationImportsServic
     public Mono<String> getErrorsCsvByImportId(String organizationId, String initiativeId, String importId) {
         return importsRepository
                 .findByImportId(organizationId, initiativeId, importId)
-                .map(r -> errors2ErrorsCsvMapper.apply(r.getErrors()))
+                .flatMapMany(r -> Flux.fromIterable(r.getErrors()))
+                .map(errors2ErrorsCsvMapper::apply)
+                .collectList()
                 .map(feedbackImportErrorsCsvService::writeCsv);
     }
 }

@@ -26,7 +26,6 @@ public class NotificationControllerImpl implements NotificationController{
     // region exports
     private final OrganizationExportsServiceImpl organizationExportsService;
     private final ExportRewardNotificationCsvService exportRewardNotificationCsvService;
-    private final ExportCsvService exportCsvService;
     private final RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
     // endregion
 
@@ -34,12 +33,15 @@ public class NotificationControllerImpl implements NotificationController{
     private final OrganizationImportsServiceImpl organizationImportsService;
     // endregion
 
-    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService, ExportRewardNotificationCsvService exportRewardNotificationCsvService, OrganizationImportsServiceImpl organizationImportsService, ExportCsvService exportCsvService, RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService) {
+    public NotificationControllerImpl(
+            OrganizationExportsServiceImpl organizationExportsService,
+            ExportRewardNotificationCsvService exportRewardNotificationCsvService,
+            RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
+            OrganizationImportsServiceImpl organizationImportsService) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
-        this.organizationImportsService = organizationImportsService;
-        this.exportCsvService = exportCsvService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
+        this.organizationImportsService = organizationImportsService;
     }
 
     @Override

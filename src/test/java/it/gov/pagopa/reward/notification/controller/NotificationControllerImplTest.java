@@ -6,7 +6,6 @@ import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
-import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;

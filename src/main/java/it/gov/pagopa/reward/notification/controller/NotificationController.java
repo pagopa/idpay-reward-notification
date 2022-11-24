@@ -64,9 +64,9 @@ public interface NotificationController {
             @PageableDefault(size = 10) Pageable pageable,
             FeedbackImportFilter filters);
 
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors", produces = "text/csv")
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{fileName}/errors", produces = "text/csv")
     Mono<String> getImportErrors(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("importId") String importId);
+            @PathVariable("fileName") String fileName);
 }

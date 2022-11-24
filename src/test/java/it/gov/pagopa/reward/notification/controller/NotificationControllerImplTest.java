@@ -253,7 +253,7 @@ class NotificationControllerImplTest {
                 .thenReturn(Mono.just(expectedCsvString));
 
         webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors")
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{fileName}/errors")
                         .build("orgId", "initiativeId", "test.zip"))
                 .exchange()
                 .expectStatus().isOk()
@@ -270,7 +270,7 @@ class NotificationControllerImplTest {
                 .thenReturn(Mono.empty());
 
         webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors")
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{fileName}/errors")
                         .build("orgId", "initiativeId", "test.zip"))
                 .exchange()
                 .expectStatus().isNotFound();

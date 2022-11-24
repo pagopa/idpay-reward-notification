@@ -214,7 +214,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         .filePath("orgId/initiativeId/export/dispositive-rewards-1.zip")
                         .progressive(1)
 
-                        .rewardNotified(6L)
+                        .rewardNotified(7L)
                         .rewardsExportedCents((1 + 4 + 7 + 10 + 13 + 16) * 100L)
                         .notificationDate(LocalDate.now())
                         .exportDate(LocalDate.now())
@@ -472,7 +472,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .percentageResults(83_63L)
 
                             .feedbackDate(exportId0.getFeedbackDate())
-                            .status(RewardOrganizationExportStatus.PARTIAL)
+                            .status(RewardOrganizationExportStatus.COMPLETE)
 
                             .build(),
                     exportId0
@@ -497,15 +497,15 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .exportDate(LocalDate.now())
                             .progressive(1)
 
-                            .rewardNotified(6L)
+                            .rewardNotified(7L)
                             .rewardsExportedCents(51_00L)
 
                             .rewardsResulted(6L)
                             .rewardsResultedOk(4L)
                             .rewardsResultsCents(31_00L)
 
-                            .percentageResulted(100_00L)
-                            .percentageResultedOk(66_66L)
+                            .percentageResulted(85_71L)
+                            .percentageResultedOk(57_14L)
                             .percentageResults(60_78L)
 
                             .feedbackDate(exportId1.getFeedbackDate())

@@ -94,7 +94,7 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
                     Long percentageResultsFix = checkPercentageValue(e.getRewardsResultsCents(), e.getRewardsExportedCents(), e.getPercentageResults());
 
                     RewardOrganizationExportStatus nextStatus=null;
-                    if(ObjectUtils.firstNonNull(percentageResultedOkFix, e.getPercentageResultedOk())>=100_00L){
+                    if(ObjectUtils.firstNonNull(percentageResultedFix, e.getPercentageResulted())>=100_00L){
                         nextStatus = RewardOrganizationExportStatus.COMPLETE;
                     } else if(RewardOrganizationExportStatus.EXPORTED.equals(e.getStatus())){
                         nextStatus=RewardOrganizationExportStatus.PARTIAL;

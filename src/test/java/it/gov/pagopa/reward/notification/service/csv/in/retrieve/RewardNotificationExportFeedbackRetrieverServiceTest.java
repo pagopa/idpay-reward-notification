@@ -326,11 +326,11 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
                 .rewardNotified(10L)
                 .rewardsExportedCents(10_00L)
 
-                .rewardsResulted(10L)
+                .rewardsResulted(9L)
                 .rewardsResultedOk(9L)
                 .rewardsResultsCents(9_00L)
 
-                .percentageResulted(100_00L)
+                .percentageResulted(90_00L)
                 .percentageResultedOk(90_01L)
                 .percentageResults(90_00L)
 
@@ -373,11 +373,11 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
                 .rewardNotified(10L)
                 .rewardsExportedCents(10_00L)
 
-                .rewardsResulted(10L)
+                .rewardsResulted(9L)
                 .rewardsResultedOk(9L)
                 .rewardsResultsCents(9_00L)
 
-                .percentageResulted(100_00L)
+                .percentageResulted(90_00L)
                 .percentageResultedOk(90_00L)
                 .percentageResults(90_00L)
 

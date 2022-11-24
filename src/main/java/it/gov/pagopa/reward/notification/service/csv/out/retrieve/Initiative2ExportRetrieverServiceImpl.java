@@ -62,10 +62,10 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     private Mono<RewardOrganizationExport> retrieveNewExports() {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] searching for rewards to notify");
 
-        return rewardOrganizationExportsRepository.findPendingAndTodayExports()
+        return rewardOrganizationExportsRepository.findPendingOrTodayExports()
                 .map(RewardOrganizationExport::getInitiativeId)
                 .collectList()
-                .doOnNext(excludes -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] excluding pending exports on initiatives: {}", excludes))
+                .doOnNext(excludes -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] excluding exports on initiatives because pending or performed today: {}", excludes))
                 .flatMapMany(rewardsNotificationRepository::findInitiatives2Notify)
                 .flatMap(this::configureExport)
                 .collectList()

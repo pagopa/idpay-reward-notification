@@ -78,7 +78,7 @@ class Initiative2ExportRetrieverServiceTest {
     void testWhenReservationAlreadyExists() {
         RewardOrganizationExport expectedResult = new RewardOrganizationExport();
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.just(expectedResult));
-        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingAndTodayExports()).thenReturn(Flux.empty());
+        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.empty());
 
         RewardOrganizationExport result = service.retrieve().block();
         Assertions.assertSame(expectedResult, result);
@@ -98,7 +98,7 @@ class Initiative2ExportRetrieverServiceTest {
     }
     void testWhenReservationNotExistsAndPendingExportsAndNotRewards2Notify(List<RewardOrganizationExport> expectedPendingExports) {
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.empty());
-        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingAndTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
+        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(
                 expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
                 .thenReturn(Flux.empty());
@@ -110,7 +110,7 @@ class Initiative2ExportRetrieverServiceTest {
     @Test
     void testWhenReservationNotExistsAndInitiativeNotExists() {
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.empty());
-        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingAndTodayExports()).thenReturn(Flux.empty());
+        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.empty());
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(Collections.emptyList())).thenReturn(Flux.just("INITIATIVEID1"));
 
         Mockito.when(rewardNotificationRuleRepositoryMock.findById("INITIATIVEID1")).thenReturn(Mono.empty());
@@ -131,7 +131,7 @@ class Initiative2ExportRetrieverServiceTest {
         ));
     }
     void testWhenReservationNotExistsAndPendingExports(List<RewardOrganizationExport> expectedPendingExports) {
-        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingAndTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
+        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(
                 expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
                 .thenReturn(Flux.just("INITIATIVEID1", "INITIATIVEID2", "INITIATIVE_ALREADY_RESERVED", "INITIATIVE_EXPORT_JUST_STORED"));

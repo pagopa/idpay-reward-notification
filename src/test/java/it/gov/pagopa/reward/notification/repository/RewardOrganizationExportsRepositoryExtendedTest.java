@@ -43,7 +43,8 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
                         .id("ID2")
                         .initiativeId("INITIATIVEID2")
                         .organizationId("ORGANIZATIONID")
-                        .notificationDate(LocalDate.now())
+                        .notificationDate(LocalDate.now().minusDays(1))
+                        .exportDate(LocalDate.now())
                         .status(RewardOrganizationExportStatus.TO_DO)
                         .build(),
                 RewardOrganizationExport.builder()
@@ -51,6 +52,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
                         .initiativeId("INITIATIVEID3")
                         .organizationId("ORGANIZATIONID")
                         .notificationDate(LocalDate.now())
+                        .exportDate(LocalDate.now())
                         .status(RewardOrganizationExportStatus.EXPORTED)
 
                         .rewardNotified(100L)
@@ -120,10 +122,10 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
     }
 
     @Test
-    void findPendingAndTodayExportsTest(){
+    void findPendingOrTodayExportsTest(){
         Assertions.assertEquals(
                 List.of("ID1","ID2","ID3"),
-                repository.findPendingAndTodayExports().map(RewardOrganizationExport::getId).sort().collectList().block()
+                repository.findPendingOrTodayExports().map(RewardOrganizationExport::getId).sort().collectList().block()
         );
     }
 

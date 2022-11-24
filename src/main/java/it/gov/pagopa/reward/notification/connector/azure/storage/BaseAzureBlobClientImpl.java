@@ -58,7 +58,7 @@ public abstract class BaseAzureBlobClientImpl implements AzureBlobClient {
     public Mono<Response<BlobProperties>> downloadFile(String filePath, Path destination) {
         log.info("Downloading file {} from azure blob container", filePath);
 
-        createDirectoryIfNotExists(destination.getParent().toString());
+        createDirectoryIfNotExists(destination.toAbsolutePath().getParent().toString());
 
         return blobContainerClient.getBlobAsyncClient(filePath)
                 .downloadToFileWithResponse(new BlobDownloadToFileOptions(destination.toString())

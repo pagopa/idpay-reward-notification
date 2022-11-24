@@ -14,11 +14,11 @@ public interface RewardOrganizationExportsRepository extends ReactiveMongoReposi
     List<RewardOrganizationExportStatus> PENDING_STATUSES = List.of(RewardOrganizationExportStatus.IN_PROGRESS, RewardOrganizationExportStatus.TO_DO);
 
     Flux<RewardOrganizationExport> findByStatusIn(Collection<RewardOrganizationExportStatus> statuses);
-    Flux<RewardOrganizationExport> findByNotificationDate(LocalDate notificationDate);
+    Flux<RewardOrganizationExport> findByExportDate(LocalDate exportDate);
 
-    default Flux<RewardOrganizationExport> findPendingAndTodayExports(){
+    default Flux<RewardOrganizationExport> findPendingOrTodayExports(){
         return findByStatusIn(PENDING_STATUSES)
-                .concatWith(findByNotificationDate(LocalDate.now()))
+                .concatWith(findByExportDate(LocalDate.now()))
                 .distinct(RewardOrganizationExport::getId);
     }
 }

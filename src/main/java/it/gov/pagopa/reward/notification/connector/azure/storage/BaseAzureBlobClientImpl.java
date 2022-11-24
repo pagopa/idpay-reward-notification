@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
@@ -58,7 +57,7 @@ public abstract class BaseAzureBlobClientImpl implements AzureBlobClient {
     public Mono<Response<BlobProperties>> downloadFile(String filePath, Path destination) {
         log.info("Downloading file {} from azure blob container", filePath);
 
-        createDirectoryIfNotExists(destination.toAbsolutePath().getParent().toString());
+        createDirectoryIfNotExists(destination);
 
         return blobContainerClient.getBlobAsyncClient(filePath)
                 .downloadToFileWithResponse(new BlobDownloadToFileOptions(destination.toString())
@@ -73,13 +72,13 @@ public abstract class BaseAzureBlobClientImpl implements AzureBlobClient {
                 .onErrorResume(BlobStorageException.class, e -> e.getStatusCode()==404? Mono.empty() : Mono.error(e));
     }
 
-    private static void createDirectoryIfNotExists(String localFileName) {
-        Path directory = Paths.get(localFileName).getParent();
+    private static void createDirectoryIfNotExists(Path localFile) {
+        Path directory = localFile.getParent();
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
             } catch (IOException e) {
-                throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot create directory to store csv %s".formatted(localFileName), e);
+                throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot create directory to store zip %s".formatted(localFile), e);
             }
         }
     }

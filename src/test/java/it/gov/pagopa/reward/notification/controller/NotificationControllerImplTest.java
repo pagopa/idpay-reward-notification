@@ -7,8 +7,11 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardImportsDTOFaker;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,8 @@ class NotificationControllerImplTest {
     private ExportRewardNotificationCsvService exportRewardNotificationCsvServiceMock;
     @MockBean
     private OrganizationImportsServiceImpl organizationImportsServiceMock;
+    @MockBean
+    private RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
 
     @Autowired
     protected WebTestClient webClient;
@@ -56,6 +61,20 @@ class NotificationControllerImplTest {
                 .expectBodyList(RewardOrganizationExport.class).isEqualTo(Collections.emptyList());
 
         Mockito.verify(exportRewardNotificationCsvServiceMock).execute();
+    }
+
+    @Test
+    void testForceExpiredInitiativesScheduling() {
+        Mockito.when(expiredInitiativeHandlerService.handle())
+                .thenReturn(Flux.empty());
+
+        webClient.get()
+                .uri("/idpay/reward/notification/expired-initiatives/start")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(RewardsNotification.class).isEqualTo(Collections.emptyList());
+
+        Mockito.verify(expiredInitiativeHandlerService).handle();
     }
 
     @Test

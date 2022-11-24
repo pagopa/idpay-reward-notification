@@ -6,9 +6,11 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,21 +26,32 @@ public class NotificationControllerImpl implements NotificationController{
     // region exports
     private final OrganizationExportsServiceImpl organizationExportsService;
     private final ExportRewardNotificationCsvService exportRewardNotificationCsvService;
+    private final ExportCsvService exportCsvService;
+    private final RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
     // endregion
 
     // region imports
     private final OrganizationImportsServiceImpl organizationImportsService;
     // endregion
-    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService, ExportRewardNotificationCsvService exportRewardNotificationCsvService, OrganizationImportsServiceImpl organizationImportsService) {
+
+    public NotificationControllerImpl(OrganizationExportsServiceImpl organizationExportsService, ExportRewardNotificationCsvService exportRewardNotificationCsvService, OrganizationImportsServiceImpl organizationImportsService, ExportCsvService exportCsvService, RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
         this.organizationImportsService = organizationImportsService;
+        this.exportCsvService = exportCsvService;
+        this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
     }
 
     @Override
     public Flux<RewardOrganizationExport> forceExportScheduling() {
         log.info("Forcing rewardNotification csv export");
         return exportRewardNotificationCsvService.execute();
+    }
+
+    @Override
+    public Flux<RewardsNotification> forceExpiredInitiativesScheduling() {
+        log.info("Forcing rewardNotification expired initiatives handling");
+        return expiredInitiativeHandlerService.handle();
     }
 
     @Override

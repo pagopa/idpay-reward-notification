@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -33,7 +33,7 @@ class RewardOrganizationExports2ExportsDTOMapperTest {
                 .percentageResultedOk(10000L)
                 .percentageResults(10000L)
                 .feedbackDate(LocalDateTime.now())
-                .status(ExportStatus.COMPLETE)
+                .status(RewardOrganizationExportStatus.COMPLETE)
                 .build();
 
         // When

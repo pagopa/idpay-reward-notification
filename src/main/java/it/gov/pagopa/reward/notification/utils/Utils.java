@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
@@ -40,5 +41,16 @@ public final class Utils {
 
     public static Long euro2Cents(BigDecimal euro){
         return euro == null? null : euro.multiply(ONE_HUNDRED).longValue();
+    }
+
+    /** To read {@link org.apache.kafka.common.header.Header} value */
+    public static String getHeaderValue(Message<String> message, String headerName) {
+        byte[] headerValue = message.getHeaders().get(headerName, byte[].class);
+        return headerValue!=null? new String(headerValue, StandardCharsets.UTF_8) : null;
+    }
+
+    /** It will return the percentage of value compared to total, multiplied by 100 in order to return an integer representing the percentage having scale 2 */
+    public static long calcPercentage(long value, long total) {
+        return (long) ((((double) value) / total) * 100_00);
     }
 }

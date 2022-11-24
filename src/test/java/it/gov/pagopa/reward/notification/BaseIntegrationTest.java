@@ -8,10 +8,11 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
-import it.gov.pagopa.reward.notification.azure.storage.RewardsNotificationBlobClient;
+import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,7 +38,6 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
@@ -50,6 +50,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.PostConstruct;
 import javax.management.*;
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
@@ -78,6 +79,8 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.rewardTrxConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
+        "${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.rewardNotificationFeedback-out-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -87,6 +90,7 @@ import static org.awaitility.Awaitility.await;
                 //region common feature disabled
                 "app.csv.export.schedule=-",
                 "app.rewards-notification.expired-initiatives.schedule=-",
+                "app.csv.tmp-dir=target/tmp",
                 "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
                 //endregion
@@ -108,6 +112,8 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-reward-notification-upload.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-reward-notification-feedback.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
                 //region mongodb
@@ -155,6 +161,10 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardResponse;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.destination}")
     protected String topicIbanOutcome;
+    @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}")
+    protected String topicRewardNotificationUpload;
+    @Value("${spring.cloud.stream.bindings.rewardNotificationFeedback-out-0.destination}")
+    protected String topicRewardNotificationFeedback;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
 
@@ -164,6 +174,8 @@ public abstract class BaseIntegrationTest {
     protected String groupIdRewardResponse;
     @Value("${spring.cloud.stream.bindings.ibanOutcomeConsumer-in-0.group}")
     protected String groupIdIbanOutcomeConsumer;
+    @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.group}")
+    protected String groupIdRewardNotificationUpload;
 
     @Autowired
     private WireMockServer wireMockServer;
@@ -219,17 +231,46 @@ public abstract class BaseIntegrationTest {
 
     protected void mockAzureBlobClient() {
         Mockito.lenient().when(rewardsNotificationBlobClientMock.uploadFile(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenAnswer(i->{
+                .thenAnswer(i-> Mono.fromSupplier(() -> {
                     File zipFile = i.getArgument(0);
                     Path zipPath = Path.of(zipFile.getAbsolutePath());
-                    Files.copy(zipPath,
-                            zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip")),
-                            StandardCopyOption.REPLACE_EXISTING);
-                    //noinspection rawtypes
+                    Path destination = zipPath.getParent().resolve(zipPath.getFileName().toString().replace(".zip", ".uploaded.zip"));
+                    try {
+                            Files.copy(zipPath,
+                                    destination,
+                                    StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Something gone wrong simulating upload of test file %s into %s".formatted(zipPath, destination), e);
+                        }
+                        //noinspection rawtypes
                     Response responseMocked = Mockito.mock(Response.class);
                     Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
-                    return Mono.just(responseMocked);
-                });
+                    return responseMocked;
+                }));
+
+        Mockito.lenient().when(rewardsNotificationBlobClientMock.downloadFile(Mockito.any(), Mockito.any()))
+                .thenAnswer(i-> Mono.fromSupplier(()->{
+                    Path zipFile = Path.of("src/test/resources/feedbackUseCasesZip", i.getArgument(0, String.class));
+                    Path destination = i.getArgument(1);
+
+                    Path destinationDir = destination.getParent();
+
+                    try {
+                        if (!Files.exists(destinationDir)) {
+                            Files.createDirectories(destinationDir);
+                        }
+
+                        Files.copy(zipFile,
+                                destination,
+                                StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Something gone wrong simulating donwlonad of test file from %s into %s".formatted(zipFile, destination), e);
+                    }
+                    //noinspection rawtypes
+                    Response responseMocked = Mockito.mock(Response.class);
+                    Mockito.when(responseMocked.getStatusCode()).thenReturn(206);
+                    return responseMocked;
+                }));
     }
 
     @Test
@@ -359,7 +400,7 @@ public abstract class BaseIntegrationTest {
         for(;maxAttempts>0; maxAttempts--){
             try {
                 final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
-                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
+                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().filter(Objects::nonNull).mapToLong(OffsetAndMetadata::offset).sum());
                 return commits;
             } catch (Throwable e){
                 lastException = new RuntimeException(e);
@@ -381,7 +422,7 @@ public abstract class BaseIntegrationTest {
         return endOffsets;
     }
 
-    protected static void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay) {
+    public static void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay) {
         try {
             await()
                     .pollInterval(millisAttemptDelay, TimeUnit.MILLISECONDS)
@@ -412,9 +453,9 @@ public abstract class BaseIntegrationTest {
             final Matcher matcher = errorUseCaseIdPatternMatch.matcher(record.value());
             int useCaseId = matcher.find() ? Integer.parseInt(matcher.group(1)) : -1;
             if (useCaseId == -1) {
-                throw new IllegalStateException("UseCaseId not recognized! " + record.value());
+                throw new IllegalStateException("UseCaseId not recognized! %s\nStackTrace: %s".formatted(record.value(), TestUtils.getHeaderValue(record, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE)));
             }
-            errorUseCases.get(useCaseId).getSecond().accept(record);
+            errorUseCases.get(useCaseId).getValue().accept(record);
         }
         checkPublishedOffsets(topicErrors,expectedErrorMessagesNumber);
     }

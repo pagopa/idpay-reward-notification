@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.charset.StandardCharsets;
@@ -55,7 +55,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         long maxWaitingMs = 30000;
 
         List<String> ibanPayloads = new ArrayList<>(notValidIban+ibanOkAndUnknown);
-        ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
+        ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
         ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+ibanOkAndUnknown, false));
 
         List<String> ibanPayloadsKO = buildCheckIbanOutcome(notValidIban, notValidIban+ibanKO, true);

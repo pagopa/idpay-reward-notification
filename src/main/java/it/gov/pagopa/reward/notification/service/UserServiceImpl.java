@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service;
 
 import it.gov.pagopa.reward.notification.model.User;
-import it.gov.pagopa.reward.notification.rest.UserRestClient;
+import it.gov.pagopa.reward.notification.connector.rest.UserRestClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

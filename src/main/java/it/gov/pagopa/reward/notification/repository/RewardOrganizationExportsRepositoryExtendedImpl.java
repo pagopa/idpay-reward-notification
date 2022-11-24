@@ -28,6 +28,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     public static final String FIELD_PERCENTAGE_RESULTED = RewardOrganizationExport.Fields.percentageResulted;
     public static final String FIELD_PERCENTAGE_RESULTED_OK = RewardOrganizationExport.Fields.percentageResultedOk;
     public static final String FIELD_PERCENTAGE_RESULTS = RewardOrganizationExport.Fields.percentageResults;
+    public static final List<RewardOrganizationExportStatus> EXPORT_RETRYABLE_STATES = List.of(RewardOrganizationExportStatus.IN_PROGRESS, RewardOrganizationExportStatus.ERROR);
 
     private final ReactiveMongoTemplate mongoTemplate;
 
@@ -110,10 +111,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).lte(filters.getNotificationDateTo()));
             }
 
-            //add all criteria
-            if (!criteriaList.isEmpty()) {
-                criteria.andOperator(criteriaList);
-            }
+            criteria.andOperator(criteriaList);
         } else {
             criteria.and(RewardOrganizationExport.Fields.status).in(ExportConstants.EXPORT_EXPOSED_STATUSES);
         }
@@ -123,7 +121,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     public Mono<RewardOrganizationExport> reserveStuckExport() {
         return mongoTemplate.findAndModify(
                 Query.query(Criteria
-                        .where(FIELD_STATUS).is(RewardOrganizationExportStatus.IN_PROGRESS)
+                        .where(FIELD_STATUS).in(EXPORT_RETRYABLE_STATES)
                         .and(FIELD_EXPORT_DATE).lt(LocalDate.now())
                 ),
                 new Update()
@@ -246,7 +244,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     @Override
     public Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExport export) {
         Update update = new Update();
-        if(nextStatus!=null){
+        if (nextStatus != null) {
             update.set(FIELD_STATUS, nextStatus);
         }
         if (percentageResultedFix != null) {

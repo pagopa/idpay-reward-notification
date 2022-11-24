@@ -64,8 +64,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                 .filter(r-> {
                     boolean uploadResult = r.getStatusCode() == 201;
                     if(!uploadResult){
-                        log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while uploading export {}: {}, {}, {}", export.getFilePath(), r.getStatusCode(), r.getHeaders(), r.getValue());
-                        return false;
+                        throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while uploading export %s: %s, %s, %s".formatted(export.getFilePath(), r.getStatusCode(), r.getHeaders(), r.getValue()));
                     } else {
                         return true;
                     }
@@ -89,6 +88,13 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                     } else {
                         return Mono.empty();
                     }
+                })
+
+                .onErrorResume(e -> {
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while writing export {}", export.getId(), e);
+                    export.setStatus(RewardOrganizationExportStatus.ERROR);
+                    return rewardOrganizationExportsRepository.save(export)
+                            .then(Mono.empty());
                 });
     }
 

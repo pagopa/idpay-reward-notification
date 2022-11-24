@@ -183,10 +183,15 @@ class ExportCsvFinalizeServiceTest {
         Mockito.when(rewardsNotificationBlobClientMock.uploadFile(new File("target/tmp",export.getFilePath()), export.getFilePath(), "application/zip"))
                 .thenReturn(Mono.just(responseMocked));
 
+        Mockito.when(rewardOrganizationExportsRepositoryMock.save(Mockito.same(export))).thenReturn(Mono.just(export));
+
         // When
         RewardOrganizationExport result = service.writeCsvAndFinalize(List.of(reward), export).block();
 
         // Then
         Assertions.assertNull(result);
+
+        Mockito.verify(rewardOrganizationExportsRepositoryMock).save(Mockito.same(export));
+        Assertions.assertEquals(RewardOrganizationExportStatus.ERROR, export.getStatus());
     }
 }

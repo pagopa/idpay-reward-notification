@@ -14,4 +14,6 @@ public interface OrganizationImportsService {
     Mono<Long> countAll(String organizationId, String initiativeId, FeedbackImportFilter filters);
 
     Mono<Page<RewardImportsDTO>> findAllPaged(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters);
+
+    Mono<String> getErrorsCsvByImportId(String organizationId, String initiativeId, String importId);
 }

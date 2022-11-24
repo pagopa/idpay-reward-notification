@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
+import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
@@ -11,6 +12,7 @@ import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServ
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -77,5 +79,12 @@ public class NotificationControllerImpl implements NotificationController{
         return organizationImportsService
                 .findAllPaged(organizationId, initiativeId, pageable, filters)
                 .switchIfEmpty(Mono.just(Page.empty(pageable)));
+    }
+
+    @Override
+    public Mono<String> getImportErrors(String organizationId, String initiativeId, String importId) {
+        return organizationImportsService
+                .getErrorsCsvByImportId(organizationId, initiativeId, importId)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 }

@@ -225,4 +225,35 @@ class NotificationControllerImplTest {
 
         Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).findAllPaged("ORGANIZATION_ID_1", "INITIATIVE_ID_1", TEST_PAGE_REQUEST, new FeedbackImportFilter());
     }
+
+    @Test
+    void testGetImportErrorsCsvOk() {
+        String expectedCsvString = "";
+
+        Mockito.when(organizationImportsServiceMock.getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip"))
+                .thenReturn(Mono.just(expectedCsvString));
+
+        webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors")
+                        .build("orgId", "initiativeId", "reward-dispositive-1.zip"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).isEqualTo(expectedCsvString);
+
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip");
+    }
+
+    @Test
+    void testGetImportErrorsEmpty() {
+        Mockito.when(organizationImportsServiceMock.getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip"))
+                .thenReturn(Mono.empty());
+
+        webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{importId}/errors")
+                        .build("orgId", "initiativeId", "reward-dispositive-1.zip"))
+                .exchange()
+                .expectStatus().isNotFound();
+
+        Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", "reward-dispositive-1.zip");
+    }
 }

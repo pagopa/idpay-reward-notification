@@ -78,7 +78,7 @@ public abstract class BaseAzureBlobClientImpl implements AzureBlobClient {
             try {
                 Files.createDirectories(directory);
             } catch (IOException e) {
-                throw new IllegalStateException("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot create directory to store zip %s".formatted(localFile), e);
+                throw new IllegalStateException("Cannot create directory to store downloaded zip %s".formatted(localFile), e);
             }
         }
     }

@@ -14,7 +14,10 @@ import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.Rewards
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -97,9 +100,12 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<String> getImportErrors(String organizationId, String initiativeId, String fileName) {
+    public Mono<ResponseEntity<String>> getImportErrors(String organizationId, String initiativeId, String fileName) {
         return organizationImportsService
                 .getErrorsCsvByImportId(organizationId, initiativeId, buildImportId(organizationId, initiativeId, fileName))
+                .map(csv->ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION,  ContentDisposition.attachment().filename(fileName).build().toString())
+                        .body(csv))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 

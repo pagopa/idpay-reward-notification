@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,7 +66,7 @@ public interface NotificationController {
             FeedbackImportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports/{fileName}/errors", produces = "text/csv")
-    Mono<String> getImportErrors(
+    Mono<ResponseEntity<String>> getImportErrors(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("fileName") String fileName);

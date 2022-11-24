@@ -23,6 +23,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ContentDisposition;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -257,6 +258,8 @@ class NotificationControllerImplTest {
                         .build("orgId", "initiativeId", "test.zip"))
                 .exchange()
                 .expectStatus().isOk()
+                .expectHeader().contentType("text/csv;charset=UTF-8")
+                .expectHeader().contentDisposition(ContentDisposition.attachment().filename("test.zip").build())
                 .expectBody(String.class).isEqualTo(expectedCsvString);
 
         Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", importId);

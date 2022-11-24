@@ -421,7 +421,7 @@ public abstract class BaseIntegrationTest {
         return endOffsets;
     }
 
-    protected static void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay) {
+    public static void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay) {
         try {
             await()
                     .pollInterval(millisAttemptDelay, TimeUnit.MILLISECONDS)

@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
@@ -52,7 +53,7 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
     @AfterEach
     void checkCsvExistance() throws IOException {
         try{
-            Assertions.assertFalse(Files.exists(sampleCsv), "The local csv has not been deleted! %s".formatted(sampleCsv));
+            BaseIntegrationTest.waitFor(()->!Files.exists(sampleCsv), ()->"The local csv has not been deleted! %s".formatted(sampleCsv), 5, 500);
         } finally {
             Files.deleteIfExists(sampleCsv);
             Files.deleteIfExists(sampleCsv.getParent());

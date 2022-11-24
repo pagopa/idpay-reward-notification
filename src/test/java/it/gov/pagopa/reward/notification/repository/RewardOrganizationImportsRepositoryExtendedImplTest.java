@@ -4,7 +4,6 @@ import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,26 +88,6 @@ class RewardOrganizationImportsRepositoryExtendedImplTest extends BaseIntegratio
         checkFindAllResult(result);
     }
 
-    private void checkFindAllResult(List<RewardOrganizationImport> result) {
-        for(RewardOrganizationImport r : result) {
-            Assertions.assertNotNull(r);
-
-            String[] filePathSplit = r.getFilePath().split("_");
-            String filePathRoot = filePathSplit[0];
-            Assertions.assertEquals(TEST_IMPORT_FILE_PATH, filePathRoot);
-        }
-    }
-
-    @Test
-    void testCountAll() {
-
-        Long result = importsRepository
-                .countAll(TEST_ORGANIZATION_ID, TEST_INITIATIVE_ID, null)
-                .block();
-
-        Assertions.assertEquals(3, result);
-    }
-
     @Test
     void testFindAllByWithFilters() {
         // all filters
@@ -127,6 +106,41 @@ class RewardOrganizationImportsRepositoryExtendedImplTest extends BaseIntegratio
         // result 1 OK
         Assertions.assertNotNull(result);
         checkFindWithFiltersResult(result);
+    }
+
+    @Test
+    void testCountAll() {
+
+        Long result = importsRepository
+                .countAll(TEST_ORGANIZATION_ID, TEST_INITIATIVE_ID, null)
+                .block();
+
+        Assertions.assertEquals(3, result);
+    }
+
+    @Test
+    void testFindByImportId() {
+        String importId = "%s_1".formatted(TEST_IMPORT_FILE_PATH);
+
+        RewardOrganizationImport result = importsRepository
+                .findByImportId(TEST_ORGANIZATION_ID, TEST_INITIATIVE_ID, importId)
+                .block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(testImport1.getFilePath(), result.getFilePath());
+        Assertions.assertEquals(testImport1.getInitiativeId(), result.getInitiativeId());
+        Assertions.assertEquals(testImport1.getOrganizationId(), result.getOrganizationId());
+
+    }
+
+    private void checkFindAllResult(List<RewardOrganizationImport> result) {
+        for(RewardOrganizationImport r : result) {
+            Assertions.assertNotNull(r);
+
+            String[] filePathSplit = r.getFilePath().split("_");
+            String filePathRoot = filePathSplit[0];
+            Assertions.assertEquals(TEST_IMPORT_FILE_PATH, filePathRoot);
+        }
     }
 
     private static void checkFindWithFiltersResult(List<RewardOrganizationImport> resultList) {

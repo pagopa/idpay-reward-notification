@@ -15,6 +15,7 @@ import java.util.List;
 public class RewardOrganizationImportsRepositoryExtendedImpl implements RewardOrganizationImportsRepositoryExtended{
     public static final String FIELD_ORGANIZATION_ID = RewardOrganizationImport.Fields.organizationId;
     public static final String FIELD_INITIATIVE_ID = RewardOrganizationImport.Fields.initiativeId;
+    public static final String FIELD_FILE_PATH = RewardOrganizationImport.Fields.filePath;
     public static final String FIELD_STATUS = RewardOrganizationImport.Fields.status;
     public static final String FIELD_ELAB_DATE = RewardOrganizationImport.Fields.elabDate;
     public static final String FIELD_ERRORS = RewardOrganizationImport.Fields.errors;
@@ -48,6 +49,18 @@ public class RewardOrganizationImportsRepositoryExtendedImpl implements RewardOr
                         RewardOrganizationImport.class
                 );
 
+    }
+
+    @Override
+    public Mono<RewardOrganizationImport> findByImportId(String organizationId, String initiativeId, String importId) {
+        Criteria criteria = getCriteria(organizationId, initiativeId, null);
+        criteria.andOperator(Criteria.where(FIELD_FILE_PATH).is(importId));
+
+        return mongoTemplate
+                .findOne(
+                        Query.query(criteria),
+                        RewardOrganizationImport.class
+                );
     }
 
     private Criteria getCriteria(String organizationId, String initiativeId, FeedbackImportFilter filters) {

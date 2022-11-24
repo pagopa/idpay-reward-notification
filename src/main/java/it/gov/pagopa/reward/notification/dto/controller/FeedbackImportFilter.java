@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 public class FeedbackImportFilter {
 
     private String status;
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime elabDateFrom;
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime elabDateTo;
 }

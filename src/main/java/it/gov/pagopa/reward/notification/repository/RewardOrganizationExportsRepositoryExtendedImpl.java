@@ -1,9 +1,11 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.ExportConstants;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -17,11 +19,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended{
+public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOrganizationExportsRepositoryExtended {
 
+    public static final String FIELD_ID = RewardOrganizationExport.Fields.id;
     public static final String FIELD_INITIATIVE_ID = RewardOrganizationExport.Fields.initiativeId;
     public static final String FIELD_EXPORT_DATE = RewardOrganizationExport.Fields.exportDate;
     public static final String FIELD_STATUS = RewardOrganizationExport.Fields.status;
+    public static final String FIELD_PERCENTAGE_RESULTED = RewardOrganizationExport.Fields.percentageResulted;
+    public static final String FIELD_PERCENTAGE_RESULTED_OK = RewardOrganizationExport.Fields.percentageResultedOk;
+    public static final String FIELD_PERCENTAGE_RESULTS = RewardOrganizationExport.Fields.percentageResults;
 
     private final ReactiveMongoTemplate mongoTemplate;
 
@@ -86,7 +92,7 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
      * {@link ExportConstants#EXPORT_EXPOSED_STATUSES} collection.
      */
     private void updateCriteriaWithFilters(Criteria criteria, ExportFilter filters) {
-        if (filters != null){
+        if (filters != null) {
             List<Criteria> criteriaList = new ArrayList<>();
 
             // status
@@ -104,7 +110,10 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                 criteriaList.add(Criteria.where(RewardOrganizationExport.Fields.notificationDate).lte(filters.getNotificationDateTo()));
             }
 
-            criteria.andOperator(criteriaList);
+            //add all criteria
+            if (!criteriaList.isEmpty()) {
+                criteria.andOperator(criteriaList);
+            }
         } else {
             criteria.and(RewardOrganizationExport.Fields.status).in(ExportConstants.EXPORT_EXPOSED_STATUSES);
         }
@@ -164,15 +173,94 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
                         .setOnInsert(RewardOrganizationExport.Fields.percentageResulted, newExport.getPercentageResulted())
                         .setOnInsert(RewardOrganizationExport.Fields.percentageResultedOk, newExport.getPercentageResultedOk())
 
-                        ,
+                ,
                 RewardOrganizationExport.class
-        ).flatMap(r->{
-            if(r.getMatchedCount()>0) {
+        ).flatMap(r -> {
+            if (r.getMatchedCount() > 0) {
                 return Mono.empty();
-            }
-            else {
+            } else {
                 return Mono.just(newExport);
             }
         });
+    }
+
+    @Override
+    public Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
+        long incOk;
+        if (deltaReward > 0L) { // is ok result
+            incOk = 1L;
+        } else if (deltaReward < 0L) { // is ko preceded by ok result
+            incOk = -1L;
+        } else {
+            incOk = 0L;
+        }
+        return updateCounters(firstFeedback ? 1L : 0L, deltaReward, incOk, export);
+    }
+
+    @Override
+    public Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export) {
+        boolean reward2update = incRewardCents != 0L;
+        boolean count2update = incCount != 0L;
+        boolean countOk2update = incOkCount != 0L;
+
+        if (reward2update || count2update || countOk2update) {
+            Update increments = new Update();
+
+            if (reward2update) {
+                buildRewardIncrements(increments, incRewardCents, export);
+            }
+
+            if (count2update) {
+                buildCountIncrements(increments, incCount, export);
+            }
+
+            if (countOk2update) {
+                buildCountOkIncrements(increments, incOkCount, export);
+            }
+
+            return mongoTemplate.updateFirst(
+                    Query.query(Criteria.where(FIELD_ID).is(export.getId())),
+                    increments,
+                    RewardOrganizationExport.class
+            );
+        } else {
+            return Mono.just(UpdateResult.acknowledged(0, null, null));
+        }
+    }
+
+    private void buildRewardIncrements(Update increments, long incRewardCents, RewardOrganizationExport export) {
+        increments.inc(RewardOrganizationExport.Fields.rewardsResultsCents, incRewardCents)
+                .inc(RewardOrganizationExport.Fields.percentageResults, Utils.calcPercentage(incRewardCents, export.getRewardsExportedCents()));
+    }
+
+    private void buildCountIncrements(Update increments, long incCount, RewardOrganizationExport export) {
+        increments.inc(RewardOrganizationExport.Fields.rewardsResulted, incCount)
+                .inc(RewardOrganizationExport.Fields.percentageResulted, Utils.calcPercentage(incCount, export.getRewardNotified()));
+    }
+
+    private void buildCountOkIncrements(Update increments, long incOkCount, RewardOrganizationExport export) {
+        increments.inc(RewardOrganizationExport.Fields.rewardsResultedOk, incOkCount)
+                .inc(RewardOrganizationExport.Fields.percentageResultedOk, Utils.calcPercentage(incOkCount, export.getRewardNotified()));
+    }
+
+    @Override
+    public Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExport export) {
+        Update update = new Update();
+        if(nextStatus!=null){
+            update.set(FIELD_STATUS, nextStatus);
+        }
+        if (percentageResultedFix != null) {
+            update.set(FIELD_PERCENTAGE_RESULTED, percentageResultedFix);
+        }
+        if (percentageResultedOkFix != null) {
+            update.set(FIELD_PERCENTAGE_RESULTED_OK, percentageResultedOkFix);
+        }
+        if (percentageResultsFix != null) {
+            update.set(FIELD_PERCENTAGE_RESULTS, percentageResultsFix);
+        }
+        return mongoTemplate.updateFirst(
+                new Query(Criteria.where(FIELD_ID).is(export.getId())),
+                update,
+                RewardOrganizationExport.class);
     }
 }

@@ -2,8 +2,10 @@ package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
-import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
+import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
+import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -12,14 +14,14 @@ import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.connector.rest.UserRestClient;
+import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
+import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
-import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
-import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -173,17 +175,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         exportsRepository.deleteAll().block();
     }
 
-    @Autowired
-    private UserRestClient userRestClient;
-
     @Test
     void test() throws ExecutionException, InterruptedException {
         // Given
         storeTestData();
-
-        // for some reason, without this, the wiremock connection result into refused
-        // it seems it could be due to connectionPool, filled when wiremock is not yet ready
-        userRestClient.retrieveUserInfo("USERID_OK_123").block();
 
         // When
         CompletableFuture<List<RewardOrganizationExport>> execute1 = exportRewardNotificationCsvService.execute().collectList().toFuture();
@@ -195,7 +190,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(3 * 2 +1, result.size()); // 3 split for INITIATIVEID, 3 split for INITIATIVEID2, 1 for INITIATIVEID3
+        Assertions.assertEquals(3 * 2 +1, result.size(), "Unexpected result size: %s".formatted(result)); // 3 split for INITIATIVEID, 3 split for INITIATIVEID2, 1 for INITIATIVEID3
 
         Assertions.assertEquals(Collections.emptyList(), rewardsRepository.findInitiatives2Notify(Collections.emptyList()).collectList().block(), "There are still initiative to be notified!");
 
@@ -210,6 +205,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
         checkIbanKoUseCases();
         checkCfKoUseCases(result);
+
+        checkKoNotification();
     }
 
     private void checkInitiativeExports(String expectedBaseExportId, RewardNotificationRule rule, String expectedBaseFilePath, long expectedBaseProgressive, LocalDate expectedNotificationDate, List<RewardOrganizationExport> result) {
@@ -231,7 +228,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         );
     }
 
-    private final Pattern csvUniqueIdGroupMatch = Pattern.compile("(?:\"[^\"]*\";){1}\"([^\"]*)\".*");
+    private final Pattern csvUniqueIdGroupMatch = Pattern.compile("\"[^\"]*\";\"([^\"]*)\".*");
+
     @SneakyThrows
     private void checkExport(List<RewardOrganizationExport> result, String exportId, RewardNotificationRule rule, long expectedProgressive, String expectedFilePath, LocalDate expectedNotificationDate, long expectedExportSize) {
         RewardOrganizationExport export = result.stream().filter(e -> exportId.equals(e.getId())).findFirst().orElse(null);
@@ -288,7 +286,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Files.delete(csvPath);
         }
     }
-
     private void checkExportSplit(List<RewardOrganizationExport> result, int splitNumber, int splitSize, String expectedBaseExportId, RewardNotificationRule rule, long expectedBaseProgressive, String expectedBaseFilePath, LocalDate expectedNotificationDate){
         checkExport(result,
                 expectedBaseExportId.replaceFirst("\\.%d$".formatted(expectedBaseProgressive), ".%d".formatted(expectedBaseProgressive+ splitNumber)),
@@ -300,7 +297,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
     private void checkIbanKoUseCases() {
         List<RewardsNotification> expectedIbanKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
-                .rejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
+                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
                 .build())).collectList().block();
 
         Assertions.assertNotNull(expectedIbanKo);
@@ -311,7 +308,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(rule3.getInitiativeId(), r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getRejectionReason());
-            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getRejectionCode());
+            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getResultCode());
             Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
             Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });
@@ -324,7 +321,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
     private void checkCfKoUseCases(List<RewardOrganizationExport> result) {
         List<RewardsNotification> expectedCfKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
-                .rejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND)
+                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND)
                 .build())).collectList().block();
 
         Assertions.assertNotNull(expectedCfKo);
@@ -335,7 +332,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(rule4.getInitiativeId(), r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());
-            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionCode());
+            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getResultCode());
             Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
             Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });
@@ -345,5 +342,49 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 , rule4, 1
                 , "rewards/notifications/ORGANIZATION_ID_4_fwi/INITIATIVEID4/export/NAME_4_wfp_%s.1.zip".formatted(TODAY_STR)
                 , TODAY, splitSize);
+    }
+
+    @SneakyThrows
+    private void checkKoNotification() {
+        int ibanKo=0;
+        int cfKo=0;
+
+        for (ConsumerRecord<String, String> msg : consumeMessages(topicRewardNotificationFeedback, 4, 1000)) {
+            RewardFeedbackDTO n = objectMapper.readValue(msg.value(), RewardFeedbackDTO.class);
+
+            Assertions.assertEquals(RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_REJECTED, n.getStatus());
+
+            if(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND.equals(n.getRejectionCode())){
+                Assertions.assertEquals("INITIATIVEID3", n.getInitiativeId());
+
+                ibanKo++;
+            } else if(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND.equals(n.getRejectionCode())){
+                Assertions.assertEquals("INITIATIVEID4", n.getInitiativeId());
+
+                cfKo++;
+            } else {
+                Assertions.fail("Unexpected rejection code: %s".formatted(n));
+            }
+
+            Assertions.assertTrue(n.getOrganizationId().startsWith("ORGANIZATION_ID_"), "Unexpected organizationId: %s".formatted(n));
+
+            Assertions.assertNotNull(n.getRewardNotificationId());
+            Assertions.assertNotNull(n.getUserId());
+            Assertions.assertNotEquals(0, n.getEffectiveRewardCents());
+
+            Assertions.assertNull(n.getCro());
+            Assertions.assertNull(n.getExecutionDate());
+
+            Assertions.assertEquals(LocalDate.now(), n.getFeedbackDate().toLocalDate());
+            Assertions.assertEquals(0, n.getFeedbackProgressive());
+            Assertions.assertEquals(0L, n.getRewardCents());
+            Assertions.assertEquals(n.getRejectionCode(), n.getRejectionReason());
+
+            Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), msg.key());
+        }
+
+        Assertions.assertEquals(3, ibanKo);
+        Assertions.assertEquals(1, cfKo);
+
     }
 }

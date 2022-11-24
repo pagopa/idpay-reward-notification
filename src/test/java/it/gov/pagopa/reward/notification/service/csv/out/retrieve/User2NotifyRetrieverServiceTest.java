@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.UserService;
-import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationNotifierService;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -22,7 +22,7 @@ class User2NotifyRetrieverServiceTest {
 
     @Mock private UserService userServiceMock;
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
-    @Mock private RewardNotificationErrorNotifierService errorNotifierServiceMock;
+    @Mock private RewardNotificationNotifierService errorNotifierServiceMock;
 
     private User2NotifyRetrieverService service;
 
@@ -40,7 +40,7 @@ class User2NotifyRetrieverServiceTest {
 
         Mockito.when(userServiceMock.getUserInfo("USERID")).thenReturn(Mono.empty());
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.same(reward))).thenReturn(Mono.just(reward));
-        Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward))).thenReturn(Mono.just(reward));
+        Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward), Mockito.eq(0L))).thenReturn(Mono.just(reward));
 
         // When
         Pair<RewardsNotification, User> result = service.retrieveUser(reward).block();
@@ -50,7 +50,7 @@ class User2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.ERROR, reward.getStatus());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getRejectionReason());
-        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getRejectionCode());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, reward.getResultCode());
         Assertions.assertNotNull(reward.getExportDate());
 
         Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
@@ -76,7 +76,7 @@ class User2NotifyRetrieverServiceTest {
 
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getKey().getStatus());
         Assertions.assertNull(result.getKey().getRejectionReason());
-        Assertions.assertNull(result.getKey().getRejectionCode());
+        Assertions.assertNull(result.getKey().getResultCode());
 
         Mockito.verifyNoMoreInteractions(userServiceMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }

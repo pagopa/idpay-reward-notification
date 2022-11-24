@@ -23,7 +23,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer
+        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback
       bindings:
         refundRuleConsumer-in-0:
           destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}
@@ -49,6 +49,10 @@ spring:
           group: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_GROUP_ID:idpay-reward-notification-storage-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-reward-notification-upload
+        rewardNotificationFeedback-out-0:
+          destination: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_TOPIC:idpay-reward-notification-response}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-reward-notification-feedback
       binders:
         kafka-idpay-rule:
           type: kafka
@@ -83,6 +87,14 @@ spring:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_BROKER:${KAFKA_BROKER:}}
               configuration.sasl.jaas.config: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_SASL_JAAS_CONFIG:}
+        kafka-reward-notification-feedback:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
       kafka:
         binder:
           auto-create-topics: false
@@ -141,7 +153,7 @@ spring:
           errors-out-0:
             producer:
               configuration:
-                client.id: trxProcessor-errors
+                client.id: rewardNotification-errors
                 connections.max.idle.ms: ${KAFKA_ERRORS_CONNECTION_MAX_IDLE_TIME:180000}
                 retry.backoff.ms: ${KAFKA_ERRORS_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
                 linger.ms: ${KAFKA_ERRORS_LINGER_MS:${KAFKA_LINGER_MS:2}}
@@ -161,6 +173,14 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          rewardNotificationFeedback-out-0:
+            producer:
+              configuration:
+                client.id: rewardNotificationFeedbackProducer
+                connections.max.idle.ms: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_REWARD_NOTIFICATION_FEEDBACK_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
 
   data:
     mongodb:

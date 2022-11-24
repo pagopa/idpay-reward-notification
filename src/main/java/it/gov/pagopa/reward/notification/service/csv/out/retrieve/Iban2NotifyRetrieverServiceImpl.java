@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.csv.RewardNotificationErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.csv.RewardNotificationNotifierService;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,9 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
 
     private final RewardIbanRepository ibanRepository;
     private final RewardsNotificationRepository rewardsNotificationRepository;
-    private final RewardNotificationErrorNotifierService errorNotifierService;
+    private final RewardNotificationNotifierService errorNotifierService;
 
-    public Iban2NotifyRetrieverServiceImpl(RewardIbanRepository ibanRepository, RewardsNotificationRepository rewardsNotificationRepository, RewardNotificationErrorNotifierService errorNotifierService) {
+    public Iban2NotifyRetrieverServiceImpl(RewardIbanRepository ibanRepository, RewardsNotificationRepository rewardsNotificationRepository, RewardNotificationNotifierService errorNotifierService) {
         this.ibanRepository = ibanRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.errorNotifierService = errorNotifierService;
@@ -33,11 +33,14 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
                 .switchIfEmpty(Mono.defer(() -> {
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find iban related to user {} and initiative {}", reward.getUserId(), reward.getInitiativeId());
                     reward.setStatus(RewardNotificationStatus.ERROR);
-                    reward.setRejectionCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
+                    reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
-                            .flatMap(errorNotifierService::notify)
+                            .flatMap(rn -> {
+                                rn.setFeedbackDate(reward.getExportDate());
+                                return errorNotifierService.notify(rn, 0L);
+                            })
                             .then(Mono.empty());
                 }))
                 .doOnNext(iban -> {

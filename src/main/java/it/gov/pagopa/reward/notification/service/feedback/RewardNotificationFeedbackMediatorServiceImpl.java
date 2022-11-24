@@ -110,7 +110,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
                 .collectList();
     }
 
-    private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/.*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));
+    private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/import/[^/]*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));
     private boolean isOrganizationFeedbackUploadEvent(StorageEventDto storageEventDto) {
         return
                 // is upload event

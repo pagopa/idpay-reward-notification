@@ -43,7 +43,13 @@ public class UserRestClientImpl implements UserRestClient {
                 .retrieve()
                 .bodyToMono(UserInfoPDV.class)
                 .retryWhen(Retry.fixedDelay(pdvMaxAttempts, Duration.ofMillis(pdvRetryDelay))
-                        .filter(ex -> ex instanceof WebClientResponseException.TooManyRequests)
+                        .filter(ex -> {
+                            boolean retry = (ex instanceof WebClientResponseException.TooManyRequests) || ex.getMessage().startsWith("Connection refused");
+                            if(retry){
+                                log.info("[PDV_INTEGRATION] Retrying invocation due to exception: {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
+                            }
+                            return retry;
+                        })
                 )
 
                 .onErrorResume(WebClientResponseException.NotFound.class, x -> {

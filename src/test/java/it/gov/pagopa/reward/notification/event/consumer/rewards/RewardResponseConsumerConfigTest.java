@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +55,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         trxNotRewarded.setId("NOTREWARDEDTRX");
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
-        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
+        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
 
         trxs.add(TestUtils.jsonSerializer(trxNotRewarded));
@@ -167,7 +167,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
     }
 
     private RewardTransactionDTO mockInstance(int bias) {
-        return useCases.get(bias % useCases.size()).getFirst().apply(bias);
+        return useCases.get(bias % useCases.size()).getKey().apply(bias);
     }
 
     Set<String> errorUseCasesStored_userid = Set.of("NOT_EXISTENT_INITIATIVE_ID_USER_ID");
@@ -177,7 +177,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
             String userId = reward.getUserId();
             int biasRetrieve = Integer.parseInt(userId.substring(6));
             if(biasRetrieve >= errorUseCases.size()){
-                useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
+                useCases.get(biasRetrieve % useCases.size()).getValue().accept(reward);
             }
         } else {
             Assertions.assertTrue(errorUseCasesStored_userid.contains(reward.getUserId()), "Invalid rejected reward: " + reward);

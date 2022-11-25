@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
 import it.gov.pagopa.reward.notification.service.LockServiceImpl;
@@ -52,9 +53,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     protected RewardsRepository rewardsRepository;
     @Autowired
     protected RewardsNotificationRepository rewardsNotificationRepository;
-    // TODO uncomment when rewardsOrganizationExports logic has been implemented
-//    @Autowired
-//    protected RewardsOrganizationExportsRepository rewardsOrganizationExportsRepository;
+    @Autowired
+    protected RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
 
     @Autowired
     protected RewardNotificationRuleRepository ruleRepository;
@@ -78,8 +78,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     void clearData() {
         rewardsRepository.deleteAll().block();
         rewardsNotificationRepository.deleteAll().block();
-        // TODO uncomment when rewardsOrganizationExports logic has been implemented
-//        rewardsOrganizationExportsRepository.deleteAll().block();
+        rewardOrganizationExportsRepository.deleteAll().block();
         ruleRepository.deleteAll().block();
     }
 

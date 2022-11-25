@@ -15,6 +15,11 @@ import java.util.zip.ZipOutputStream;
 public final class ZipUtils {
     private ZipUtils(){}
 
+    // region zip thresholds to avoid zip bomb attacks
+    private static final int THRESHOLD_SIZE = 1000000000; // 1 GB
+    private static final int THRESHOLD_ENTRIES = 10000;
+    // endregion
+
     /** To zip a list of files */
     public static void zip(String zipFilePath, List<File> files) {
         try (FileOutputStream outputStream = new FileOutputStream(zipFilePath);
@@ -40,7 +45,7 @@ public final class ZipUtils {
         }
     }
 
-    /** To zip a list of files */
+    /** To unzip a file */
     public static void unzip(String zipFilePath, String destDirPath) {
         Path destDir = Path.of(destDirPath);
         if(!Files.exists(destDir)){
@@ -52,23 +57,45 @@ public final class ZipUtils {
         }
 
         try (ZipFile zipFile = new ZipFile(zipFilePath)) {
+            if(zipFile.size()>THRESHOLD_ENTRIES){
+                throw new IllegalArgumentException("Zip archive contains too many files!"); // to preserve from zip bomb attack
+            }
             Stream<? extends ZipEntry> stream = zipFile.stream();
+            int[] totalSizeArchive = new int[]{0};
             stream.forEach(zipEntry -> {
-                try (InputStream inputStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
-                     BufferedInputStream bufferInStream = new BufferedInputStream(inputStream);
-                     BufferedOutputStream bufferOutStream = new BufferedOutputStream(
-                             new FileOutputStream(destDirPath + File.separator + zipEntry.getName()))) {
-                    int bytes;
-                    while ((bytes = bufferInStream.read()) > 0) {
-                        bufferOutStream.write(bytes);
-                        bufferOutStream.flush();
-                    }
-                } catch (IOException e) {
-                    throw new IllegalStateException("Something gone wrong while unzipping entry file %s into %s".formatted(zipEntry, destDirPath), e);
+                totalSizeArchive[0]+=unzipZipEntry(destDirPath, zipFile, zipEntry);
+                if(totalSizeArchive[0]>THRESHOLD_SIZE){
+                    throw new IllegalArgumentException("Zip archive too large!"); // to preserve from zip bomb attack
                 }
             });
         } catch (IOException e) {
             throw new IllegalStateException("Something gone wrong while unzipping %s into %s".formatted(zipFilePath, destDirPath), e);
+        }
+    }
+
+    /** To unzip a {@link ZipEntry} */
+    public static int unzipZipEntry(String destDirPath, ZipFile zipFile, ZipEntry zipEntry) {
+        try (InputStream inputStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
+             BufferedInputStream bufferInStream = new BufferedInputStream(inputStream);
+             BufferedOutputStream bufferOutStream = new BufferedOutputStream(
+                     new FileOutputStream(destDirPath + File.separator + zipEntry.getName()))) {
+            int bytes;
+
+            int totalSizeEntry = 0;
+            while ((bytes = bufferInStream.read()) > 0) {
+                bufferOutStream.write(bytes);
+                bufferOutStream.flush();
+
+                totalSizeEntry += bytes;
+            }
+
+            if(totalSizeEntry>THRESHOLD_SIZE){
+                throw new IllegalArgumentException("Zip file too large!"); // to preserve from zip bomb attack
+            }
+
+            return totalSizeEntry;
+        } catch (IOException e) {
+            throw new IllegalStateException("Something gone wrong while unzipping entry file %s into %s".formatted(zipEntry, destDirPath), e);
         }
     }
 

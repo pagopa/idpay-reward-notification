@@ -1,13 +1,12 @@
 package it.gov.pagopa.reward.notification.dto.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -52,5 +51,5 @@ public class RewardExportsDTO {
     @JsonProperty("feedbackDate")
     private LocalDateTime feedbackDate;
     @JsonProperty("status")
-    private ExportStatus status;
+    private RewardOrganizationExportStatus status;
 }

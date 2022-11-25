@@ -41,7 +41,7 @@ class RewardsNotificationMapperTest {
                 "exportId",
                 "iban",
                 "checkIbanResult",
-                "rejectionCode",
+                "resultCode",
                 "rejectionReason",
                 "feedbackDate",
                 "feedbackHistory",

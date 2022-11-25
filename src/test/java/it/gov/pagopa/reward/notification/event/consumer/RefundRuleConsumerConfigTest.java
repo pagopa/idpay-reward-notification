@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.charset.StandardCharsets;
@@ -48,7 +48,7 @@ public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
         List<String> initiativePayloads = new ArrayList<>();
         initiativePayloads.addAll(buildValidPayloads(notValidInitiatives, validInitiatives/2));
-        initiativePayloads.addAll(IntStream.range(0,notValidInitiatives).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
+        initiativePayloads.addAll(IntStream.range(0,notValidInitiatives).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
         initiativePayloads.addAll(buildValidPayloads(notValidInitiatives + (validInitiatives / 2) + notValidInitiatives, validInitiatives / 2));
 
         long timeStart=System.currentTimeMillis();

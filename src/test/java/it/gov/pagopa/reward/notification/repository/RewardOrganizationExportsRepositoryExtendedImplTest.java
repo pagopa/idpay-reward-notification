@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.repository;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.enums.ExportStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -32,7 +32,7 @@ class RewardOrganizationExportsRepositoryExtendedImplTest extends BaseIntegratio
     @BeforeEach
     void prepareTestData() {
         rewardOrganizationExportsRepository.save(
-                buildUseCase(TEST_EXPORT_ID, TEST_INITIATIVE_ID, TEST_ORGANIZATION_ID, ExportStatus.EXPORTED)
+                buildUseCase(TEST_EXPORT_ID, TEST_INITIATIVE_ID, TEST_ORGANIZATION_ID, RewardOrganizationExportStatus.EXPORTED)
         ).block();
     }
 
@@ -115,7 +115,7 @@ class RewardOrganizationExportsRepositoryExtendedImplTest extends BaseIntegratio
         Assertions.assertEquals(1, result);
     }
 
-    private RewardOrganizationExport buildUseCase(String id, String initiativeId, String organizationId, ExportStatus status) {
+    private RewardOrganizationExport buildUseCase(String id, String initiativeId, String organizationId, RewardOrganizationExportStatus status) {
         return RewardOrganizationExport.builder()
                 .id(id)
                 .initiativeId(initiativeId)

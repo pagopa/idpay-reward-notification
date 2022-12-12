@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -228,6 +230,96 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         expectedResult.getTrxIds().add("TRXID");
 
         Mockito.when(repositoryMock.findById(expectedResult.getId())).thenReturn(Mono.just(expectedResult));
+        Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.empty());
+
+        service = Mockito.spy(service);
+
+        // When
+        RewardsNotification result = service.handle(trx, rule, reward).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertSame(expectedResult, result);
+
+        Assertions.assertEquals(1100L, result.getRewardCents());
+        Assertions.assertEquals(expectedProgressive, result.getProgressive());
+        Assertions.assertEquals(DepositType.FINAL, result.getDepositType());
+        Assertions.assertEquals(List.of("TRXID", trx.getId()), result.getTrxIds());
+        Assertions.assertEquals(expectedNotificationDate, result.getNotificationDate());
+
+        Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
+        Mockito.verify(service).calculateNotificationDate(Mockito.eq(LocalDate.now()), Mockito.same(rule));
+
+        Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
+    }
+
+    @Test
+    void testHandleNewNotifyOnAlreadyNotified(){
+        // Given
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+        RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
+        rule.setInitiativeName("NAME_0_vnj");
+        rule.setInitiativeId("INITIATIVEID");
+        rule.setOrganizationId("ORGANIZATION_ID_0_hpd");
+        rule.setOrganizationFiscalCode("ORGANIZATION_FISCAL_CODE_0_qdx");
+        rule.setEndDate(LocalDate.now());
+        Reward reward = new Reward(BigDecimal.TEN);
+
+        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
+        RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        alreadyNotified.setStatus(RewardNotificationStatus.EXPORTED);
+
+        Mockito.when(repositoryMock.findById(alreadyNotified.getId())).thenReturn(Mono.just(alreadyNotified));
+
+        long expectedProgressive = 5L;
+        RewardsNotification expectedNewNotify = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        expectedNewNotify.setProgressive(expectedProgressive);
+        expectedNewNotify.setId("%s_%d".formatted(expectedNewNotify.getId(), expectedProgressive));
+        expectedNewNotify.setRewardCents(1000L);
+        expectedNewNotify.setDepositType(DepositType.FINAL);
+        expectedNewNotify.getTrxIds().add(trx.getId());
+
+        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.just(expectedProgressive-1));
+
+        service = Mockito.spy(service);
+
+        // When
+        RewardsNotification result = service.handle(trx, rule, reward).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedNewNotify, result);
+
+        Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
+        Mockito.verify(service).calculateNotificationDate(Mockito.eq(LocalDate.now()), Mockito.same(rule));
+        Mockito.verify(mapperSpy).apply(Mockito.eq(expectedNewNotify.getId().replaceAll("_%d$".formatted(expectedProgressive), "")), Mockito.eq(expectedNotificationDate), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
+
+        Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
+    }
+
+    @Test
+    void testHandleNotifyUpdatedOnAlreadyNotified(){
+        // Given
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+        RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
+        rule.setInitiativeId("INITIATIVEID");
+        rule.setEndDate(LocalDate.now());
+        Reward reward = new Reward(BigDecimal.TEN);
+
+        LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
+        RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        alreadyNotified.setStatus(RewardNotificationStatus.EXPORTED);
+
+        Mockito.when(repositoryMock.findById(alreadyNotified.getId())).thenReturn(Mono.just(alreadyNotified));
+
+        long expectedProgressive = 5L;
+        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        expectedResult.setProgressive(expectedProgressive);
+        expectedResult.setRewardCents(100L);
+        expectedResult.getTrxIds().add("TRXID");
+
+        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
         Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);

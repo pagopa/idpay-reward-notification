@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -106,7 +107,7 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
 
         String expectedNotificationId = "USERID0_INITIATIVEID_%d".formatted(expectedProgressive);
 
-        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDate(trx.getUserId(), rule.getInitiativeId(), null)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
         Mockito.doAnswer(a -> {
                     expectedResult[0] = (RewardsNotification) a.callRealMethod();
                     return expectedResult[0];
@@ -117,7 +118,7 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.just(expectedProgressive - 1));
 
         if (isRefund) {
-            Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateGreaterThan(trx.getUserId(), rule.getInitiativeId(), LocalDate.now())).thenReturn(Flux.empty());
+            Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatus(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
         }
 
         service = Mockito.spy(service);
@@ -173,10 +174,10 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         expectedResult.setNotificationDate(notificationDate);
         expectedResult.getTrxIds().add("TRXID");
 
-        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDate(trx.getUserId(), rule.getInitiativeId(), null)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
         Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.empty());
 
-        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateGreaterThan(trx.getUserId(), rule.getInitiativeId(), LocalDate.now())).thenReturn(Flux.just(expectedResult));
+        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatus(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
 
         service = Mockito.spy(service);
 
@@ -220,7 +221,7 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         expectedResult.setRewardCents(200L);
         expectedResult.getTrxIds().add("TRXID");
 
-        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDate(trx.getUserId(), rule.getInitiativeId(), null)).thenReturn(Flux.just(expectedResult));
+        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
         Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);

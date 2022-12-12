@@ -42,6 +42,18 @@ class UserRestClientImplTest extends BaseIntegrationTest {
     }
 
     @Test
+    void retrieveUserInfoNotValid() {
+        String userId = "USERID_NOTVALID_1";
+
+        try{
+            userRestClient.retrieveUserInfo(userId).block();
+        }catch (Throwable e){
+            Assertions.assertTrue(e instanceof WebClientException);
+            Assertions.assertEquals(WebClientResponseException.BadRequest.class,e.getClass());
+        }
+    }
+
+    @Test
     void retrieveUserInfoInternalServerError() {
         String userId = "USERID_INTERNALSERVERERROR_1";
 

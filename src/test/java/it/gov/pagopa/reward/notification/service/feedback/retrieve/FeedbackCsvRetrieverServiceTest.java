@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,12 +45,12 @@ class FeedbackCsvRetrieverServiceTest {
         Path sampleTmpDir = Path.of(csvTmpDir);
         try(Stream<Path> fileListStream = Files.list(sampleTmpDir)){
             Assertions.assertEquals(
-                    List.of(
+                    Set.of(
                             sampleTmpDir.resolve("invalid"),
                             sampleTmpDir.resolve("orgId"),
                             sampleTmpDir.resolve("valid")
                             ),
-                    fileListStream.toList()
+                    fileListStream.collect(Collectors.toSet())
             );
         } finally {
             FileSystemUtils.deleteRecursively(sampleTmpDir.toFile());

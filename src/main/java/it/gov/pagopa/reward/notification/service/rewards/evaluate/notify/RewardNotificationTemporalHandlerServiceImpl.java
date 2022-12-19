@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -38,6 +39,17 @@ public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNoti
         String notificationId = buildNotificationId(trx, rule, notificationDate);
 
         return rewardsNotificationRepository.findById(notificationId)
+                .flatMap(r -> {
+                    if(RewardNotificationStatus.TO_SEND.equals(r.getStatus())){
+                        return Mono.just(r);
+                    } else {
+                        log.info("[REWARD_NOTIFICATION] Find exported notification even if scheduled for the future. Probably manually changed: {} having status {}", r.getId(), r.getStatus());
+                        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), notificationDate, RewardNotificationStatus.TO_SEND)
+                                .switchIfEmpty(createNewNotification(trx, rule, notificationDate, notificationId))
+                                .last()
+                                .doOnNext(n -> n.setId("%s_%d".formatted(n.getId(), n.getProgressive())));
+                    }
+                })
                 .switchIfEmpty(createNewNotification(trx, rule, notificationDate, notificationId))
                 .doOnNext(n -> updateReward(trx, rule, reward, n));
     }

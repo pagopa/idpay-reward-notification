@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.service.rewards.evaluate.notify;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -40,7 +41,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
 
     @Override
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
-        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDate(trx.getUserId(), rule.getInitiativeId(), null)
+        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)
                 .switchIfEmpty(handleNoOpenNotification(trx, rule, reward))
                 .last()
                 .doOnNext(n -> {
@@ -67,7 +68,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
         Flux<RewardsNotification> findFutureIfRefund;
         if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) <= 0){
             log.debug("[REWARD_NOTIFICATION] searching for future notification for userId {} and initiativeId {}", trx.getUserId(), rule.getInitiativeId());
-            findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThan(trx.getUserId(), rule.getInitiativeId(), LocalDate.now());
+            findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatus(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND);
         } else {
             findFutureIfRefund = Flux.empty();
         }

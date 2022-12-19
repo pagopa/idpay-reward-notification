@@ -55,6 +55,10 @@ public class UserRestClientImpl implements UserRestClient {
                 .onErrorResume(WebClientResponseException.NotFound.class, x -> {
                     log.warn("userId not found into pdv: {}", userId);
                     return Mono.empty();
+                })
+                .onErrorResume(WebClientResponseException.BadRequest.class, x -> {
+                    log.warn("userId not valid: {}", userId);
+                    return Mono.empty();
                 });
     }
 }

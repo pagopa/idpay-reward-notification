@@ -1,5 +1,8 @@
 package it.gov.pagopa.reward.notification.service.rewards;
 
+import it.gov.pagopa.reward.notification.dto.trx.Reward;
+import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
@@ -13,8 +16,12 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.support.MessageBuilder;
+import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -36,6 +43,31 @@ class RewardMediatorServiceTest {
     @BeforeEach
     void init(){
         service=new RewardsMediatorServiceImpl("APPNAME", lockServiceMock, rewardsServiceMock, ruleEvaluatorServiceMock, errorNotifierServiceMock, 500, TestUtils.objectMapper);
+    }
+
+    @Test
+    void testFiltering0Rewards() {
+        // Given
+        Reward reward3 = new Reward(BigDecimal.ONE);
+        RewardTransactionDTO trx = RewardTransactionDTO.builder()
+                .rewards(Map.of(
+                        "ID1", new Reward(BigDecimal.ZERO),
+                        "ID2", new Reward(BigDecimal.ONE, BigDecimal.ZERO),
+                        "ID3", reward3
+                ))
+                .build();
+
+        Mockito.when(rewardsServiceMock.checkDuplicateReward(trx, "ID3")).thenReturn(Mono.just(trx));
+        Rewards expectedResult = Rewards.builder().initiativeId("ID3").build();
+
+        Mockito.when(ruleEvaluatorServiceMock.retrieveAndEvaluate("ID3", reward3, trx, null)).thenReturn(Mono.just(expectedResult));
+
+        // When
+        List<Rewards> result = service.execute(trx, null, new HashMap<>()).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(List.of(expectedResult),result);
     }
 
     @Test

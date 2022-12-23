@@ -20,6 +20,7 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +113,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
         } else {
             return Flux.fromStream(
                     rewardTransactionDTO.getRewards().entrySet().stream()
+                            .filter(r->r.getValue().getAccruedReward().compareTo(BigDecimal.ZERO)!=0)
                             .map(e -> Triple.of(rewardTransactionDTO, e.getKey(), e.getValue())));
         }
     }

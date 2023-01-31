@@ -42,7 +42,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
     @Override
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
         return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)
-                .switchIfEmpty(handleNoOpenNotification(trx, rule, reward))
+                .switchIfEmpty(Mono.defer(()->handleNoOpenNotification(trx, rule, reward)))
                 .last()
                 .doOnNext(n -> {
                     updateReward(trx, rule, reward, n);

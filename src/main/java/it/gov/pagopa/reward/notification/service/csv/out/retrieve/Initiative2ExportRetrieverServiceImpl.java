@@ -55,7 +55,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     @Override
     public Mono<RewardOrganizationExport> retrieve() {
         return rewardOrganizationExportsRepository.reserveExport()
-                .switchIfEmpty(retrieveNewExports())
+                .switchIfEmpty(Mono.defer(this::retrieveNewExports))
                 .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
     }
 

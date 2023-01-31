@@ -222,7 +222,6 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         expectedResult.getTrxIds().add("TRXID");
 
         Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
-        Mockito.when(repositoryMock.count(Mockito.any())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);
 

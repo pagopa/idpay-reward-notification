@@ -75,10 +75,17 @@ class RewardMediatorServiceTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> service.calculateLockId(MessageBuilder.withPayload("{\"userId\":\"%s\"".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString())).build()))
+                .mapToObj(i -> service.calculateLockId(buildBaseMessageBuilder("{\"userId\":\"%s\"".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString())).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         checkLockIdValues(lockId2Count);
+    }
+
+    private static MessageBuilder<String> buildBaseMessageBuilder(String payload) {
+        return MessageBuilder
+                .withPayload(payload)
+                .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                .setHeader(KafkaHeaders.OFFSET, 0L);
     }
 
     @Test
@@ -86,7 +93,7 @@ class RewardMediatorServiceTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> service.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.RECEIVED_MESSAGE_KEY, "KEY%s".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()).getBytes(StandardCharsets.UTF_8)).build()))
+                .mapToObj(i -> service.calculateLockId(buildBaseMessageBuilder("").setHeader(KafkaHeaders.RECEIVED_MESSAGE_KEY, "KEY%s".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()).getBytes(StandardCharsets.UTF_8)).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         checkLockIdValues(lockId2Count);
@@ -97,7 +104,7 @@ class RewardMediatorServiceTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> service.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.PARTITION_ID, "%d".formatted(i).getBytes(StandardCharsets.UTF_8)).build()))
+                .mapToObj(i -> service.calculateLockId(buildBaseMessageBuilder("").setHeader(KafkaHeaders.PARTITION_ID, "%d".formatted(i).getBytes(StandardCharsets.UTF_8)).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         checkLockIdValues(lockId2Count);
@@ -108,7 +115,7 @@ class RewardMediatorServiceTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> service.calculateLockId(MessageBuilder.withPayload("%d".formatted(i)).build()))
+                .mapToObj(i -> service.calculateLockId(buildBaseMessageBuilder("%d".formatted(i)).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         checkLockIdValues(lockId2Count);

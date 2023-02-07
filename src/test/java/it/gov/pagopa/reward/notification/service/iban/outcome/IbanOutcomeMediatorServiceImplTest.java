@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
@@ -48,23 +49,23 @@ class IbanOutcomeMediatorServiceImplTest {
         //Initializing KO messages
         IbanOutcomeDTO ibanOutcomeKoDTO = IbanOutcomeDTOFaker.mockInstance(1);
         ibanOutcomeKoDTO.setStatus(IbanConstants.STATUS_KO);
-        Message<String> msgKo = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeKoDTO)).build();
+        Message<String> msgKo = buildMessage(TestUtils.jsonSerializer(ibanOutcomeKoDTO));
         IbanOutcomeDTO ibanOutcomeKoExceptionDTO = IbanOutcomeDTOFaker.mockInstance(2);
         ibanOutcomeKoExceptionDTO.setStatus(IbanConstants.STATUS_KO);
-        Message<String> msgKoException = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeKoExceptionDTO)).build();
+        Message<String> msgKoException = buildMessage(TestUtils.jsonSerializer(ibanOutcomeKoExceptionDTO));
 
         //Initializing UNKNOWN_PSP message
         IbanOutcomeDTO ibanOutcomeUnknownPspDTO = IbanOutcomeDTOFaker.mockInstance(3);
         ibanOutcomeUnknownPspDTO.setStatus(IbanConstants.STATUS_UNKNOWN_PSP);
-        Message<String> msgUnknownPsp = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeUnknownPspDTO)).build();
+        Message<String> msgUnknownPsp = buildMessage(TestUtils.jsonSerializer(ibanOutcomeUnknownPspDTO));
 
         //Initializing Ok message
         IbanOutcomeDTO ibanOutcomeOkDTO = IbanOutcomeDTOFaker.mockInstance(4);
         ibanOutcomeOkDTO.setStatus(IbanConstants.STATUS_OK);
-        Message<String> msgOk = MessageBuilder.withPayload(TestUtils.jsonSerializer(ibanOutcomeOkDTO)).build();
+        Message<String> msgOk = buildMessage(TestUtils.jsonSerializer(ibanOutcomeOkDTO));
 
         //Initializing invalid message
-        Message<String> msgJsonInvalid = MessageBuilder.withPayload("INVALID JSON").build();
+        Message<String> msgJsonInvalid = buildMessage("INVALID JSON");
 
         Flux<Message<String>> messageFlux = Flux.just(msgKo, msgKoException, msgUnknownPsp, msgOk, msgJsonInvalid);
 
@@ -106,6 +107,14 @@ class IbanOutcomeMediatorServiceImplTest {
         Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
     }
 
+    private static Message<String> buildMessage(String ibanOutcomeKoDTO) {
+        return MessageBuilder
+                .withPayload(ibanOutcomeKoDTO)
+                .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                .setHeader(KafkaHeaders.OFFSET, 0L)
+                .build();
+    }
+
     @Test
     void otherApplicationRetryTest(){
         // Given
@@ -114,7 +123,11 @@ class IbanOutcomeMediatorServiceImplTest {
 
         Flux<Message<String>> msgs = Flux.just(ibanOutcomeDTO1, ibanOutcomeDTO2)
                 .map(TestUtils::jsonSerializer)
-                .map(MessageBuilder::withPayload)
+                .map(payload -> MessageBuilder
+                        .withPayload(payload)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.OFFSET, 0L)
+                )
                 .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 

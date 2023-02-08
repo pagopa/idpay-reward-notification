@@ -110,7 +110,7 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
         }
         return exportMono
                 .flatMap(exp -> csvWriterService.writeCsvAndFinalize(csvLines, exp))
-                .doOnNext(exp -> log.info("[PERFORMANCE_LOG][REWARD_NOTIFICATION_EXPORT_CSV] Completed export of reward notification related to initiative: from the beginning of the process: {}ms, initiative {}, fileName {}, split number {}", System.currentTimeMillis() - startTime, export.getInitiativeId(), exp.getFilePath(), n));
+                .doOnNext(exp -> log.info("[PERFORMANCE_LOG] [REWARD_NOTIFICATION_EXPORT_CSV] Completed export of reward notification related to initiative: from the beginning of the process: {}ms, initiative {}, fileName {}, split number {}", System.currentTimeMillis() - startTime, export.getInitiativeId(), exp.getFilePath(), n));
     }
 
 }

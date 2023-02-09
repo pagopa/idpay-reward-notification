@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class RewardFeedbackDTO {
+    private String id;
+    private String externalId;
     private String initiativeId;
     private String userId;
     private String organizationId;

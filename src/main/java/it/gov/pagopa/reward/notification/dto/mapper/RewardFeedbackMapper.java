@@ -13,6 +13,8 @@ public class RewardFeedbackMapper {
 
     public RewardFeedbackDTO apply(RewardsNotification notification, long deltaRewardCents){
         return RewardFeedbackDTO.builder()
+                .id(notification.getId())
+                .externalId(notification.getExternalId())
                 .rewardNotificationId(notification.getId())
                 .initiativeId(notification.getInitiativeId())
                 .userId(notification.getUserId())

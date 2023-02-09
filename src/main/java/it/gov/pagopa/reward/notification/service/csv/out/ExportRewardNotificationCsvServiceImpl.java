@@ -46,7 +46,7 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
                                 ? retrieveStuckInitiativeExportsThenNew
                                 : retrieveNewInitiativeExport
                 )))
-                .doFinally(x -> log.info("[PERFORMANCE_LOG] [REWARD_NOTIFICATION_EXPORT_CSV] Reward notification export completed in {}ms", System.currentTimeMillis() - startTime));
+                .doFinally(x -> log.info("[PERFORMANCE_LOG] [REWARD_NOTIFICATION_EXPORT_CSV] Time occurred to perform business logic: {} ms", System.currentTimeMillis() - startTime));
     }
 
     private Flux<RewardOrganizationExport> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {

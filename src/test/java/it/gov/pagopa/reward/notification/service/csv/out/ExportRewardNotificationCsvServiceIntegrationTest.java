@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 @TestPropertySource(properties = {
         "app.csv.export.split-size=500",
         "logging.level.it.gov.pagopa.reward.notification.connector.rest.UserRestClientImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
 })
 class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationTest {
 

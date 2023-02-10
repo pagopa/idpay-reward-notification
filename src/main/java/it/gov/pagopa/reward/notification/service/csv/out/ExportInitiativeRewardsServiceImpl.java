@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.service.csv.out.mapper.RewardNotification2ExportCsvService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.writer.ExportCsvFinalizeService;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -75,7 +76,7 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                     if(isStuckExport){
                         log.info("[REWARD_NOTIFICATION_EXPORT_CSV][STUCK_EXECUTION] Stuck execution has no previous records {}", export.getId());
                     } else {
-                        log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Execution has no previous records {}", export.getId());
+                        log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Execution has no previous records {}", export.getId());
                     }
                     return Mono.empty();
                 }))
@@ -108,9 +109,11 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                     // processing furthermore split once at time
                     .publishOn(Schedulers.single(splitScheduler));
         }
-        return exportMono
-                .flatMap(exp -> csvWriterService.writeCsvAndFinalize(csvLines, exp))
-                .doOnNext(exp -> log.info("[PERFORMANCE_LOG] [REWARD_NOTIFICATION_EXPORT_CSV] Completed export of reward notification related to initiative: from the beginning of the process: {}ms, initiative {}, fileName {}, split number {}", System.currentTimeMillis() - startTime, export.getInitiativeId(), exp.getFilePath(), n));
+        return PerformanceLogger.logTimingOnNext(
+                "REWARD_NOTIFICATION_SPLIT_WRITE_AND_UPLOAD", startTime,
+                exportMono
+                .flatMap(exp -> csvWriterService.writeCsvAndFinalize(csvLines, exp)),
+                exp -> "Completed export of reward notification related to initiative from the beginning of the process:  initiative %s, fileName %s, split number %s".formatted(export.getInitiativeId(), exp.getFilePath(), n));
     }
 
 }

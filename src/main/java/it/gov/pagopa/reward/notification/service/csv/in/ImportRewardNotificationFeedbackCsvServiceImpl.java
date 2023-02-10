@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.ImportElaborationCounters;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +74,10 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .parallel(parallelism)
                 .runOn(Schedulers.boundedElastic())
 
-                .flatMap(line -> rewardNotificationFeedbackHandlerService.evaluate(line, importRequest, exportCache))
+                .flatMap(line -> PerformanceLogger.logTimingOnNext(
+                        "FEEDBACK_FILE_LINE_EVALUATION",
+                        rewardNotificationFeedbackHandlerService.evaluate(line, importRequest, exportCache),
+                        x -> "importFile %s, line %s".formatted(importRequest.getFilePath(), line.getRowNumber())))
                 .map(ImportElaborationCounters::fromElaborationResult)
 
                 .reduce(ImportElaborationCounters::add)

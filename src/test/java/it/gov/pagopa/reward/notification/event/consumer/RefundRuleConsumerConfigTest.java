@@ -29,6 +29,7 @@ import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
 })
 public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 

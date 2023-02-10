@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,6 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
     @Override
     public Flux<RewardOrganizationExport> execute() {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting reward notifications export to CSV");
-        long startTime = System.currentTimeMillis();
-
         Mono<RewardOrganizationExport> retrieveNewInitiativeExport =
                 initiative2ExportRetrieverService.retrieve();
 
@@ -40,13 +39,15 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
                         .switchIfEmpty(retrieveNewInitiativeExport);
 
         // repeat until not more initiatives
-        return exportInitiative(retrieveStuckInitiativeExportsThenNew)
-                .expand(x -> exportInitiative((
-                        isStuckExecution(x)
-                                ? retrieveStuckInitiativeExportsThenNew
-                                : retrieveNewInitiativeExport
-                )))
-                .doFinally(x -> log.info("[PERFORMANCE_LOG] [REWARD_NOTIFICATION_EXPORT_CSV] Time occurred to perform business logic: {} ms", System.currentTimeMillis() - startTime));
+        return PerformanceLogger.logTimingFinally(
+                "REWARD_NOTIFICATION_EXPORT_CSV",
+                exportInitiative(retrieveStuckInitiativeExportsThenNew)
+                        .expand(x -> exportInitiative((
+                                isStuckExecution(x)
+                                        ? retrieveStuckInitiativeExportsThenNew
+                                        : retrieveNewInitiativeExport
+                        ))),
+                null);
     }
 
     private Flux<RewardOrganizationExport> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {

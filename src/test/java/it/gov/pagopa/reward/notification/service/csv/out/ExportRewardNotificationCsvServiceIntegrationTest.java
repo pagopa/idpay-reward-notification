@@ -45,7 +45,9 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
-        "app.csv.export.split-size=500"
+        "app.csv.export.split-size=500",
+        "logging.level.it.gov.pagopa.reward.notification.connector.rest.UserRestClientImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
 })
 class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationTest {
 
@@ -368,6 +370,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
             Assertions.assertTrue(n.getOrganizationId().startsWith("ORGANIZATION_ID_"), "Unexpected organizationId: %s".formatted(n));
 
+            Assertions.assertNotNull(n.getExternalId());
             Assertions.assertNotNull(n.getRewardNotificationId());
             Assertions.assertNotNull(n.getUserId());
             Assertions.assertNotEquals(0, n.getEffectiveRewardCents());

@@ -70,7 +70,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     @Override
     protected void subscribeAfterCommits(Flux<List<List<RewardOrganizationImport>>> afterCommits2subscribe) {
-        afterCommits2subscribe.subscribe(p -> log.debug("[REWARD_NOTIFICATION_FEEDBACK] Processed offsets committed successfully"));
+        afterCommits2subscribe.subscribe(p -> log.info("[REWARD_NOTIFICATION_FEEDBACK] Processed offsets committed successfully"));
     }
 
     @Override

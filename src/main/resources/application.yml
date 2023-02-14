@@ -5,13 +5,6 @@ reactor:
   bufferSize:
     small: ${REACTOR_BUFFER_SIZE:256}
 
-info:
-  build:
-    artifact: "@project.artifactId@"
-    name: "@project.artifactId@"
-    description: "@project.description@"
-    version: "@project.version@"
-
 spring:
   application:
     name: "@project.artifactId@"
@@ -23,7 +16,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback
+        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback;errors
       bindings:
         refundRuleConsumer-in-0:
           destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}
@@ -106,7 +99,7 @@ spring:
             security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
             connections.max.idle.ms: ${KAFKA_CONFIG_CONNECTION_MAX_IDLE_TIME:180000}
             metadata.max.idle.ms: ${KAFKA_CONFIG_METADATA_MAX_IDLE_MS:180000}
-            metadata.max.age.ms: ${KAFKA_CONFIG_METADATA_MAX_AGE_INTERVAL:180000}
+            metadata.max.age.ms: ${KAFKA_CONFIG_METADATA_MAX_AGE_INTERVAL:179000}
             max.request.size: ${KAFKA_CONFIG_METADATA_MAX_REQUEST_SIZE:1000000}
         bindings:
           refundRuleConsumer-in-0:
@@ -200,6 +193,10 @@ spring:
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
 
+management.endpoints:
+  web:
+    exposure.include: info, health
+
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
@@ -262,7 +259,7 @@ app:
     headers:
       x-api-key: ${PDV_DECRYPT_API_KEY:x_api_key}
     retry:
-      delay-millis: ${PDV_RETRY_DELAY_MILLIS:10000}
+      delay-millis: ${PDV_RETRY_DELAY_MILLIS:2000}
       max-attempts: ${PDV_RETRY_MAX_ATTEMPTS:${RETRY_MAX_ATTEMPTS:10}}
   web-client:
     connect.timeout.millis: ${CONNECT_TIMEOUT_MILLIS:10000}

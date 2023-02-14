@@ -65,7 +65,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
 
     @Override
     protected void subscribeAfterCommits(Flux<List<List<Rewards>>> afterCommits2subscribe) {
-        afterCommits2subscribe.subscribe(p -> log.debug("[REWARD_NOTIFICATION] Processed offsets committed successfully"));
+        afterCommits2subscribe.subscribe(p -> log.info("[REWARD_NOTIFICATION] Processed offsets committed successfully"));
     }
 
     @Override

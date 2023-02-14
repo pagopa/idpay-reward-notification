@@ -39,6 +39,7 @@ import java.util.concurrent.Semaphore;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.rewards.RewardsServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
 })
 @Slf4j
 abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest {

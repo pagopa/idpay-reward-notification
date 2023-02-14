@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExpor
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Iban2NotifyRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.User2NotifyRetrieverService;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -25,11 +26,17 @@ public class RewardNotification2ExportCsvServiceImpl implements RewardNotificati
 
     @Override
     public Mono<RewardNotificationExportCsvDto> apply(RewardsNotification reward) {
-        return iban2NotifyRetrieverService.retrieveIban(reward)
-                .flatMap(user2NotifyRetrieverService::retrieveUser)
-                .map(r2user -> rewardNotificationExport2CsvMapper.apply(r2user.getKey(), r2user.getValue()))
+        long startTime = System.currentTimeMillis();
+        return PerformanceLogger.logTimingOnNext(
+                        "EXPORT_CSV_DATA_ENRICH", startTime,
+                        iban2NotifyRetrieverService.retrieveIban(reward)
+                                .flatMap(user2NotifyRetrieverService::retrieveUser)
+                                .map(r2user -> rewardNotificationExport2CsvMapper.apply(r2user.getKey(), r2user.getValue())),
+                        x -> reward.getId()
+                )
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while trying to map reward {} on csv line", reward.getId(), e);
+                    PerformanceLogger.logTiming("EXPORT_CSV_DATA_ENRICH", startTime, "%s - FAIL".formatted(reward.getId()));
                     return Mono.empty();
                 });
     }

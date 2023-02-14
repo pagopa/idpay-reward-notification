@@ -40,7 +40,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN"
+        "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
 })
 class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationTest {
 

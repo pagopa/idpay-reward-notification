@@ -57,7 +57,7 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaConsumer<IbanOutcom
     @Override
     protected void subscribeAfterCommits(Flux<List<RewardIban>> afterCommits2subscribe) {
         afterCommits2subscribe
-                .subscribe(i -> log.debug("[REWARD_NOTIFICATION_IBAN_OUTCOME] Processed offsets for IBAN in outcome topic committed successfully"));
+                .subscribe(i -> log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Processed offsets for IBAN in outcome topic committed successfully"));
     }
 
     @Override

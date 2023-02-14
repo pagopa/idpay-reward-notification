@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
@@ -35,7 +36,11 @@ class RefundRuleMediatorServiceTest {
 
         Flux<Message<String>> msgs = Flux.just(initiativeRefund2StoreDTO1, initiativeRefund2StoreDTO2, initiativeRefund2StoreDTO3)
                 .map(TestUtils::jsonSerializer)
-                .map(MessageBuilder::withPayload)
+                .map(payload -> MessageBuilder
+                        .withPayload(payload)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.OFFSET, 0L)
+                )
                 .map(MessageBuilder::build);
 
         RewardNotificationRule rewardNotificationRuleO1 = RewardNotificationRuleFaker.mockInstance(1);
@@ -73,7 +78,11 @@ class RefundRuleMediatorServiceTest {
 
         Flux<Message<String>> msgs = Flux.just(rewardNotificationRule1, rewardNotificationRule2)
                 .map(TestUtils::jsonSerializer)
-                .map(MessageBuilder::withPayload)
+                .map(payload -> MessageBuilder
+                        .withPayload(payload)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.OFFSET, 0L)
+                )
                 .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 

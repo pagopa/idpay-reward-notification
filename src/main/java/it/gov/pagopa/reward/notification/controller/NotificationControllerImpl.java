@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificatio
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
+import it.gov.pagopa.reward.notification.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,17 +35,20 @@ public class NotificationControllerImpl implements NotificationController{
 
     // region imports
     private final OrganizationImportsServiceImpl organizationImportsService;
+    private final Utilities utilities;
     // endregion
 
     public NotificationControllerImpl(
             OrganizationExportsServiceImpl organizationExportsService,
             ExportRewardNotificationCsvService exportRewardNotificationCsvService,
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
-            OrganizationImportsServiceImpl organizationImportsService) {
+            OrganizationImportsServiceImpl organizationImportsService,
+            Utilities utilities) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
         this.organizationImportsService = organizationImportsService;
+        this.utilities = utilities;
     }
 
     @Override
@@ -74,6 +78,7 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Mono<Page<RewardExportsDTO>> getExportsPaged(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
+        utilities.logGetExportsPaged(initiativeId, organizationId);
         return organizationExportsService
                 .findAllPaged(organizationId, initiativeId, pageable, filters)
                 .switchIfEmpty(Mono.just(Page.empty(pageable)));

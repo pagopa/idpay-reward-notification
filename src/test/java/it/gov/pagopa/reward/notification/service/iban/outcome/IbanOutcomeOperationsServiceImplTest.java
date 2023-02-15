@@ -4,8 +4,9 @@ import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
-import it.gov.pagopa.reward.notification.utils.IbanConstants;
+import it.gov.pagopa.reward.notification.service.iban.outcome.recovery.RecoverIbanKoService;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
+import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,11 +25,13 @@ class IbanOutcomeOperationsServiceImplTest {
     private RewardIbanService rewardIbanServiceMock;
     @Mock
     private IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapperMock;
+    @Mock
+    private RecoverIbanKoService recoverIbanKoServiceMock;
     private IbanOutcomeOperationsService ibanOutcomeOperationsService;
 
     @BeforeEach
     void setUp() {
-        ibanOutcomeOperationsService = new IbanOutcomeOperationsServiceImpl(rewardIbanServiceMock, ibanOutcomeDTO2RewardIbanMapperMock);
+        ibanOutcomeOperationsService = new IbanOutcomeOperationsServiceImpl(rewardIbanServiceMock, ibanOutcomeDTO2RewardIbanMapperMock, recoverIbanKoServiceMock);
     }
 
     @Test

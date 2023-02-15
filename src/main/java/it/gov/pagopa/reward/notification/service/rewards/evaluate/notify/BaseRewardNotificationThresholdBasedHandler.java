@@ -56,7 +56,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
 
     protected abstract boolean isThresholdReached(RewardNotificationRule rule, RewardsNotification n, Reward reward);
 
-    private LocalDate calculateNotificationDate() {
+    public LocalDate calculateNotificationDate() {
         if(notificateNextDay){
             return LocalDate.now().plusDays(1);
         } else {

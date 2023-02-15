@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.notification.service.iban.outcome.recovery;
 
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
-import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationBudgetExhaustedHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationTemporalHandlerServiceImpl;
@@ -58,12 +57,5 @@ public abstract class BaseDiscardedRewardNotificationServiceImpl implements Disc
                     notification.setNotificationDate(date);
                     return notification;
                 });
-    }
-
-    public static void resetNotificationStatus(RewardsNotification rewardsNotification) {
-        rewardsNotification.setStatus(RewardNotificationStatus.TO_SEND);
-        rewardsNotification.setRejectionReason(null);
-        rewardsNotification.setResultCode(null);
-        rewardsNotification.setExportDate(null);
     }
 }

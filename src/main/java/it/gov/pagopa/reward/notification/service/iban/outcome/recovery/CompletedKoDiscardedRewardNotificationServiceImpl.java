@@ -21,6 +21,7 @@ import java.util.List;
 public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDiscardedRewardNotificationServiceImpl implements CompletedKoDiscardedRewardNotificationService {
 
     public static final String RECOVERY_ID_SUFFIX = "_recovery-";
+    public static final String RECOVERED_ID_PLACEHOLDERS = "%s%s%d";
     private final RewardsNotificationRepository rewardsNotificationRepository;
 
 
@@ -35,8 +36,8 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
 
     @Override
     public Mono<List<RewardsNotification>> handleCompletedKoDiscardedRewardNotification(RewardIban rewardIban) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Searching for {} discarded rewardNotification on userId {} and initiativeId {}",
-                RewardNotificationStatus.COMPLETED_KO, rewardIban.getUserId(), rewardIban.getInitiativeId());
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Searching for COMPLETED_KO discarded rewardNotification on userId {} and initiativeId {}",
+                rewardIban.getUserId(), rewardIban.getInitiativeId());
 
         // case 2 - Exported notification having KO result
         return PerformanceLogger.logTimingOnNext("REWARD_NOTIFICATION_IBAN_OUTCOME",
@@ -46,24 +47,23 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
                                 RewardNotificationStatus.COMPLETED_KO)
                         .flatMap(this::createRemedialNotification)
                         .collectList(),
-                recovered -> "Recovered %d %s rewardNotification on userId %s and initiativeId %s".formatted(
+                recovered -> "Recovered %d COMPLETED_KO rewardNotification on userId %s and initiativeId %s".formatted(
                         recovered.size(),
-                        RewardNotificationStatus.COMPLETED_KO,
                         rewardIban.getUserId(),
                         rewardIban.getInitiativeId()));
     }
 
     private Mono<RewardsNotification> createRemedialNotification(RewardsNotification discarded) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Found discarded {}} rewardNotification having id {} on userId {} and initiativeId {}",
-                RewardNotificationStatus.COMPLETED_KO, discarded.getId(), discarded.getUserId(), discarded.getInitiativeId());
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Found discarded COMPLETED_KO rewardNotification having id {} on userId {} and initiativeId {}",
+                discarded.getId(), discarded.getUserId(), discarded.getInitiativeId());
 
         return Mono.just(discarded)
                 .flatMap(this::buildRemedialNotification)
                 .flatMap(remedialNotification -> updateDiscardedAndStoreRemedial(discarded, remedialNotification))
 
                 .onErrorResume(e -> {
-                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] Something went wrong while recovering {} rewardNotification having id {} related to userId {} and initiativeId {}",
-                            RewardNotificationStatus.COMPLETED_KO, discarded.getId(), discarded.getUserId(), discarded.getInitiativeId(), e);
+                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] Something went wrong while recovering COMPLETED_KO rewardNotification having id {} related to userId {} and initiativeId {}",
+                            discarded.getId(), discarded.getUserId(), discarded.getInitiativeId(), e);
                     return Mono.empty();
                 });
     }
@@ -96,9 +96,10 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
         // if recovering a remedial it will calculate the next progressive
         if (input.getOrdinaryId() != null) {
             int nextRecoveryProgressiveId = getNextRecoveryProgressiveId(id);
+            out.setId(RECOVERED_ID_PLACEHOLDERS.formatted(input.getOrdinaryId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId));
 
-            out.setId("%s%s%d".formatted(input.getOrdinaryId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId));
-            out.setExternalId("%s%s%d".formatted(input.getExternalId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId));
+            out.setExternalId(getRecoveredExternalId(input.getExternalId()));
+
             out.setOrdinaryId(input.getOrdinaryId());
         } else {
             out.setId(id.concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
@@ -106,6 +107,14 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
             out.setOrdinaryId(id);
         }
 
+    }
+
+    private static String getRecoveredExternalId(String externalId) {
+        String[] externalIdSplit = externalId.split(RECOVERY_ID_SUFFIX);
+
+        return externalIdSplit.length == 2
+                ? RECOVERED_ID_PLACEHOLDERS.formatted(externalIdSplit[0], RECOVERY_ID_SUFFIX, Integer.parseInt(externalIdSplit[1]) + 1)
+                : RECOVERED_ID_PLACEHOLDERS.formatted(externalId, RECOVERY_ID_SUFFIX, 1);
     }
 
     private static int getNextRecoveryProgressiveId(String id) {

@@ -5,7 +5,7 @@ public enum RewardNotificationStatus {
     TO_SEND,
     /** if an error occurred while exporting */
     ERROR,
-    /** if it was previously an ERROR status and has been recovered */
+    /** if it was previously an COMPLETED_KO status and has been recovered */
     RECOVERED,
     /** if exported, but not feedback has been received */
     EXPORTED,

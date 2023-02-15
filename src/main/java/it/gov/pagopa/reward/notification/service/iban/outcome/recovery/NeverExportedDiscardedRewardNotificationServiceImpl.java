@@ -56,7 +56,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
                 notification.getId(), notification.getUserId(), notification.getInitiativeId());
 
         return Mono.just(notification)
-                .doOnNext(BaseDiscardedRewardNotificationServiceImpl::resetNotificationStatus)
+                .doOnNext(this::resetRewardNotificationStatus)
                 .flatMap(n -> setRemedialNotificationDate(n.getInitiativeId(), n))
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
@@ -64,5 +64,12 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
                             notification.getId(), notification.getUserId(), notification.getInitiativeId(), e);
                     return Mono.empty();
                 });
+    }
+
+    private void resetRewardNotificationStatus(RewardsNotification rewardsNotification) {
+        rewardsNotification.setStatus(RewardNotificationStatus.TO_SEND);
+        rewardsNotification.setRejectionReason(null);
+        rewardsNotification.setResultCode(null);
+        rewardsNotification.setExportDate(null);
     }
 }

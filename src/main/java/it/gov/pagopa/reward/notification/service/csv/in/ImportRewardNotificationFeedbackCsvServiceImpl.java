@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -71,8 +70,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
         return Flux.fromStream(csvReader.stream())
                 .doOnNext(r -> r.setRowNumber(rowNumber[0]++))
 
-                .parallel(parallelism)
-                .runOn(Schedulers.boundedElastic())
+                .limitRate(parallelism)
 
                 .flatMap(line -> PerformanceLogger.logTimingOnNext(
                         "FEEDBACK_FILE_LINE_EVALUATION",
@@ -104,7 +102,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     }
 
     private RewardOrganizationImport updateImportRequest(ImportElaborationCounters counter, RewardOrganizationImport importRequest) {
-        log.debug("[REWARD_NOTIFICATION_FEEDBACK] updating importRequest {} with counters {}", importRequest.getFilePath(), counter);
+        log.info("[REWARD_NOTIFICATION_FEEDBACK] updating importRequest {} with counters {}", importRequest.getFilePath(), counter);
 
         importRequest.setExportIds(new ArrayList<>(counter.getExportIds()));
         importRequest.getExportIds().sort(Comparator.comparing(Function.identity()));

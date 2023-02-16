@@ -30,6 +30,7 @@ public class RewardsNotification {
     private String externalId;
     private String remedialId;
     private String ordinaryId;
+    private String ordinaryExternalId;
     private String initiativeId;
     private String initiativeName;
     private String organizationId;

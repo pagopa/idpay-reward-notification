@@ -98,23 +98,18 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
             int nextRecoveryProgressiveId = getNextRecoveryProgressiveId(id);
             out.setId(RECOVERED_ID_PLACEHOLDERS.formatted(input.getOrdinaryId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId));
 
-            out.setExternalId(getRecoveredExternalId(input.getExternalId()));
+            int nextRecoveryProgressiveExternalId = getNextRecoveryProgressiveId(input.getExternalId());
+            out.setExternalId(RECOVERED_ID_PLACEHOLDERS.formatted(input.getOrdinaryExternalId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveExternalId));
 
             out.setOrdinaryId(input.getOrdinaryId());
+            out.setOrdinaryExternalId(input.getOrdinaryExternalId());
         } else {
             out.setId(id.concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
             out.setExternalId(input.getExternalId().concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
+
             out.setOrdinaryId(id);
+            out.setOrdinaryExternalId(input.getExternalId());
         }
-
-    }
-
-    private static String getRecoveredExternalId(String externalId) {
-        String[] externalIdSplit = externalId.split(RECOVERY_ID_SUFFIX);
-
-        return externalIdSplit.length == 2
-                ? RECOVERED_ID_PLACEHOLDERS.formatted(externalIdSplit[0], RECOVERY_ID_SUFFIX, Integer.parseInt(externalIdSplit[1]) + 1)
-                : RECOVERED_ID_PLACEHOLDERS.formatted(externalId, RECOVERY_ID_SUFFIX, 1);
     }
 
     private static int getNextRecoveryProgressiveId(String id) {

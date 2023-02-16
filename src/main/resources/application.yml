@@ -107,7 +107,7 @@ spring:
               startOffset: ${KAFKA_REFUND_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REFUND_RULE_REQUEST_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_REFUND_RULE_REQUEST_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REFUND_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -122,7 +122,7 @@ spring:
               startOffset: ${KAFKA_REWARD_RESPONSE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_RESPONSE_REQUEST_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_REWARD_RESPONSE_REQUEST_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REWARD_RESPONSE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -137,7 +137,7 @@ spring:
               startOffset: ${KAFKA_CHECKIBAN_OUTCOME_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_CHECKIBAN_OUTCOME_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_CHECKIBAN_OUTCOME_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_CHECKIBAN_OUTCOME_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -160,7 +160,7 @@ spring:
               startOffset: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:

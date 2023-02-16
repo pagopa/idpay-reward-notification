@@ -11,7 +11,7 @@ import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.utils.Utilities;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.Assertions;
@@ -40,14 +40,14 @@ class ExportCsvFinalizeServiceTest {
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock private RewardOrganizationExportsRepository rewardOrganizationExportsRepositoryMock;
     @Mock private RewardsNotificationBlobClient rewardsNotificationBlobClientMock;
-    @Mock private Utilities utilitiesMock;
+    @Mock private AuditUtilities auditUtilitiesMock;
     private ExportCsvFinalizeService service;
 
     @BeforeEach
     void init() {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         char csvSeparator = ';';
-        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock, utilitiesMock);
+        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock, auditUtilitiesMock);
     }
 
     @Test

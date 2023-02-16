@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 @Slf4j
-public class Utilities {
+public class AuditUtilities {
     private static String SRCIP;
 
     static {

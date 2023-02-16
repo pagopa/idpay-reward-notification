@@ -23,8 +23,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
-@ContextConfiguration(classes = {Utilities.class,InetAddress.class})
-class UtilitiesTest {
+@ContextConfiguration(classes = {AuditUtilities.class,InetAddress.class})
+class AuditUtilitiesTest {
     private static final String SRCIP;
 
     static {
@@ -43,7 +43,7 @@ class UtilitiesTest {
     @MockBean
     Logger logger;
     @Autowired
-    Utilities utilities;
+    AuditUtilities auditUtilities;
     @MockBean
     InetAddress inetAddress;
     MemoryAppender memoryAppender;
@@ -60,18 +60,18 @@ class UtilitiesTest {
 
     @Test
     void logUploadFile_ok(){
-        utilities.logUploadFile(INITIATIVE_ID,ORGANIZATION_ID,FILE_NAME);
+        auditUtilities.logUploadFile(INITIATIVE_ID,ORGANIZATION_ID,FILE_NAME);
         assertThat(memoryAppender.contains(ch.qos.logback.classic.Level.DEBUG,MSG)).isFalse();
     }
 
     @Test
     void logDownloadFile_ok(){
-        utilities.logDownloadFile(INITIATIVE_ID,ORGANIZATION_ID);
+        auditUtilities.logDownloadFile(INITIATIVE_ID,ORGANIZATION_ID);
         assertThat(memoryAppender.contains(ch.qos.logback.classic.Level.DEBUG,MSG)).isFalse();
     }
     @Test
     void logGetExportsPaged_ok(){
-        utilities.logGetExportsPaged(INITIATIVE_ID,ORGANIZATION_ID);
+        auditUtilities.logGetExportsPaged(INITIATIVE_ID,ORGANIZATION_ID);
         assertThat(memoryAppender.contains(ch.qos.logback.classic.Level.DEBUG,MSG)).isFalse();
     }
 

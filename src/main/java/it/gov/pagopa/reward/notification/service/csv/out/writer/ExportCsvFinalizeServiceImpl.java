@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.utils.Utilities;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -36,19 +36,19 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
     private final HeaderColumnNameStrategy<RewardNotificationExportCsvDto> mappingStrategy;
     private final RewardsNotificationBlobClient azureBlobClient;
-    private final Utilities utilities;
+    private final AuditUtilities auditUtilities;
 
     public ExportCsvFinalizeServiceImpl(
             @Value("${app.csv.tmp-dir}") String csvTmpDir,
             @Value("${app.csv.export.separator}") char csvSeparator,
             RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationBlobClient azureBlobClient,
-            Utilities utilities) {
+            AuditUtilities auditUtilities) {
         this.csvTmpDir = csvTmpDir;
         this.csvSeparator = csvSeparator;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
         this.azureBlobClient = azureBlobClient;
-        this.utilities = utilities;
+        this.auditUtilities = auditUtilities;
         mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationExportCsvDto.class);
     }
 
@@ -62,7 +62,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         export.setStatus(RewardOrganizationExportStatus.EXPORTED);
 
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Sending to Azure Storage export of initiative {} having id {} on path {}", export.getInitiativeId(), export.getId(), export.getFilePath());
-        utilities.logUploadFile(export.getInitiativeId(), export.getOrganizationId(), zipFilePath.toFile().getName());
+        auditUtilities.logUploadFile(export.getInitiativeId(), export.getOrganizationId(), zipFilePath.toFile().getName());
 
         return azureBlobClient.uploadFile(zipFilePath.toFile(), export.getFilePath(), "application/zip")
                 .filter(r-> {

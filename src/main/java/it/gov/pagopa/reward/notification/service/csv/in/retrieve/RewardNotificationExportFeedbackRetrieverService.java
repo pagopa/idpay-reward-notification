@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImpor
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public interface RewardNotificationExportFeedbackRetrieverService {
     Mono<RewardOrganizationExport> retrieve(RewardsNotification rewardsNotification, RewardNotificationImportCsvDto row, RewardOrganizationImport importRequest, Map<String, RewardOrganizationExport> exportCache);
-    Mono<Long> updateCounters(RewardsNotification notification, RewardOrganizationExport export);
+    Mono<RewardNotificationFeedbackExportDelta> updateCounters(RewardsNotification notification, RewardOrganizationExport export);
 
     Flux<UpdateResult> updateExportStatus(List<String> exportIds);
 }

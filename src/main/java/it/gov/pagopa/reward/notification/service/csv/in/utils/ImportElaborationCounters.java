@@ -44,7 +44,7 @@ public class ImportElaborationCounters {
         boolean isError = outcome.getError() != null;
 
         ImportElaborationCounters out = new ImportElaborationCounters();
-        out.exportIds=outcome.getExportId()!=null? Set.of(outcome.getExportId()) : Collections.emptySet();
+        out.exportIds=outcome.getExportDelta()!=null? Set.of(outcome.getExportDelta().getExportId()) : Collections.emptySet();
         out.rewardsResulted = 1;
         out.rewardsResultedError = isError ? 1 : 0;
         out.rewardsResultedOk = isOkOutcome ? 1 : 0;

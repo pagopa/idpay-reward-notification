@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.service.csv.RewardNotificationNotifierS
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.FeedbackEvaluationException;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackHandlerOutcome;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +38,11 @@ public class RewardNotificationFeedbackHandlerServiceImpl implements RewardNotif
 
         if(rowResult == null){
             log.error("[REWARD_NOTIFICATION_FEEDBACK] unexpected feedback result {} handling uniqueId {} notified at row {} of import {}", row.getResult(), row.getUniqueID(), row.getRowNumber(), importRequest.getFilePath());
-            return Mono.just(new RewardNotificationFeedbackHandlerOutcome(null, null, new RewardOrganizationImport.RewardOrganizationImportError(row.getRowNumber(), RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_RESULT)));
+            return Mono.just(new RewardNotificationFeedbackHandlerOutcome(null, new RewardOrganizationImport.RewardOrganizationImportError(row.getRowNumber(), RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_RESULT), null));
         }
 
         return notificationFeedbackRetrieverService.retrieve(row, importRequest)
                 .flatMap(rn -> retrieveExportAndEvaluate(rn, row, rowResult, importRequest, exportCache))
-                .map(rn -> new RewardNotificationFeedbackHandlerOutcome(rowResult, rn.getExportId(), null))
 
                 .onErrorResume(e -> {
                     RewardFeedbackConstants.ImportFeedbackRowErrors error;
@@ -52,27 +52,28 @@ public class RewardNotificationFeedbackHandlerServiceImpl implements RewardNotif
                         log.error("[REWARD_NOTIFICATION_FEEDBACK] Something gone wrong while handling uniqueId {} notified at row {} of import {}", row.getUniqueID(), row.getRowNumber(), importRequest.getFilePath(), e);
                         error = RewardFeedbackConstants.ImportFeedbackRowErrors.GENERIC_ERROR;
                     }
-                    return Mono.just(new RewardNotificationFeedbackHandlerOutcome(rowResult, null, new RewardOrganizationImport.RewardOrganizationImportError(row.getRowNumber(), error)));
+                    return Mono.just(new RewardNotificationFeedbackHandlerOutcome(rowResult, new RewardOrganizationImport.RewardOrganizationImportError(row.getRowNumber(), error), null));
                 });
     }
 
-    private Mono<RewardsNotification> retrieveExportAndEvaluate(RewardsNotification notification, RewardNotificationImportCsvDto row, RewardOrganizationImportResult rowResult, RewardOrganizationImport importRequest, Map<String, RewardOrganizationExport> exportCache) {
+    private Mono<RewardNotificationFeedbackHandlerOutcome> retrieveExportAndEvaluate(RewardsNotification notification, RewardNotificationImportCsvDto row, RewardOrganizationImportResult rowResult, RewardOrganizationImport importRequest, Map<String, RewardOrganizationExport> exportCache) {
         return exportFeedbackRetrieverService.retrieve(notification, row, importRequest, exportCache)
                 .flatMap(e -> evaluate(notification, row, rowResult, importRequest, e));
     }
 
-    private Mono<RewardsNotification> evaluate(RewardsNotification notification, RewardNotificationImportCsvDto row, RewardOrganizationImportResult rowResult, RewardOrganizationImport importRequest, RewardOrganizationExport export) {
+    private Mono<RewardNotificationFeedbackHandlerOutcome> evaluate(RewardsNotification notification, RewardNotificationImportCsvDto row, RewardOrganizationImportResult rowResult, RewardOrganizationImport importRequest, RewardOrganizationExport export) {
         return notificationFeedbackRetrieverService.updateFeedbackHistory(notification, row, rowResult, importRequest)
                 .flatMap(toNotify -> {
-                    Mono<RewardsNotification> notificationMono;
+                    Mono<RewardNotificationFeedbackHandlerOutcome> outcomeMono;
                     if (Boolean.TRUE.equals(toNotify)) {
-                        notificationMono = exportFeedbackRetrieverService.updateCounters(notification, export)
-                                .flatMap(deltaReward -> notificationNotifierService.notify(notification, deltaReward));
+                        outcomeMono = exportFeedbackRetrieverService.updateCounters(notification, export)
+                                .flatMap(exportDelta -> notificationNotifierService.notify(notification, exportDelta.getExportDeltaReward())
+                                        .map(x -> new RewardNotificationFeedbackHandlerOutcome(rowResult, null, exportDelta)));
                     } else {
-                        notificationMono = Mono.just(notification);
+                        outcomeMono = Mono.just(new RewardNotificationFeedbackHandlerOutcome(rowResult, null, new RewardNotificationFeedbackExportDelta(export.getId(), 0L, 0L, 0L)));
                     }
 
-                    return notificationMono;
+                    return outcomeMono;
                 });
     }
 

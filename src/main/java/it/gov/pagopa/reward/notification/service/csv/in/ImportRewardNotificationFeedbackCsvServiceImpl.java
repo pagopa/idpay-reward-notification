@@ -32,7 +32,6 @@ import java.util.function.Function;
 public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRewardNotificationFeedbackCsvService {
 
     private final char csvSeparator;
-    private final Integer parallelism;
 
     private final RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService;
     private final RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService;
@@ -41,11 +40,9 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
 
     public ImportRewardNotificationFeedbackCsvServiceImpl(
             @Value("${app.csv.import.separator}") char csvSeparator,
-            @Value("${app.csv.import.parallelism}") Integer parallelism,
 
             RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService, RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService) {
         this.csvSeparator = csvSeparator;
-        this.parallelism = parallelism;
         this.rewardNotificationFeedbackHandlerService = rewardNotificationFeedbackHandlerService;
         this.exportFeedbackRetrieverService = exportFeedbackRetrieverService;
 
@@ -69,8 +66,6 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
         int[] rowNumber = new int[]{1};
         return Flux.fromStream(csvReader.stream())
                 .doOnNext(r -> r.setRowNumber(rowNumber[0]++))
-
-                .limitRate(parallelism)
 
                 .flatMap(line -> PerformanceLogger.logTimingOnNext(
                         "FEEDBACK_FILE_LINE_EVALUATION",

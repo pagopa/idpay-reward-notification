@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationExportsFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import org.junit.jupiter.api.AfterEach;
@@ -145,14 +146,14 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
 
         long expectedDeltaRewardCents = rn.getRewardCents();
 
-        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(true), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+        Mockito.when(repositoryMock.updateCounters(Mockito.eq(1L), Mockito.eq(expectedDeltaRewardCents), Mockito.eq(1L), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        Long result = service.updateCounters(rn, export).block();
+        RewardNotificationFeedbackExportDelta result = service.updateCounters(rn, export).block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedDeltaRewardCents, result);
+        Assertions.assertEquals(new RewardNotificationFeedbackExportDelta(export.getId(), 1L, 1L, expectedDeltaRewardCents), result);
     }
 
     @Test
@@ -167,14 +168,14 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
 
         long expectedDeltaRewardCents = 0L;
 
-        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(true), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+        Mockito.when(repositoryMock.updateCounters(Mockito.eq(1L), Mockito.eq(expectedDeltaRewardCents), Mockito.eq(0L), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        Long result = service.updateCounters(rn, export).block();
+        RewardNotificationFeedbackExportDelta result = service.updateCounters(rn, export).block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedDeltaRewardCents, result);
+        Assertions.assertEquals(new RewardNotificationFeedbackExportDelta(export.getId(), 1L, 0L, expectedDeltaRewardCents), result);
     }
 
     @Test
@@ -193,14 +194,14 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
 
         long expectedDeltaRewardCents = 0L;
 
-        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+        Mockito.when(repositoryMock.updateCounters(Mockito.eq(0L), Mockito.eq(expectedDeltaRewardCents), Mockito.eq(0L), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        Long result = service.updateCounters(rn, export).block();
+        RewardNotificationFeedbackExportDelta result = service.updateCounters(rn, export).block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedDeltaRewardCents, result);
+        Assertions.assertEquals(new RewardNotificationFeedbackExportDelta(export.getId(), 0L, 0L, expectedDeltaRewardCents), result);
     }
 
     @Test
@@ -222,14 +223,14 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
 
         long expectedDeltaRewardCents = 0L;
 
-        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+        Mockito.when(repositoryMock.updateCounters(Mockito.eq(0L), Mockito.eq(expectedDeltaRewardCents), Mockito.eq(0L), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        Long result = service.updateCounters(rn, export).block();
+        RewardNotificationFeedbackExportDelta result = service.updateCounters(rn, export).block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedDeltaRewardCents, result);
+        Assertions.assertEquals(new RewardNotificationFeedbackExportDelta(export.getId(), 0L, 0L, expectedDeltaRewardCents), result);
     }
 
     @Test
@@ -251,14 +252,14 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
 
         long expectedDeltaRewardCents = rn.getRewardCents();
 
-        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+        Mockito.when(repositoryMock.updateCounters(Mockito.eq(0L), Mockito.eq(expectedDeltaRewardCents), Mockito.eq(1L), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        Long result = service.updateCounters(rn, export).block();
+        RewardNotificationFeedbackExportDelta result = service.updateCounters(rn, export).block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedDeltaRewardCents, result);
+        Assertions.assertEquals(new RewardNotificationFeedbackExportDelta(export.getId(), 0L, 1L, expectedDeltaRewardCents), result);
     }
 
     @Test
@@ -280,14 +281,14 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
 
         long expectedDeltaRewardCents = -rn.getRewardCents();
 
-        Mockito.when(repositoryMock.updateCountersOnRewardFeedback(Mockito.eq(false), Mockito.eq(expectedDeltaRewardCents), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+        Mockito.when(repositoryMock.updateCounters(Mockito.eq(0L), Mockito.eq(expectedDeltaRewardCents), Mockito.eq(-1L), Mockito.same(export))).thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
 
         // When
-        Long result = service.updateCounters(rn, export).block();
+        RewardNotificationFeedbackExportDelta result = service.updateCounters(rn, export).block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedDeltaRewardCents, result);
+        Assertions.assertEquals(new RewardNotificationFeedbackExportDelta(export.getId(), 0L, -1L, expectedDeltaRewardCents), result);
     }
     //endregion
 

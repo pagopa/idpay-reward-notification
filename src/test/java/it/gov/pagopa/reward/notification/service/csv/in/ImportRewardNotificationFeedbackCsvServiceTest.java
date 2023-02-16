@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImpor
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackHandlerOutcome;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -45,7 +46,7 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.ConvertUtils")).setLevel(Level.OFF);
 
-        service = new ImportRewardNotificationFeedbackCsvServiceImpl(';', 7, rowHandlerServiceMock, exportFeedbackRetrieverServiceMock);
+        service = new ImportRewardNotificationFeedbackCsvServiceImpl(';', rowHandlerServiceMock, exportFeedbackRetrieverServiceMock);
 
         ZipUtils.unzip("src/test/resources/feedbackUseCasesZip/valid/validUseCase.zip", sampleCsv.getParent().toString());
     }
@@ -79,7 +80,7 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
             } else {
                 error=null;
             }
-            return Mono.just(new RewardNotificationFeedbackHandlerOutcome(feedbackOutcome, error==null? "EXPORTID%d".formatted(row.getRowNumber()%3) : null, error));
+            return Mono.just(new RewardNotificationFeedbackHandlerOutcome(feedbackOutcome, error, error==null? new RewardNotificationFeedbackExportDelta("EXPORTID%d".formatted(row.getRowNumber()%3), 1L, RewardOrganizationImportResult.OK.equals(feedbackOutcome) ? 1 : 0, RewardOrganizationImportResult.OK.equals(feedbackOutcome) ? 10L : 0L) : null));
         });
 
         Mockito.when(exportFeedbackRetrieverServiceMock.updateExportStatus(expectedExportIds))

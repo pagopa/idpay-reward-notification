@@ -252,8 +252,6 @@ app:
     import:
       # column separator to use when importing csv
       separator: ${IMPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
-      # The parallelism level to use when reading the csv
-      parallelism: ${IMPORT_CSV_PARALLELISM:7}
   pdv:
     base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:

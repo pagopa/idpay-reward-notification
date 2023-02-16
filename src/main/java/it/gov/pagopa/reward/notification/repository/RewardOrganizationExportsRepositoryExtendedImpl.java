@@ -183,19 +183,6 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Mono<UpdateResult> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
-        long incOk;
-        if (deltaReward > 0L) { // is ok result
-            incOk = 1L;
-        } else if (deltaReward < 0L) { // is ko preceded by ok result
-            incOk = -1L;
-        } else {
-            incOk = 0L;
-        }
-        return updateCounters(firstFeedback ? 1L : 0L, deltaReward, incOk, export);
-    }
-
-    @Override
     public Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export) {
         boolean reward2update = incRewardCents != 0L;
         boolean count2update = incCount != 0L;

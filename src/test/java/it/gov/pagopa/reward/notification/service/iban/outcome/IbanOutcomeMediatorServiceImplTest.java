@@ -5,10 +5,10 @@ import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
-import it.gov.pagopa.reward.notification.service.LockService;
-import it.gov.pagopa.reward.notification.utils.IbanConstants;
+import it.gov.pagopa.reward.notification.service.LockServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,8 +30,6 @@ class IbanOutcomeMediatorServiceImplTest {
     private IbanOutcomeOperationsService ibanOutcomeOperationsServiceMock;
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
-    @Mock
-    private LockService lockServiceMock;
 
 
     private IbanOutcomeMediatorService ibanOutcomeMediatorService;
@@ -43,7 +41,7 @@ class IbanOutcomeMediatorServiceImplTest {
                     1000,
                     ibanOutcomeOperationsServiceMock,
                     errorNotifierServiceMock,
-                    lockServiceMock,
+                    new LockServiceImpl(10, 60),
                     TestUtils.objectMapper);
     }
 

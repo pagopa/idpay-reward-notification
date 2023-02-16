@@ -66,6 +66,7 @@ class IbanOutcomeOperationsServiceImplTest {
                 .checkIbanOutcome(ibanOutcomeUnknownDTO.getStatus())
                 .timestamp(LocalDateTime.now()).build();
         Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeUnknownDTO)).thenReturn(rewardIbanUnknown);
+        Mockito.when(recoverIbanKoServiceMock.recover(rewardIbanUnknown)).thenReturn(Mono.just(rewardIbanUnknown));
 
         IbanOutcomeDTO ibanOutcomeOkDTO = IbanOutcomeDTOFaker.mockInstance(1);
         ibanOutcomeOkDTO.setStatus(IbanConstants.STATUS_OK);
@@ -77,6 +78,7 @@ class IbanOutcomeOperationsServiceImplTest {
                 .checkIbanOutcome(ibanOutcomeOkDTO.getStatus())
                 .timestamp(LocalDateTime.now()).build();
         Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeOkDTO)).thenReturn(rewardIbanOk);
+        Mockito.when(recoverIbanKoServiceMock.recover(rewardIbanOk)).thenReturn(Mono.just(rewardIbanOk));
 
         Mockito.when(rewardIbanServiceMock.save(Mockito.any(RewardIban.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 

@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotifica
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,13 +34,17 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
     private final RewardsNotificationBlobClient blobClient;
 
     private final List<Pattern> mandatoryHeadersPattern;
+    private final AuditUtilities auditUtilities;
+
 
     public FeedbackCsvRetrieverServiceImpl(
             @Value("${app.csv.tmp-dir}") String csvTmpDir,
             @Value("${app.csv.import.separator}") String csvColumnSeparator,
-            RewardsNotificationBlobClient blobClient) {
+            RewardsNotificationBlobClient blobClient,
+            AuditUtilities auditUtilities) {
         this.csvTmpDir = csvTmpDir;
         this.blobClient = blobClient;
+        this.auditUtilities = auditUtilities;
 
         mandatoryHeadersPattern = Stream.of(
                         RewardNotificationImportCsvDto.Fields.uniqueID,
@@ -54,6 +59,7 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
     @Override
     public Mono<Path> retrieveCsv(RewardOrganizationImport importRequest) {
         Path zipLocalPath = Path.of(csvTmpDir, importRequest.getFilePath());
+        auditUtilities.logDownloadFile(importRequest.getInitiativeId(), importRequest.getOrganizationId());
         return blobClient.downloadFile(importRequest.getFilePath(), zipLocalPath)
                 .mapNotNull(x -> validateZipContentAndUnzip(zipLocalPath, importRequest));
     }

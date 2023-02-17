@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServ
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardImportsDTOFaker;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,8 @@ class NotificationControllerImplTest {
     private OrganizationImportsServiceImpl organizationImportsServiceMock;
     @MockBean
     private RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
-
+    @MockBean
+    private AuditUtilities auditUtilities;
     @Autowired
     protected WebTestClient webClient;
 

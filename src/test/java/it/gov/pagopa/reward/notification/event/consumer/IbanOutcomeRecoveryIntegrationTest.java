@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.iban.outcome;
+package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
@@ -6,12 +6,12 @@ import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import org.junit.jupiter.api.AfterEach;
@@ -19,9 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.Message;
 import org.springframework.test.context.TestPropertySource;
-import reactor.core.publisher.Flux;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -32,47 +30,45 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
+import static it.gov.pagopa.reward.notification.event.consumer.IbanOutcomeConsumerConfigTest.waitForIbanStoreChanged;
+
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.*=WARN",
 })
-class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
+class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
 
-    public static final String INITIATIVEID = "INITIATIVEID%s";
-    public static final String USERID = "USERID%s";
+    private final int totalIban = 16;
+
+    private static final String INITIATIVEID = "INITIATIVEID%s";
+    private static final String USERID = "USERID%s";
     @Autowired
     RewardsNotificationRepository rewardsNotificationRepository;
     @Autowired
     RewardNotificationRuleRepository notificationRuleRepository;
     @Autowired
     RewardIbanService rewardIbanService;
-
     @Autowired
-    private IbanOutcomeMediatorService mediator;
+    RewardIbanRepository rewardIbanRepository;
 
-    private final List<IbanOutcomeDTO> ibanOutcomeDTOList = new ArrayList<>();
-    private final List<Message<String>> msgIbanList = new ArrayList<>();
-    private final List<RewardsNotification> rewardsNotificationList = new ArrayList<>();
-    private final List<RewardNotificationRule> notificationRuleList = new ArrayList<>();
+    private List<IbanOutcomeDTO> ibanOutcomeDTOList;
+    private List<RewardsNotification> rewardsNotificationList;
+    private List<RewardNotificationRule> notificationRuleList;
 
     private final LocalDate today = LocalDate.now();
 
 
     @BeforeEach
     void prepareTestData() {
+        ibanOutcomeDTOList = new ArrayList<>();
+        rewardsNotificationList = new ArrayList<>();
+        notificationRuleList = new ArrayList<>();
+
         /*
         ERROR - [0,7]
         [0,3] status ERROR and rejectionReason IBAN_NOT_FOUND
         [4,7] status ERROR only
          */
-        ibanOutcomeDTOList.addAll(IntStream.rangeClosed(0, 7).mapToObj(i -> {
-            IbanOutcomeDTO x = mockIbanOutcome(i);
-            if (i < 4) {
-                x.setIban(null);
-            }
-            msgIbanList.add(IbanOutcomeMediatorServiceImplTest.buildMessage(TestUtils.jsonSerializer(x)));
-
-            return x;
-        }).toList());
+        ibanOutcomeDTOList.addAll(IntStream.rangeClosed(0, 7).mapToObj(this::mockIbanOutcome).toList());
 
         rewardsNotificationList.addAll(
                 Objects.requireNonNull(
@@ -95,12 +91,7 @@ class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
         [8,11] recover a ordinary
         [12,15] recover a recovery
          */
-        ibanOutcomeDTOList.addAll(IntStream.rangeClosed(8, 15).mapToObj(i -> {
-            IbanOutcomeDTO x = mockIbanOutcome(i);
-            msgIbanList.add(IbanOutcomeMediatorServiceImplTest.buildMessage(TestUtils.jsonSerializer(x)));
-
-            return x;
-        }).toList());
+        ibanOutcomeDTOList.addAll(IntStream.rangeClosed(8, 15).mapToObj(this::mockIbanOutcome).toList());
 
         rewardsNotificationList.addAll(
                 Objects.requireNonNull(
@@ -110,7 +101,9 @@ class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
                                             x.setStatus(RewardNotificationStatus.COMPLETED_KO);
                                             if (i > 11) {
                                                 x.setOrdinaryId(x.getId());
+                                                x.setOrdinaryExternalId(x.getExternalId());
                                                 x.setId(getRemedialNotificationId(x.getId()));
+                                                x.setExternalId(getRemedialNotificationId(x.getExternalId()));
                                             }
                                             return x;
                                         }).toList())
@@ -118,36 +111,33 @@ class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
                 ));
 
 
-        notificationRuleList.addAll(
-                Objects.requireNonNull(
-                        notificationRuleRepository.saveAll(
-                                        IntStream.rangeClosed(0, 15).mapToObj(i -> {
-                                            RewardNotificationRule x = RewardNotificationRuleFaker.mockInstance(i);
-                                            x.setInitiativeId(INITIATIVEID.formatted(i));
+        notificationRuleList = notificationRuleRepository.saveAll(
+                        IntStream.rangeClosed(0, 15).mapToObj(i -> {
+                            RewardNotificationRule x = RewardNotificationRuleFaker.mockInstance(i);
+                            x.setInitiativeId(INITIATIVEID.formatted(i));
 
-                                            switch (i % 4) {
-                                                case 0 -> // expired
-                                                        x.setEndDate(today.minusDays(5));
-                                                case 1 -> { // timeParameter
-                                                    x.setEndDate(today.plusDays(5));
-                                                    x.setAccumulatedAmount(null);
-                                                }
-                                                case 2 -> { // budgetExhausted
-                                                    x.setEndDate(today.plusDays(5));
-                                                    x.setTimeParameter(null);
-                                                    x.setAccumulatedAmount(AccumulatedAmountDTO.builder()
-                                                            .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED).build());
-                                                }
-                                                case 3 -> { // threshold
-                                                    x.setEndDate(today.plusDays(5));
-                                                    x.setTimeParameter(null);
-                                                }
-                                            }
+                            switch (i % 4) {
+                                case 0 -> // expired
+                                        x.setEndDate(today.minusDays(5));
+                                case 1 -> { // timeParameter
+                                    x.setEndDate(today.plusDays(5));
+                                    x.setAccumulatedAmount(null);
+                                }
+                                case 2 -> { // budgetExhausted
+                                    x.setEndDate(today.plusDays(5));
+                                    x.setTimeParameter(null);
+                                    x.setAccumulatedAmount(AccumulatedAmountDTO.builder()
+                                            .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED).build());
+                                }
+                                case 3 -> { // threshold
+                                    x.setEndDate(today.plusDays(5));
+                                    x.setTimeParameter(null);
+                                }
+                            }
 
-                                            return x;
-                                        }).toList())
-                                .collectList().block()
-                ));
+                            return x;
+                        }).toList())
+                .collectList().block();
     }
 
     @AfterEach
@@ -168,8 +158,9 @@ class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
     void test() {
         // notificationId = USERID%s_INITIATIVEID%s_today.format(Utils.FORMATTER_DATE)
 
-        Flux<Message<String>> msgIbanFlux = Flux.fromIterable(msgIbanList);
-        mediator.execute(msgIbanFlux);
+        ibanOutcomeDTOList.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome, null, p.getUserId().concat(p.getInitiativeId()), p));
+
+        waitForIbanStoreChanged(totalIban, rewardIbanRepository);
 
         for (RewardsNotification r : rewardsNotificationList) {
             RewardsNotification recovered = rewardsNotificationRepository.findById(r.getId()).block();
@@ -182,8 +173,7 @@ class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
             } // skip [4,7] because they will not be recovered since status = ERROR but rejectionReason = null
 
             else if (i >= 8 && i <= 15) { // COMPLETED_KO - [8,15]
-                checkRecoveredCompletedKoStatus(r, recovered);
-                checkNotificationDate(i, recovered.getNotificationDate(), recovered.getId());
+                checkRecoveredCompletedKoStatus(i, r, recovered);
             }
 
         }
@@ -224,32 +214,34 @@ class IbanOutcomeRecoveryE2ETest extends BaseIntegrationTest {
         Assertions.assertNull(recovered.getExportDate());
     }
 
-    private void checkRecoveredCompletedKoStatus(RewardsNotification r, RewardsNotification recovered) {
+    private void checkRecoveredCompletedKoStatus(int i, RewardsNotification r, RewardsNotification recovered) {
         Assertions.assertEquals(getRemedialNotificationId(r.getId()), recovered.getRemedialId());
         Assertions.assertEquals(RewardNotificationStatus.RECOVERED, recovered.getStatus());
 
-        checkRemedialNotification(r);
+        checkRemedialNotification(i, r);
     }
 
-    private void checkRemedialNotification(RewardsNotification r) {
+    private void checkRemedialNotification(int i, RewardsNotification r) {
         RewardsNotification remedial = rewardsNotificationRepository.findById(getRemedialNotificationId(r.getId())).block();
         Assertions.assertNotNull(remedial);
-        Assertions.assertEquals(r.getId(), remedial.getOrdinaryId());
 
-        RewardsNotification expectedRemedial = r.toBuilder()
-                .status(RewardNotificationStatus.TO_SEND)
-                .exportId(null)
-                .exportDate(null)
-                .iban(null)
-                .rejectionReason(null)
-                .resultCode(null)
-                .feedbackDate(null)
-                .feedbackHistory(Collections.emptyList())
-                .cro(null)
-                .executionDate(null)
-                .remedialId(null)
-                .build();
-        Assertions.assertEquals(expectedRemedial, remedial);
+        Assertions.assertEquals(getRemedialNotificationId(r.getId()), remedial.getId());
+        Assertions.assertEquals(getRemedialNotificationId(r.getExternalId()), remedial.getExternalId());
+        Assertions.assertEquals(i < 12 ? r.getId() : r.getOrdinaryId(), remedial.getOrdinaryId());
+        Assertions.assertEquals(i < 12 ? r.getExternalId() : r.getOrdinaryExternalId(), remedial.getOrdinaryExternalId());
+        Assertions.assertEquals(RewardNotificationStatus.TO_SEND, remedial.getStatus());
+        Assertions.assertNull(remedial.getExportId());
+        Assertions.assertNull(remedial.getExportDate());
+        Assertions.assertNull(remedial.getIban());
+        Assertions.assertNull(remedial.getRejectionReason());
+        Assertions.assertNull(remedial.getResultCode());
+        Assertions.assertNull(remedial.getFeedbackDate());
+        Assertions.assertEquals(Collections.emptyList(), remedial.getFeedbackHistory());
+        Assertions.assertNull(remedial.getCro());
+        Assertions.assertNull(remedial.getExecutionDate());
+        Assertions.assertNull(remedial.getRemedialId());
+
+        checkNotificationDate(i, remedial.getNotificationDate(), remedial.getId());
     }
 
     private void checkNotificationDate(int i, LocalDate notificationDate, String id) {

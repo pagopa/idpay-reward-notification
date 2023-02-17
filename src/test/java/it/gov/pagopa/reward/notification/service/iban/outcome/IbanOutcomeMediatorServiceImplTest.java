@@ -109,7 +109,7 @@ class IbanOutcomeMediatorServiceImplTest {
         Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
     }
 
-    private static Message<String> buildMessage(String ibanOutcomeKoDTO) {
+    public static Message<String> buildMessage(String ibanOutcomeKoDTO) {
         return MessageBuilder
                 .withPayload(ibanOutcomeKoDTO)
                 .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)

@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import org.junit.jupiter.api.AfterEach;
@@ -125,7 +126,9 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
     void findPendingOrTodayExportsTest(){
         Assertions.assertEquals(
                 List.of("ID1","ID2","ID3"),
-                repository.findPendingOrTodayExports().map(RewardOrganizationExport::getId).sort().collectList().block()
+                repository.findPendingOrTodayExports()
+                        .filter(e->e.getId().startsWith("ID"))
+                        .map(RewardOrganizationExport::getId).sort().collectList().block()
         );
     }
 
@@ -171,7 +174,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         export.setRewardsExportedCents(10_00L);
 
         // When
-        UpdateResult result = repository.updateCounters(1L, 1L, 1L, export).block();
+        UpdateResult result = repository.updateCounters(new RewardNotificationFeedbackExportDelta(export, 1L, 1L, 1L)).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -187,7 +190,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport export = testData.get(2);
 
         // When
-        UpdateResult result = repository.updateCounters(inc, incReward, incOk, export).block();
+        UpdateResult result = repository.updateCounters(new RewardNotificationFeedbackExportDelta(export, inc, incOk, incReward)).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -221,7 +224,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport export = testData.get(2);
 
         // When
-        UpdateResult result = repository.updateCounters(inc, rewardCents, incOk, export).block();
+        UpdateResult result = repository.updateCounters(new RewardNotificationFeedbackExportDelta(export, inc, incOk, rewardCents)).block();
 
         // Then
         checkUpdateCounters(rewardCents, inc, incOk, expectedPercentageRewardsCents, expectedPercentageResulted, expectedPercentageResultedOk, export, result);

@@ -134,12 +134,12 @@ class RewardNotificationFeedbackHandlerServiceTest {
 
         RewardNotificationFeedbackHandlerOutcome expectedResult;
         if(expectedNotification) {
-            Mockito.when(exportFeedbackRetrieverServiceMock.updateCounters(Mockito.same(notification), Mockito.same(export))).thenReturn(Mono.just(new RewardNotificationFeedbackExportDelta(export.getId(), 1, 1, notification.getRewardCents())));
+            Mockito.when(exportFeedbackRetrieverServiceMock.calculateExportDelta(Mockito.same(notification), Mockito.same(export))).thenReturn(new RewardNotificationFeedbackExportDelta(export, 1, 1, notification.getRewardCents()));
             Mockito.when(notificationNotifierServiceMock.notify(Mockito.same(notification), Mockito.eq(notification.getRewardCents()))).thenReturn(Mono.just(notification));
 
-            expectedResult = new RewardNotificationFeedbackHandlerOutcome(RewardOrganizationImportResult.OK, null, new RewardNotificationFeedbackExportDelta(export.getId(), 1L, 1L, notification.getRewardCents()));
+            expectedResult = new RewardNotificationFeedbackHandlerOutcome(RewardOrganizationImportResult.OK, null, new RewardNotificationFeedbackExportDelta(export, 1L, 1L, notification.getRewardCents()));
         } else {
-            expectedResult = new RewardNotificationFeedbackHandlerOutcome(RewardOrganizationImportResult.OK, null, new RewardNotificationFeedbackExportDelta(export.getId(), 0L, 0L, 0L));
+            expectedResult = new RewardNotificationFeedbackHandlerOutcome(RewardOrganizationImportResult.OK, null, new RewardNotificationFeedbackExportDelta(export, 0L, 0L, 0L));
         }
 
         // When

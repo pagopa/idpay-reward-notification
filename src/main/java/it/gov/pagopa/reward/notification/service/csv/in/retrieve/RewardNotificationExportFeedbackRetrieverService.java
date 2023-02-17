@@ -9,12 +9,14 @@ import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotification
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 public interface RewardNotificationExportFeedbackRetrieverService {
     Mono<RewardOrganizationExport> retrieve(RewardsNotification rewardsNotification, RewardNotificationImportCsvDto row, RewardOrganizationImport importRequest, Map<String, RewardOrganizationExport> exportCache);
-    Mono<RewardNotificationFeedbackExportDelta> updateCounters(RewardsNotification notification, RewardOrganizationExport export);
+    RewardNotificationFeedbackExportDelta calculateExportDelta(RewardsNotification notification, RewardOrganizationExport export);
 
-    Flux<UpdateResult> updateExportStatus(List<String> exportIds);
+    Mono<UpdateResult> updateCounters(RewardNotificationFeedbackExportDelta exportDelta);
+
+    Flux<UpdateResult> updateExportStatus(Collection<String> exportIds);
 }

@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.utils.ExportConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.data.domain.Pageable;
@@ -183,7 +184,11 @@ public class RewardOrganizationExportsRepositoryExtendedImpl implements RewardOr
     }
 
     @Override
-    public Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export) {
+    public Mono<UpdateResult> updateCounters(RewardNotificationFeedbackExportDelta exportDelta) {
+        return updateCountersInner(exportDelta.getExportInc(), exportDelta.getExportDeltaReward(), exportDelta.getExportIncOk(), exportDelta.getExport());
+    }
+
+    public Mono<UpdateResult> updateCountersInner(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export) {
         boolean reward2update = incRewardCents != 0L;
         boolean count2update = incCount != 0L;
         boolean countOk2update = incOkCount != 0L;

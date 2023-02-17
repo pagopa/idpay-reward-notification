@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,7 +20,8 @@ public interface RewardOrganizationExportsRepositoryExtended {
     Mono<RewardOrganizationExport> reserveExport();
     /** It will retrieve an export having status {@link RewardOrganizationExportStatus#IN_PROGRESS} and {@link RewardOrganizationExport#getExportDate()} < today, updating it to today, and allowing the current process to handle it */
     Mono<RewardOrganizationExport> reserveStuckExport();
-    Mono<UpdateResult> updateCounters(long incCount, long incRewardCents, long incOkCount, RewardOrganizationExport export);
+
+    Mono<UpdateResult> updateCounters(RewardNotificationFeedbackExportDelta exportDelta);
 
     Mono<UpdateResult> updateStatus(RewardOrganizationExportStatus nextStatus, Long percentageResultedFix, Long percentageResultedOkFix, Long percentageResultsFix, RewardOrganizationExport export);
 }

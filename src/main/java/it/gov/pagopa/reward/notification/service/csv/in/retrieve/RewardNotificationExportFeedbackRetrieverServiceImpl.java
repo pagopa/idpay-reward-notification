@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 @Slf4j
@@ -60,7 +60,7 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
     }
 
     @Override
-    public Mono<RewardNotificationFeedbackExportDelta> updateCounters(RewardsNotification notification, RewardOrganizationExport export) {
+    public RewardNotificationFeedbackExportDelta calculateExportDelta(RewardsNotification notification, RewardOrganizationExport export) {
         boolean firstFeedback = notification.getFeedbackHistory().size() == 1;
 
         // is first feedback  or previous feedback was a KO
@@ -80,10 +80,10 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
 
         log.debug("[REWARD_NOTIFICATION_FEEDBACK] Updating counters of export {} with reward {}; firstFeedback:{} and deltaRewardCents:{}", notification.getExportId(), notification.getId(), firstFeedback, deltaRewardCents);
 
-        return updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export);
+        return calculateExportDeltaInner(firstFeedback, deltaRewardCents, export);
     }
 
-    private  Mono<RewardNotificationFeedbackExportDelta> updateCountersOnRewardFeedback(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
+    private  RewardNotificationFeedbackExportDelta calculateExportDeltaInner(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
         long incOk;
         if (deltaReward > 0L) { // is ok result
             incOk = 1L;
@@ -94,12 +94,18 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
         }
         long inc = firstFeedback ? 1L : 0L;
 
-        return repository.updateCounters(inc, deltaReward, incOk, export)
-                .map(x ->new RewardNotificationFeedbackExportDelta(export.getId(), inc, incOk, deltaReward));
+        return new RewardNotificationFeedbackExportDelta(export, inc, incOk, deltaReward);
     }
 
     @Override
-    public Flux<UpdateResult> updateExportStatus(List<String> exportIds) {
+    public Mono<UpdateResult> updateCounters(RewardNotificationFeedbackExportDelta exportDelta) {
+        log.debug("[REWARD_NOTIFICATION_FEEDBACK] Updating export counters of involved export {}", exportDelta.getExport().getId());
+
+        return repository.updateCounters(exportDelta);
+    }
+
+    @Override
+    public Flux<UpdateResult> updateExportStatus(Collection<String> exportIds) {
         log.debug("[REWARD_NOTIFICATION_FEEDBACK] Updating statuses of involved exports {}", exportIds);
 
         return repository.findAllById(exportIds)

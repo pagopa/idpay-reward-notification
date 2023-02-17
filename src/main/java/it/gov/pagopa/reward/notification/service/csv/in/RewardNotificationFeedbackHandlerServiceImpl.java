@@ -66,11 +66,11 @@ public class RewardNotificationFeedbackHandlerServiceImpl implements RewardNotif
                 .flatMap(toNotify -> {
                     Mono<RewardNotificationFeedbackHandlerOutcome> outcomeMono;
                     if (Boolean.TRUE.equals(toNotify)) {
-                        outcomeMono = exportFeedbackRetrieverService.updateCounters(notification, export)
-                                .flatMap(exportDelta -> notificationNotifierService.notify(notification, exportDelta.getExportDeltaReward())
-                                        .map(x -> new RewardNotificationFeedbackHandlerOutcome(rowResult, null, exportDelta)));
+                        RewardNotificationFeedbackExportDelta exportDelta = exportFeedbackRetrieverService.calculateExportDelta(notification, export);
+                        outcomeMono = notificationNotifierService.notify(notification, exportDelta.getExportDeltaReward())
+                                        .map(x -> new RewardNotificationFeedbackHandlerOutcome(rowResult, null, exportDelta));
                     } else {
-                        outcomeMono = Mono.just(new RewardNotificationFeedbackHandlerOutcome(rowResult, null, new RewardNotificationFeedbackExportDelta(export.getId(), 0L, 0L, 0L)));
+                        outcomeMono = Mono.just(new RewardNotificationFeedbackHandlerOutcome(rowResult, null, new RewardNotificationFeedbackExportDelta(export, 0L, 0L, 0L)));
                     }
 
                     return outcomeMono;

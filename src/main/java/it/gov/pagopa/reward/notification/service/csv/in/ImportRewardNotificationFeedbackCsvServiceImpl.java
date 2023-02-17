@@ -82,9 +82,13 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                         log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot close local csv {}", csv, e);
                     }
                 })
-                .map(c -> updateImportRequest(c, importRequest))
-                .flatMap(i -> exportFeedbackRetrieverService.updateExportStatus(i.getExportIds())
-                        .then(Mono.just(i)));
+                .flatMap(counters -> Flux.fromIterable(counters.getExportDeltas().values())
+                        .flatMap(exportFeedbackRetrieverService::updateCounters)
+                        .collectList()
+                        .flatMapMany(x -> exportFeedbackRetrieverService.updateExportStatus(counters.getExportDeltas().keySet()))
+                        .then(Mono.just(counters))
+                )
+                .map(counters -> updateImportRequest(counters, importRequest));
     }
 
     private CsvToBean<RewardNotificationImportCsvDto> buildCsvReader(Reader reader) {
@@ -99,7 +103,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     private RewardOrganizationImport updateImportRequest(ImportElaborationCounters counter, RewardOrganizationImport importRequest) {
         log.info("[REWARD_NOTIFICATION_FEEDBACK] updating importRequest {} with counters {}", importRequest.getFilePath(), counter);
 
-        importRequest.setExportIds(new ArrayList<>(counter.getExportIds()));
+        importRequest.setExportIds(new ArrayList<>(counter.getExportDeltas().keySet()));
         importRequest.getExportIds().sort(Comparator.comparing(Function.identity()));
 
         importRequest.setRewardsResulted(counter.getRewardsResulted());

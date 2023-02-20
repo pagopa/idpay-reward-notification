@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 @Slf4j
@@ -59,7 +60,7 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
     }
 
     @Override
-    public Mono<Long> updateCounters(RewardsNotification notification, RewardOrganizationExport export) {
+    public RewardNotificationFeedbackExportDelta calculateExportDelta(RewardsNotification notification, RewardOrganizationExport export) {
         boolean firstFeedback = notification.getFeedbackHistory().size() == 1;
 
         // is first feedback  or previous feedback was a KO
@@ -79,12 +80,32 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
 
         log.debug("[REWARD_NOTIFICATION_FEEDBACK] Updating counters of export {} with reward {}; firstFeedback:{} and deltaRewardCents:{}", notification.getExportId(), notification.getId(), firstFeedback, deltaRewardCents);
 
-        return repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export)
-                .map(x -> deltaRewardCents);
+        return calculateExportDeltaInner(firstFeedback, deltaRewardCents, export);
+    }
+
+    private  RewardNotificationFeedbackExportDelta calculateExportDeltaInner(boolean firstFeedback, long deltaReward, RewardOrganizationExport export) {
+        long incOk;
+        if (deltaReward > 0L) { // is ok result
+            incOk = 1L;
+        } else if (deltaReward < 0L) { // is ko preceded by ok result
+            incOk = -1L;
+        } else {
+            incOk = 0L;
+        }
+        long inc = firstFeedback ? 1L : 0L;
+
+        return new RewardNotificationFeedbackExportDelta(export, inc, incOk, deltaReward);
     }
 
     @Override
-    public Flux<UpdateResult> updateExportStatus(List<String> exportIds) {
+    public Mono<UpdateResult> updateCounters(RewardNotificationFeedbackExportDelta exportDelta) {
+        log.debug("[REWARD_NOTIFICATION_FEEDBACK] Updating export counters of involved export {}", exportDelta.getExport().getId());
+
+        return repository.updateCounters(exportDelta);
+    }
+
+    @Override
+    public Flux<UpdateResult> updateExportStatus(Collection<String> exportIds) {
         log.debug("[REWARD_NOTIFICATION_FEEDBACK] Updating statuses of involved exports {}", exportIds);
 
         return repository.findAllById(exportIds)

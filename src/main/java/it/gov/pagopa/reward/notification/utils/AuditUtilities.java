@@ -3,21 +3,22 @@ package it.gov.pagopa.reward.notification.utils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
+
+import it.gov.pagopa.reward.notification.exception.ClientException;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-@Slf4j
 public class AuditUtilities {
-    private static String SRCIP;
+    private static final String SRCIP;
 
     static {
         try {
             SRCIP = InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
-            log.error(e.getMessage());
+            throw new ClientException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

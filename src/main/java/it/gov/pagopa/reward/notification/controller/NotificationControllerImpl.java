@@ -1,9 +1,6 @@
 package it.gov.pagopa.reward.notification.controller;
 
-import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
-import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
+import it.gov.pagopa.reward.notification.dto.controller.*;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -82,6 +79,26 @@ public class NotificationControllerImpl implements NotificationController{
         return organizationExportsService
                 .findAllPaged(organizationId, initiativeId, pageable, filters)
                 .switchIfEmpty(Mono.just(Page.empty(pageable)));
+    }
+
+    @Override
+    public Mono<SingleExportSummaryDTO> getSingleExportSummary(String organizationId, String initiativeId, String exportId) {
+        return null;
+    }
+
+    @Override
+    public Flux<ExportDetailDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, SingleExportFilter filters) {
+        return null;
+    }
+
+    @Override
+    public Mono<SingleExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, SingleExportFilter filters) {
+        return null;
+    }
+
+    @Override
+    public Mono<SingleRefundDTO> getSingleRefund(String organizationId, String initiativeId, String exportId, String eventId) {
+        return null;
     }
 
     @Override

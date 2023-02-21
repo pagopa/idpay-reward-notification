@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
 import it.gov.pagopa.reward.notification.service.csv.in.ImportRewardNotificationFeedbackCsvService;
 import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRetrieverService;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -121,7 +122,11 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     private Mono<RewardOrganizationImport> retrieveAndElaborateCsv(RewardOrganizationImport importRequest) {
         log.info("[REWARD_NOTIFICATION_FEEDBACK] New request recognized, retrieving and processing it: {}", importRequest.getFilePath());
-        return csvRetrieverService.retrieveCsv(importRequest)
+        return PerformanceLogger.logTimingOnNext(
+                        "REWARD_NOTIFICATION_FEEDBACK_DOWNLOAD",
+                        csvRetrieverService.retrieveCsv(importRequest),
+                        i -> "downloaded feedback file %s on initiative %s".formatted(importRequest.getFilePath(), importRequest.getInitiativeId())
+                )
                 .flatMap(p->importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
                 .switchIfEmpty(Mono.fromSupplier(()->{
                     log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot retrieve csv from filePath: {}", importRequest.getFilePath());

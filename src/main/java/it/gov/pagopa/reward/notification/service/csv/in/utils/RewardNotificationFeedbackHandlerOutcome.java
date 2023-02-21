@@ -13,6 +13,6 @@ import lombok.ToString;
 @ToString
 public class RewardNotificationFeedbackHandlerOutcome {
     private RewardOrganizationImportResult result;
-    private String exportId;
     private RewardOrganizationImport.RewardOrganizationImportError error;
+    private RewardNotificationFeedbackExportDelta exportDelta;
 }

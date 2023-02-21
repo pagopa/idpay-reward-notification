@@ -51,7 +51,11 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
     }
 
     private Flux<RewardOrganizationExport> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {
-        return exportRetriever
+        return PerformanceLogger.logTimingOnNext(
+                "REWARD_NOTIFICATION_LOCATE_INITIATIVE",
+                        exportRetriever,
+                        e -> "starting reward notification export on initiative %s into %s".formatted(e.getInitiativeId(), e.getFilePath())
+                )
                 .flatMapMany(exp -> exportInitiativeRewardsService.performExport(exp, isStuckExecution(exp)));
     }
 

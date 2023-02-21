@@ -90,29 +90,45 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
         return setRemedialNotificationDate(discarded.getInitiativeId(), remedial);
     }
 
-    private void setNewIdAndOrdinaryId(RewardsNotification out, RewardsNotification input) {
-        String id = input.getId();
+    private void setNewIdAndOrdinaryId(RewardsNotification remedial, RewardsNotification discarded) {
+        String id = discarded.getId();
+        String externalId = discarded.getExternalId();
 
         // if recovering a remedial it will calculate the next progressive
-        if (input.getOrdinaryId() != null) {
-            int nextRecoveryProgressiveId = getNextRecoveryProgressiveId(id);
-            out.setId(RECOVERED_ID_PLACEHOLDERS.formatted(input.getOrdinaryId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId));
+        if (discarded.getOrdinaryId() != null) {
 
-            int nextRecoveryProgressiveExternalId = getNextRecoveryProgressiveId(input.getExternalId());
-            out.setExternalId(RECOVERED_ID_PLACEHOLDERS.formatted(input.getOrdinaryExternalId(), RECOVERY_ID_SUFFIX, nextRecoveryProgressiveExternalId));
+            remedial.setId(buildRecoveryId(id, discarded.getOrdinaryId()));
+            remedial.setExternalId(buildRecoveryId(externalId, discarded.getOrdinaryExternalId()));
 
-            out.setOrdinaryId(input.getOrdinaryId());
-            out.setOrdinaryExternalId(input.getOrdinaryExternalId());
+            remedial.setOrdinaryId(discarded.getOrdinaryId());
+            remedial.setOrdinaryExternalId(discarded.getOrdinaryExternalId());
         } else {
-            out.setId(id.concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
-            out.setExternalId(input.getExternalId().concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
+            remedial.setId(buildRecoveryId(id));
+            remedial.setExternalId(buildRecoveryId(externalId));
 
-            out.setOrdinaryId(id);
-            out.setOrdinaryExternalId(input.getExternalId());
+            remedial.setOrdinaryId(id);
+            remedial.setOrdinaryExternalId(externalId);
         }
     }
 
-    private static int getNextRecoveryProgressiveId(String id) {
+    /**
+     * Returns a formatted String with given base id, {@link CompletedKoDiscardedRewardNotificationServiceImpl#RECOVERY_ID_SUFFIX}
+     * and the calculated next recovery progressive
+     */
+    private static String buildRecoveryId(String id, String baseId) {
+        int nextRecoveryProgressive = getNextRecoveryProgressive(id);
+        return buildRecoveryId(baseId, nextRecoveryProgressive);
+    }
+
+    private String buildRecoveryId(String baseId) {
+        return buildRecoveryId(baseId, 1);
+    }
+
+    private static String buildRecoveryId(String baseId, int progressive) {
+        return RECOVERED_ID_PLACEHOLDERS.formatted(baseId, RECOVERY_ID_SUFFIX, progressive);
+    }
+
+    private static int getNextRecoveryProgressive(String id) {
         String[] idSplit = id.split(RECOVERY_ID_SUFFIX);
 
         return idSplit.length == 2 ? Integer.parseInt(idSplit[1]) + 1 : 1;

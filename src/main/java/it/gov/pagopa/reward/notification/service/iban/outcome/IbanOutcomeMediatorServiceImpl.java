@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.model.RewardIban;
-import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
+import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.LockService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class IbanOutcomeMediatorServiceImpl extends BaseKafkaConsumer<IbanOutcomeDTO, RewardIban> implements IbanOutcomeMediatorService{
+public class IbanOutcomeMediatorServiceImpl extends BaseKafkaBlockingPartitionConsumer<IbanOutcomeDTO, RewardIban> implements IbanOutcomeMediatorService{
     private final Duration commitDelay;
 
     private final IbanOutcomeOperationsService ibanOutcomeOperationsService;
@@ -33,9 +34,9 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaConsumer<IbanOutcom
             @Value("${spring.cloud.stream.kafka.bindings.ibanOutcomeConsumer-in-0.consumer.ackTime}")
             long commitMillis,
             IbanOutcomeOperationsService ibanOutcomeOperationsService, ErrorNotifierService errorNotifierService,
-
+            LockService lockService,
             ObjectMapper objectMapper) {
-        super(applicationName);
+        super(applicationName, lockService);
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.ibanOutcomeOperationsService = ibanOutcomeOperationsService;
 

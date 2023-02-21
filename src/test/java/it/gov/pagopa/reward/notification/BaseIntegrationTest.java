@@ -93,6 +93,7 @@ import static org.awaitility.Awaitility.await;
                 "app.csv.tmp-dir=target/tmp",
                 "logging.level.it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.reward.notification.service.BaseKafkaConsumer=WARN",
+                "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
                 //endregion
 
                 //region pdv

@@ -97,4 +97,17 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
                 repository.findExportRewards("EXPORTID5").collectList().block()
         );
     }
+
+    @Test
+    void testSaveIfNotExists(){
+        RewardsNotification updated = testData.get(0).toBuilder().build();
+        updated.setCro("UPDATED");
+        RewardsNotification result = repository.saveIfNotExists(updated).block();
+        Assertions.assertNull(result);
+
+        RewardsNotification fetched = repository.findById(updated.getId()).block();
+        Assertions.assertNotNull(fetched);
+        Assertions.assertEquals(testData.get(0).getCro(), fetched.getCro());
+
+    }
 }

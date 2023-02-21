@@ -103,8 +103,8 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
             remedial.setOrdinaryId(discarded.getOrdinaryId());
             remedial.setOrdinaryExternalId(discarded.getOrdinaryExternalId());
         } else {
-            remedial.setId(id.concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
-            remedial.setExternalId(externalId.concat("%s1".formatted(RECOVERY_ID_SUFFIX)));
+            remedial.setId(buildRecoveryId(id));
+            remedial.setExternalId(buildRecoveryId(externalId));
 
             remedial.setOrdinaryId(id);
             remedial.setOrdinaryExternalId(externalId);
@@ -112,12 +112,16 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
     }
 
     /**
-     * Returns a formatted String with ordinaryId, {@link CompletedKoDiscardedRewardNotificationServiceImpl#RECOVERY_ID_SUFFIX}
+     * Returns a formatted String with given base id, {@link CompletedKoDiscardedRewardNotificationServiceImpl#RECOVERY_ID_SUFFIX}
      * and the calculated next recovery progressive
      */
     private static String buildRecoveryId(String id, String baseId) {
         int nextRecoveryProgressiveId = getNextRecoveryProgressiveId(id);
         return RECOVERED_ID_PLACEHOLDERS.formatted(baseId, RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId);
+    }
+
+    private String buildRecoveryId(String id) {
+        return buildRecoveryId(id, id);
     }
 
     private static int getNextRecoveryProgressiveId(String id) {

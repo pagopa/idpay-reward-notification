@@ -224,10 +224,13 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
     }
 
     private void checkRecoveredCompletedKoStatus(int i, RewardsNotification r, RewardsNotification recovered) {
+        checkRecovederNotification(r, recovered);
+        checkRemedialNotification(i, r);
+    }
+
+    private void checkRecovederNotification(RewardsNotification r, RewardsNotification recovered) {
         Assertions.assertEquals(getRemedialNotificationId(r.getId()), recovered.getRemedialId());
         Assertions.assertEquals(RewardNotificationStatus.RECOVERED, recovered.getStatus());
-
-        checkRemedialNotification(i, r);
     }
 
     private void checkRemedialNotification(int i, RewardsNotification r) {

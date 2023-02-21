@@ -7,12 +7,13 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardImportsDTOFaker;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,8 @@ class NotificationControllerImplTest {
     private OrganizationImportsServiceImpl organizationImportsServiceMock;
     @MockBean
     private RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
+    @MockBean
+    private AuditUtilities auditUtilities;
     @Autowired
     protected WebTestClient webClient;
 

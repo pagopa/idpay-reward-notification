@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
@@ -28,6 +29,7 @@ public class NotificationControllerImpl implements NotificationController{
     private final OrganizationExportsServiceImpl organizationExportsService;
     private final ExportRewardNotificationCsvService exportRewardNotificationCsvService;
     private final RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
+    private final ExportDetailService exportDetailService;
     // endregion
 
     // region imports
@@ -39,11 +41,12 @@ public class NotificationControllerImpl implements NotificationController{
             OrganizationExportsServiceImpl organizationExportsService,
             ExportRewardNotificationCsvService exportRewardNotificationCsvService,
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
-            OrganizationImportsServiceImpl organizationImportsService,
+            ExportDetailService exportDetailService, OrganizationImportsServiceImpl organizationImportsService,
             AuditUtilities auditUtilities) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
+        this.exportDetailService = exportDetailService;
         this.organizationImportsService = organizationImportsService;
         this.auditUtilities = auditUtilities;
     }
@@ -83,21 +86,21 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Mono<ExportSummaryDTO> getSingleExportSummary(String organizationId, String initiativeId, String exportId) {
+        return exportDetailService.getExportSummary(organizationId, initiativeId, exportId);
+    }
+
+    @Override
+    public Flux<ExportDetailDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
         return null;
     }
 
     @Override
-    public Flux<ExportDetailDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, SingleExportFilter filters) {
+    public Mono<ExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
         return null;
     }
 
     @Override
-    public Mono<ExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, SingleExportFilter filters) {
-        return null;
-    }
-
-    @Override
-    public Mono<SingleRefundDTO> getSingleRefund(String organizationId, String initiativeId, String exportId, String eventId) {
+    public Mono<RefundDetailDTO> getSingleRefund(String organizationId, String initiativeId, String exportId, String eventId) {
         return null;
     }
 

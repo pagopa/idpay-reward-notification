@@ -54,7 +54,7 @@ public interface NotificationController {
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,
             @PageableDefault(size = 10) Pageable pageable,
-            SingleExportFilter filters);
+            ExportDetailFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/paged")
     Mono<ExportPageDTO> getSingleExportPaged(
@@ -62,10 +62,10 @@ public interface NotificationController {
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,
             @PageableDefault(size = 10) Pageable pageable,
-            SingleExportFilter filters);
+            ExportDetailFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/refund/{eventId}")
-    Mono<SingleRefundDTO> getSingleRefund(
+    Mono<RefundDetailDTO> getSingleRefund(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,

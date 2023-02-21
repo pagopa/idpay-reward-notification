@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SingleExportFilter {
+public class ExportDetailFilter {
     private String status;
     private String cro;
 }

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SingleRefundDTO {
+public class RefundDetailDTO {
     private String fiscalCode;
     private String iban;
     private BigDecimal amount;

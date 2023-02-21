@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.dto.controller.ExportDetailFilter;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.NotificationConstants;

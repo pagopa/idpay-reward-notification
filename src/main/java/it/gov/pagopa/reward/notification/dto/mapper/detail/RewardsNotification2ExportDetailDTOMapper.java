@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.reward.notification.dto.controller.ExportDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.stereotype.Service;
 

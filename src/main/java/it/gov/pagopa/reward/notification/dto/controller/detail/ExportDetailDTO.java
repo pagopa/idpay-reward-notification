@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.dto.controller;
+package it.gov.pagopa.reward.notification.dto.controller.detail;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;

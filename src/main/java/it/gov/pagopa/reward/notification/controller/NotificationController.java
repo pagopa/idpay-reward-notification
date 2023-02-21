@@ -1,6 +1,10 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.*;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.data.domain.Page;

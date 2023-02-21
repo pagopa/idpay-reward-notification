@@ -1,6 +1,10 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.*;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -104,7 +108,7 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Mono<RefundDetailDTO> getSingleRefund(String organizationId, String initiativeId, String exportId, String eventId) {
-        return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, exportId, eventId);
+        return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, eventId);
     }
 
     @Override

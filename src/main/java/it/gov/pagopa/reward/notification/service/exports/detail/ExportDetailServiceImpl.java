@@ -1,6 +1,10 @@
 package it.gov.pagopa.reward.notification.service.exports.detail;
 
 import it.gov.pagopa.reward.notification.dto.controller.*;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.detail.PageImpl2ExportPageDTOMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.detail.RewardOrganizationExport2ExportSummaryDTOMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.detail.RewardsNotification2ExportDetailDTOMapper;
@@ -85,8 +89,8 @@ public class ExportDetailServiceImpl implements ExportDetailService {
     }
 
     @Override
-    public Mono<RefundDetailDTO> getSingleRefundDetail(String organizationId, String initiativeId, String exportId, String eventId) {
-        return notificationRepository.findByOrganizationIdAndInitiativeIdAndExportIdAndExternalId(organizationId, initiativeId, exportId, eventId)
+    public Mono<RefundDetailDTO> getSingleRefundDetail(String organizationId, String initiativeId, String eventId) {
+        return notificationRepository.findByOrganizationIdAndInitiativeIdAndExternalId(organizationId, initiativeId, eventId)
                 .flatMap(userService::retrieveUser)
                 .map(p -> refundMapper.apply(p.getLeft(), p.getRight()));
     }

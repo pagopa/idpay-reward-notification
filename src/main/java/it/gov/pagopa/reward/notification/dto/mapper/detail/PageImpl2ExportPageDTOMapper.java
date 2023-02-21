@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.reward.notification.dto.controller.ExportDetailDTO;
-import it.gov.pagopa.reward.notification.dto.controller.ExportPageDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

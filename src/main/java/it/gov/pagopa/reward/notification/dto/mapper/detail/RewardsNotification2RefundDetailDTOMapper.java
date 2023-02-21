@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.reward.notification.dto.controller.RefundDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import org.springframework.stereotype.Service;

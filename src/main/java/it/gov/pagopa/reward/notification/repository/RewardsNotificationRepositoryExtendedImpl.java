@@ -1,8 +1,11 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import it.gov.pagopa.reward.notification.dto.controller.ExportDetailFilter;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.utils.NotificationConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -12,7 +15,9 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotificationRepositoryExtended {
 
@@ -90,5 +95,75 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
                         .set(FIELD_EXPORT_ID, exportId),
                 RewardsNotification.class
         ).map(x->rewardNotificationId);
+    }
+
+    @Override
+    public Flux<RewardsNotification> findAllWithFilters(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
+        if (filters != null && filters.getStatus() != null && checkStatusNotValid(filters.getStatus())) {
+            return Flux.empty();
+        } else {
+            return mongoTemplate
+                    .find(
+                            Query.query(getCriteria(organizationId, initiativeId, exportId, filters)).with(getPageable(pageable)),
+                            RewardsNotification.class
+                    );
+        }
+    }
+
+    @Override
+    public Mono<Long> countAll(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
+        if (filters != null && filters.getStatus() != null && checkStatusNotValid(filters.getStatus())) {
+            return Mono.just(0L);
+        } else {
+            return mongoTemplate
+                    .count(
+                            Query.query(getCriteria(organizationId, initiativeId, exportId, filters)).with(getPageable(pageable)),
+                            RewardsNotification.class
+                    );
+        }
+    }
+
+    private boolean checkStatusNotValid(String status) {
+        return !NotificationConstants.REWARD_NOTIFICATION_EXPOSED_STATUS.contains(RewardNotificationStatus.valueOf(status));
+    }
+
+    private Criteria getCriteria(String organizationId, String initiativeId, String exportId, ExportDetailFilter filters) {
+        Criteria criteria = Criteria
+                .where(RewardsNotification.Fields.organizationId).is(organizationId)
+                .and(RewardsNotification.Fields.initiativeId).is(initiativeId)
+                .and(RewardsNotification.Fields.exportId).is(exportId);
+
+        // if filters are set, update the criteria; else, use default query
+        updateCriteriaWithFilters(criteria, filters);
+        return criteria;
+    }
+
+    private Pageable getPageable(Pageable pageable) {
+        if (pageable == null) {
+            pageable = Pageable.unpaged();
+        }
+        return pageable;
+    }
+
+    private void updateCriteriaWithFilters(Criteria criteria, ExportDetailFilter filters) {
+        if (filters != null) {
+            List<Criteria> criteriaList = new ArrayList<>();
+
+            // status
+            if (filters.getStatus() != null) {
+                criteriaList.add(Criteria.where(RewardsNotification.Fields.status).is(filters.getStatus()));
+            } else {
+                criteriaList.add(Criteria.where(RewardsNotification.Fields.status).in(NotificationConstants.REWARD_NOTIFICATION_EXPOSED_STATUS));
+            }
+
+            //notificationDate
+            if (filters.getCro() != null) {
+                criteriaList.add(Criteria.where(RewardsNotification.Fields.cro).is(filters.getCro()));
+            }
+
+            criteria.andOperator(criteriaList);
+        } else {
+            criteria.and(RewardsNotification.Fields.status).in(NotificationConstants.REWARD_NOTIFICATION_EXPOSED_STATUS);
+        }
     }
 }

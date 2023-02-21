@@ -41,7 +41,8 @@ public class NotificationControllerImpl implements NotificationController{
             OrganizationExportsServiceImpl organizationExportsService,
             ExportRewardNotificationCsvService exportRewardNotificationCsvService,
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
-            ExportDetailService exportDetailService, OrganizationImportsServiceImpl organizationImportsService,
+            ExportDetailService exportDetailService,
+            OrganizationImportsServiceImpl organizationImportsService,
             AuditUtilities auditUtilities) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
@@ -91,17 +92,19 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Flux<ExportDetailDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
-        return null;
+        return exportDetailService.getSingleExport(organizationId, initiativeId, exportId, pageable, filters);
     }
 
     @Override
     public Mono<ExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
-        return null;
+        return exportDetailService
+                .getSingleExportPaged(organizationId, initiativeId, exportId, pageable, filters)
+                .switchIfEmpty(exportDetailService.getExportDetailEmptyPage(pageable));
     }
 
     @Override
     public Mono<RefundDetailDTO> getSingleRefund(String organizationId, String initiativeId, String exportId, String eventId) {
-        return null;
+        return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, exportId, eventId);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.notification.repository;
 
+import it.gov.pagopa.reward.notification.dto.controller.ExportDetailFilter;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,4 +15,7 @@ public interface RewardsNotificationRepositoryExtended {
     Flux<RewardsNotification> findExportRewards(String exportId);
 
     Mono<String> updateExportStatus(String rewardNotificationId, String iban, String checkIbanResult, String exportId);
+
+    Flux<RewardsNotification> findAllWithFilters(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters);
+    Mono<Long> countAll(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters);
 }

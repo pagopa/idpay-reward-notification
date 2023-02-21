@@ -21,9 +21,14 @@ public class RefundDetailDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private RewardNotificationStatus status;
-    private String refundType;
+    private RefundDetailType refundType;
     private String cro;
     private LocalDateTime creationDate;
     private LocalDateTime sendDate;
     private LocalDateTime notificationDate;
+
+    public enum RefundDetailType {
+        ORDINARY,
+        REMEDIAL
+    }
 }

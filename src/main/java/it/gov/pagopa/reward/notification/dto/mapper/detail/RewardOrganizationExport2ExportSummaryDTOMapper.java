@@ -1,16 +1,15 @@
-package it.gov.pagopa.reward.notification.dto.mapper;
+package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
 import it.gov.pagopa.reward.notification.dto.controller.ExportSummaryDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.function.Function;
 
 @Service
-public class RewardOrganizationExport2ExportSummaryDTOMapper implements Function<RewardOrganizationExport, ExportSummaryDTO> {
+public class RewardOrganizationExport2ExportSummaryDTOMapper implements Function<RewardOrganizationExport, ExportSummaryDTO>, BaseDetailMapper {
 
     private static final DecimalFormat percentageFormatter = new DecimalFormat("0");
     static{
@@ -26,10 +25,6 @@ public class RewardOrganizationExport2ExportSummaryDTOMapper implements Function
                 .totalRefunds(rewardOrganizationExport.getRewardNotified())
                 .successPercentage(percentageFormat(rewardOrganizationExport.getPercentageResultedOk()))
                 .build();
-    }
-
-    private BigDecimal centsToEur(Long cents) {
-        return BigDecimal.valueOf(cents/100);
     }
 
     private String percentageFormat(Long p) {

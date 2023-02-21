@@ -82,7 +82,7 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<SingleExportSummaryDTO> getSingleExportSummary(String organizationId, String initiativeId, String exportId) {
+    public Mono<ExportSummaryDTO> getSingleExportSummary(String organizationId, String initiativeId, String exportId) {
         return null;
     }
 
@@ -92,7 +92,7 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<SingleExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, SingleExportFilter filters) {
+    public Mono<ExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, SingleExportFilter filters) {
         return null;
     }
 

@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SingleExportPageDTO {
+public class ExportPageDTO {
     @JsonProperty(value = "content")
     private List<ExportDetailDTO> content;
     @JsonProperty(value = "pageNo")

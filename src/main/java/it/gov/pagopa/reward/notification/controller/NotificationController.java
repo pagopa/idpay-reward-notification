@@ -43,7 +43,7 @@ public interface NotificationController {
             ExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/summary")
-    Mono<SingleExportSummaryDTO> getSingleExportSummary(
+    Mono<ExportSummaryDTO> getSingleExportSummary(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId);
@@ -57,7 +57,7 @@ public interface NotificationController {
             SingleExportFilter filters);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/paged")
-    Mono<SingleExportPageDTO> getSingleExportPaged(
+    Mono<ExportPageDTO> getSingleExportPaged(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,

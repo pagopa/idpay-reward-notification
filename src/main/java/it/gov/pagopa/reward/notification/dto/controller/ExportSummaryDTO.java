@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SingleExportSummaryDTO {
+public class ExportSummaryDTO {
     @JsonProperty(value = "createDate")
     private LocalDateTime createDate;
     @JsonProperty(value = "totalAmount")
@@ -24,7 +24,7 @@ public class SingleExportSummaryDTO {
     @JsonProperty(value = "totalRefunds")
     private long totalRefunds;
     @JsonProperty(value = "successPercentage")
-    private long successPercentage;
+    private String successPercentage;
     @JsonProperty(value = "status")
     private RewardOrganizationExportStatus status;
 

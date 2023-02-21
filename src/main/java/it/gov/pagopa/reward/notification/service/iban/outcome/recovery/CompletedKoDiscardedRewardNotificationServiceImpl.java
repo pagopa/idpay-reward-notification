@@ -117,14 +117,14 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
      */
     private static String buildRecoveryId(String id, String baseId) {
         int nextRecoveryProgressive = getNextRecoveryProgressive(id);
-        return formatId(baseId, nextRecoveryProgressive);
+        return buildRecoveryId(baseId, nextRecoveryProgressive);
     }
 
     private String buildRecoveryId(String baseId) {
-        return formatId(baseId, 1);
+        return buildRecoveryId(baseId, 1);
     }
 
-    private static String formatId(String baseId, int progressive) {
+    private static String buildRecoveryId(String baseId, int progressive) {
         return RECOVERED_ID_PLACEHOLDERS.formatted(baseId, RECOVERY_ID_SUFFIX, progressive);
     }
 

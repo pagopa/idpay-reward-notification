@@ -116,15 +116,19 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
      * and the calculated next recovery progressive
      */
     private static String buildRecoveryId(String id, String baseId) {
-        int nextRecoveryProgressiveId = getNextRecoveryProgressiveId(id);
-        return RECOVERED_ID_PLACEHOLDERS.formatted(baseId, RECOVERY_ID_SUFFIX, nextRecoveryProgressiveId);
+        int nextRecoveryProgressive = getNextRecoveryProgressive(id);
+        return formatId(baseId, nextRecoveryProgressive);
     }
 
-    private String buildRecoveryId(String id) {
-        return buildRecoveryId(id, id);
+    private String buildRecoveryId(String baseId) {
+        return formatId(baseId, 1);
     }
 
-    private static int getNextRecoveryProgressiveId(String id) {
+    private static String formatId(String baseId, int progressive) {
+        return RECOVERED_ID_PLACEHOLDERS.formatted(baseId, RECOVERY_ID_SUFFIX, progressive);
+    }
+
+    private static int getNextRecoveryProgressive(String id) {
         String[] idSplit = id.split(RECOVERY_ID_SUFFIX);
 
         return idSplit.length == 2 ? Integer.parseInt(idSplit[1]) + 1 : 1;

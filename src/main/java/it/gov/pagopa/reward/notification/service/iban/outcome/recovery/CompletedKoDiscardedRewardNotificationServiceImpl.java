@@ -103,8 +103,8 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
             remedial.setOrdinaryId(discarded.getOrdinaryId());
             remedial.setOrdinaryExternalId(discarded.getOrdinaryExternalId());
         } else {
-            remedial.setId(buildRecoveryId(id));
-            remedial.setExternalId(buildRecoveryId(externalId));
+            remedial.setId(buildFirstRecoveryId(id));
+            remedial.setExternalId(buildFirstRecoveryId(externalId));
 
             remedial.setOrdinaryId(id);
             remedial.setOrdinaryExternalId(externalId);
@@ -115,31 +115,31 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
      * Returns a formatted String with given base id, {@link CompletedKoDiscardedRewardNotificationServiceImpl#RECOVERY_ID_SUFFIX}
      * and the calculated next recovery progressive
      */
-    private static String buildRecoveryId(String id, String baseId) {
+    private String buildRecoveryId(String id, String baseId) {
         int nextRecoveryProgressive = getNextRecoveryProgressive(id);
         return buildRecoveryId(baseId, nextRecoveryProgressive);
     }
 
-    private String buildRecoveryId(String baseId) {
+    private String buildFirstRecoveryId(String baseId) {
         return buildRecoveryId(baseId, 1);
     }
 
-    private static String buildRecoveryId(String baseId, int progressive) {
+    private String buildRecoveryId(String baseId, int progressive) {
         return RECOVERED_ID_PLACEHOLDERS.formatted(baseId, RECOVERY_ID_SUFFIX, progressive);
     }
 
-    private static int getNextRecoveryProgressive(String id) {
+    private int getNextRecoveryProgressive(String id) {
         String[] idSplit = id.split(RECOVERY_ID_SUFFIX);
 
         return idSplit.length == 2 ? Integer.parseInt(idSplit[1]) + 1 : 1;
     }
 
     private Mono<RewardsNotification> updateDiscardedAndStoreRemedial(RewardsNotification discarded, RewardsNotification remedial) {
-
         discarded.setRemedialId(remedial.getId());
         discarded.setStatus(RewardNotificationStatus.RECOVERED);
 
-        return rewardsNotificationRepository.save(discarded)
-                .flatMap(x -> rewardsNotificationRepository.save(remedial));
+        return rewardsNotificationRepository.saveIfNotExists(remedial)
+                .then(rewardsNotificationRepository.save(discarded))
+                .then(Mono.just(remedial));
     }
 }

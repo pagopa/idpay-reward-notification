@@ -4,14 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
-import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,6 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -64,6 +66,8 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
 
         long totalSendMessages = trxs.size() + duplicateTrx;
 
+        storeRecoveryNotifications();
+
         long timePublishOnboardingStart = System.currentTimeMillis();
         int[] i = new int[]{0};
         trxs.forEach(p -> {
@@ -92,10 +96,22 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
 
         verifyNotElaborated(trx -> trx.getId().equals(trxAlreadyProcessed.getId()));
 
+        List<RewardsNotification> storedRewards = rewardsNotificationRepository.findAll().filter(rn -> rn.getOrdinaryId() == null).collectList().block();
+        Assertions.assertNotNull(storedRewards);
+        List<RewardsNotification> duplicateExternalIds = storedRewards.stream().collect(Collectors.groupingBy(RewardsNotification::getExternalId)).values().stream()
+                .filter(l -> l.size() > 1)
+                .flatMap(Collection::stream)
+                .map(rn->rn.toBuilder().build())
+                .toList();
+
         Assertions.assertEquals(
                 objectMapper.writeValueAsString(prepare2Compare(expectedRewardNotifications.values())),
-                objectMapper.writeValueAsString(prepare2Compare(Objects.requireNonNull(rewardsNotificationRepository.findAll().collectList().block())))
+                objectMapper.writeValueAsString(prepare2Compare(storedRewards))
                 );
+
+        Assertions.assertEquals(Collections.emptyList(),
+                duplicateExternalIds
+                , "There are externalId not unique!");
 
         checkErrorsPublished(notValidTrx, maxWaitingMs, errorUseCases);
 
@@ -137,6 +153,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
     private RewardsNotification storeRewardNotification(RewardTransactionDTO trx, String initiativeId, LocalDate notificationDate, long rewardCents, DepositType depositType, List<String> trxIds) {
         Rewards rewardAlreadyProcessed = storeReward(trx, initiativeId, RewardStatus.ACCEPTED);
         RewardsNotification rewardsNotification = buildRewardsNotificationExpected(rewardAlreadyProcessed.getNotificationId(), notificationDate, trx, 1L, initiativeId, rewardCents, depositType, null);
+        rewardsNotification.setExternalId(rewardsNotification.getId());
         rewardsNotification.setTrxIds(trxIds);
         return rewardsNotificationRepository.save(rewardsNotification).block();
     }
@@ -158,6 +175,19 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
 
     private void verifyDuplicateCheck() {
         verifyNotElaborated(trx -> trx.getSenderCode().endsWith(DUPLICATE_SUFFIX));
+    }
+
+    private void storeRecoveryNotifications() {
+        rewardsNotificationRepository.saveAll(
+                expectedRewardNotifications.values()
+                .stream().map(rn ->
+                    rn.toBuilder()
+                            .id("%srecovery-1".formatted(rn.getId())) // we are re-using the id of the new reward notification, but we have no threat this as its recovery
+                            .externalId("%srecovery-1".formatted(rn.getExternalId()))
+                            .rewardCents(10_00L)
+                            .ordinaryId(rn.getId() + "-ordinaryId") // not a real ordinary id
+                            .build()
+                        ).toList()).collectList().block();
     }
 
     private void verifyNotElaborated(ArgumentMatcher<RewardTransactionDTO> matcher) {
@@ -649,6 +679,78 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         LocalDate expectedNotificationDate = TOMORROW;
                         String expectedNotificationId = "%s_%s_%s".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
+                    }
+            ),
+            // useCase 21: initiative daily notified, with previous forced to be exported before
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_DAILY;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
+                                .build();
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        RewardsNotification expectedRN = updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1000L, DepositType.PARTIAL);
+
+                        RewardsNotification previousRN = rewardsNotificationRepository.save(expectedRN.toBuilder()
+                                .status(RewardNotificationStatus.EXPORTED)
+                                .notificationDate(TODAY)
+                                .rewardCents(15_20L)
+                                .exportDate(TODAY.atStartOfDay())
+                                .build()).block();
+
+                        expectedRewardNotifications.put(expectedNotificationId, previousRN);
+
+                        expectedRN.setId(expectedNotificationId+"_2");
+                        expectedRN.setProgressive(2L);
+                        expectedRewardNotifications.put(expectedNotificationId+"_2", expectedRN);
+
+                        return trx;
+                    },
+                    reward -> {
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s_2".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
+                    }
+            ),
+            // useCase 22: initiative daily notified, with previous forced to be exported before and next already created
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_NOTIFY_WEEKLY;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
+                                .build();
+                        LocalDate expectedNotificationDate = NEXT_WEEK;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getUserId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        RewardsNotification expectedRN = updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 10_00L, DepositType.PARTIAL);
+
+                        RewardsNotification previousRN = rewardsNotificationRepository.save(expectedRN.toBuilder()
+                                .status(RewardNotificationStatus.EXPORTED)
+                                .notificationDate(TODAY)
+                                .rewardCents(18_20L)
+                                .exportDate(TODAY.atStartOfDay())
+                                .build()).block();
+
+                        expectedRewardNotifications.put(expectedNotificationId, previousRN);
+
+                        expectedRN.setId(expectedNotificationId+"_2");
+                        expectedRN.setExternalId(expectedNotificationId+"_2");
+                        expectedRN.setProgressive(2L);
+                        expectedRN.setRewardCents(12_00L);
+                        expectedRN.setTrxIds(List.of(trx.getId() + "_PREVIOUS"));
+                        expectedRewardNotifications.put(expectedNotificationId+"_2", expectedRN);
+
+                        rewardsNotificationRepository.save(expectedRN).block();
+
+                        expectedRN.setTrxIds(List.of(trx.getId() + "_PREVIOUS", trx.getId()));
+                        expectedRN.setRewardCents(22_00L);
+
+                        return trx;
+                    },
+                    reward -> {
+                        LocalDate expectedNotificationDate = NEXT_WEEK;
+                        String expectedNotificationId = "%s_%s_%s_2".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_WEEKLY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewards(reward, INITIATIVE_ID_NOTIFY_WEEKLY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, false);
                     }
             )
     );

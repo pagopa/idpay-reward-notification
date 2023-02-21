@@ -7,7 +7,6 @@ import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import org.springframework.data.domain.Example;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -23,17 +22,22 @@ public abstract class BaseRewardNotificationHandlerService implements RewardNoti
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.mapper = mapper;
     }
-
     protected Mono<RewardsNotification> createNewNotification(RewardTransactionDTO trx, RewardNotificationRule rule, LocalDate notificationDate, String notificationId) {
-        RewardsNotification query = new RewardsNotification();
-        query.setUserId(trx.getUserId());
-        query.setInitiativeId(rule.getInitiativeId());
-        query.setTrxIds(null);
-        query.setFeedbackHistory(null);
-
-        return rewardsNotificationRepository.count(Example.of(query))
+        return rewardsNotificationRepository.countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())
                 .defaultIfEmpty(0L)
                 .map(progressive -> mapper.apply(notificationId, notificationDate, progressive+1, trx, rule));
+    }
+
+    protected Mono<RewardsNotification> createNewNotificationWithProgressiveId(RewardTransactionDTO trx, RewardNotificationRule rule, LocalDate notificationDate, String notificationId) {
+        return createNewNotification(trx, rule, notificationDate, notificationId)
+                .doOnNext(n -> {
+                    n.setId(buildNextProgressiveId(n.getId(), n));
+                    n.setExternalId(buildNextProgressiveId(n.getExternalId(), n));
+                });
+    }
+
+    private String buildNextProgressiveId(String n, RewardsNotification n1) {
+        return "%s_%d".formatted(n, n1.getProgressive());
     }
 
     protected void updateReward(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward, RewardsNotification n) {

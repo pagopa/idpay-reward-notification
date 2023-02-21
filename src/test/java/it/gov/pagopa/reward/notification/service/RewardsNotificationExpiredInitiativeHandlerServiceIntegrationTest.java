@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.rewards.evaluate.notify;
+package it.gov.pagopa.reward.notification.service;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;

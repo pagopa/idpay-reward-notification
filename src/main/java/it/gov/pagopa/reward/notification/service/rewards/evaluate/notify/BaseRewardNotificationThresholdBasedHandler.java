@@ -41,7 +41,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
 
     @Override
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
-        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)
+        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)
                 .switchIfEmpty(Mono.defer(()->handleNoOpenNotification(trx, rule, reward)))
                 .last()
                 .doOnNext(n -> {
@@ -68,14 +68,13 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
         Flux<RewardsNotification> findFutureIfRefund;
         if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) <= 0){
             log.debug("[REWARD_NOTIFICATION] searching for future notification for userId {} and initiativeId {}", trx.getUserId(), rule.getInitiativeId());
-            findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatus(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND);
+            findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND);
         } else {
             findFutureIfRefund = Flux.empty();
         }
         return findFutureIfRefund
                 .switchIfEmpty(
-                    createNewNotification(trx, rule, null, buildNotificationId(trx, rule))
-                    .doOnNext(n -> n.setId("%s_%d".formatted(n.getId(), n.getProgressive())))
+                        createNewNotificationWithProgressiveId(trx, rule, null, buildNotificationId(trx, rule))
                 )
                 .last();
     }

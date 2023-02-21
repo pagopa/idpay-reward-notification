@@ -39,7 +39,8 @@ import java.util.concurrent.Semaphore;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.rewards.RewardsServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.rewards.RewardsServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.rewards.evaluate.notify=WARN",
 })
 @Slf4j
 abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest {
@@ -90,7 +91,9 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     }
 
     protected List<Rewards> fetchNewRewardsStored() {
-        return rewardsRepository.findAll().filter(r->!r.getTrxId().startsWith("ALREADY")).collectList().block();
+        return rewardsRepository.findAll()
+                .filter(r->!r.getTrxId().startsWith("ALREADY"))
+                .collectList().block();
     }
 
     protected List<RewardsNotification> prepare2Compare(Collection<RewardsNotification> values) {

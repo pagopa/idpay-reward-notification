@@ -42,13 +42,13 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
     private static final String INITIATIVEID = "INITIATIVEID%s";
     private static final String USERID = "USERID%s";
     @Autowired
-    RewardsNotificationRepository rewardsNotificationRepository;
+    private RewardsNotificationRepository rewardsNotificationRepository;
     @Autowired
-    RewardNotificationRuleRepository notificationRuleRepository;
+    private RewardNotificationRuleRepository notificationRuleRepository;
     @Autowired
-    RewardIbanService rewardIbanService;
+    private RewardIbanService rewardIbanService;
     @Autowired
-    RewardIbanRepository rewardIbanRepository;
+    private RewardIbanRepository rewardIbanRepository;
 
     private List<IbanOutcomeDTO> ibanOutcomeDTOList;
     private List<RewardsNotification> rewardsNotificationList;
@@ -156,7 +156,7 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void test() {
-        // notificationId = USERID%s_INITIATIVEID%s_today.format(Utils.FORMATTER_DATE)
+        // notificationId = USERID%d_INITIATIVEID%d_today.format(Utils.FORMATTER_DATE)
 
         ibanOutcomeDTOList.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome, null, p.getUserId().concat(p.getInitiativeId()), p));
 
@@ -168,12 +168,19 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
 
             int i = getIndexFromNotificationId(recovered.getId());
             if (i >= 0 && i <= 3) { // status ERROR rejectionReason IBAN_NOT_FOUND - [0,3]
-                checkRecoveredErrorStatus(recovered);
-                checkNotificationDate(i, recovered.getNotificationDate(), recovered.getId());
-            } // skip [4,7] because they will not be recovered since status = ERROR but rejectionReason = null
+                checkRecoveredErrorStatus(i, recovered);
+            }
+            else if (i >= 4 && i <= 7){ // status ERROR rejectionReason null - [4,7]
+                // the recovered notification should be identical to the r one, since it should be ignored by the RecoveryService
+                Assertions.assertEquals(r, recovered);
+            }
 
             else if (i >= 8 && i <= 15) { // COMPLETED_KO - [8,15]
                 checkRecoveredCompletedKoStatus(i, r, recovered);
+            }
+
+            else {
+                throw new IllegalStateException("[IBAN_RECOVERY_TEST] Unexpected index: %d".formatted(i));
             }
 
         }
@@ -207,11 +214,13 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
         return Integer.parseInt(idSplit[0]);
     }
 
-    private void checkRecoveredErrorStatus(RewardsNotification recovered) {
+    private void checkRecoveredErrorStatus(int i, RewardsNotification recovered) {
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, recovered.getStatus(), "notification %s".formatted(recovered.getId()));
         Assertions.assertNull(recovered.getRejectionReason());
         Assertions.assertNull(recovered.getResultCode());
         Assertions.assertNull(recovered.getExportDate());
+
+        checkNotificationDate(i, recovered.getNotificationDate(), recovered.getId());
     }
 
     private void checkRecoveredCompletedKoStatus(int i, RewardsNotification r, RewardsNotification recovered) {

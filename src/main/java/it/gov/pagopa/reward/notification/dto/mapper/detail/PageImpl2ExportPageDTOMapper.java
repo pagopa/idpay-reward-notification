@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.RewardNotificationDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.ExportContentPageDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class PageImpl2ExportPageDTOMapper {
 
-    public ExportPageDTO apply(PageImpl<ExportDetailDTO> page) {
-        return ExportPageDTO.builder()
+    public ExportContentPageDTO apply(PageImpl<RewardNotificationDTO> page) {
+        return ExportContentPageDTO.builder()
                 .content(page.getContent())
                 .pageNo(page.getNumber())
                 .pageSize(page.getSize())
@@ -20,10 +20,10 @@ public class PageImpl2ExportPageDTOMapper {
                 .build();
     }
 
-    public ExportPageDTO apply(Pageable pageable) {
-        Page<ExportDetailDTO> page = Page.empty(pageable);
+    public ExportContentPageDTO apply(Pageable pageable) {
+        Page<RewardNotificationDTO> page = Page.empty(pageable);
 
-        return ExportPageDTO.builder()
+        return ExportContentPageDTO.builder()
                 .content(page.getContent())
                 .pageNo(page.getNumber())
                 .pageSize(page.getSize())

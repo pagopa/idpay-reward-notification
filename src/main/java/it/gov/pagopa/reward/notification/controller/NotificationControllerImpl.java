@@ -1,10 +1,7 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.*;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
-import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -90,25 +87,25 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Mono<ExportSummaryDTO> getSingleExportSummary(String organizationId, String initiativeId, String exportId) {
+    public Mono<ExportSummaryDTO> getExport(String organizationId, String initiativeId, String exportId) {
         return exportDetailService.getExportSummary(organizationId, initiativeId, exportId);
     }
 
     @Override
-    public Flux<ExportDetailDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
+    public Flux<RewardNotificationDTO> getExportNotifications(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
         return exportDetailService.getSingleExport(organizationId, initiativeId, exportId, pageable, filters);
     }
 
     @Override
-    public Mono<ExportPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
+    public Mono<ExportContentPageDTO> getExportNotificationsPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
         return exportDetailService
                 .getSingleExportPaged(organizationId, initiativeId, exportId, pageable, filters)
                 .switchIfEmpty(exportDetailService.getExportDetailEmptyPage(pageable));
     }
 
     @Override
-    public Mono<RefundDetailDTO> getSingleRefund(String organizationId, String initiativeId, String eventId) {
-        return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, eventId);
+    public Mono<RewardNotificationDetailDTO> getRewardNotification(String organizationId, String initiativeId, String notificationId) {
+        return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, notificationId);
     }
 
     @Override

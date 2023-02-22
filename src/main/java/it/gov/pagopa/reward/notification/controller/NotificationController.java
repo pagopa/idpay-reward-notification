@@ -1,10 +1,7 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.reward.notification.dto.controller.*;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailDTO;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
-import it.gov.pagopa.reward.notification.dto.controller.detail.ExportPageDTO;
-import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.data.domain.Page;
@@ -46,33 +43,33 @@ public interface NotificationController {
             @PageableDefault(size = 10) Pageable pageable,
             ExportFilter filters);
 
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/summary")
-    Mono<ExportSummaryDTO> getSingleExportSummary(
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}")
+    Mono<ExportSummaryDTO> getExport(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId);
 
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}")
-    Flux<ExportDetailDTO> getSingleExport(
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/content")
+    Flux<RewardNotificationDTO> getExportNotifications(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,
             @PageableDefault(size = 10) Pageable pageable,
             ExportDetailFilter filters);
 
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/paged")
-    Mono<ExportPageDTO> getSingleExportPaged(
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/content/paged")
+    Mono<ExportContentPageDTO> getExportNotificationsPaged(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,
             @PageableDefault(size = 10) Pageable pageable,
             ExportDetailFilter filters);
 
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/event/{eventId}")
-    Mono<RefundDetailDTO> getSingleRefund(
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/{notificationId}")
+    Mono<RewardNotificationDetailDTO> getRewardNotification(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("eventId") String eventId);
+            @PathVariable("notificationId") String notificationId);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports")
     Flux<RewardImportsDTO> getImports(

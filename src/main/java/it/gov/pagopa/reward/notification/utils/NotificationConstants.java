@@ -12,7 +12,8 @@ public final class NotificationConstants {
     public static final List<RewardNotificationStatus> REWARD_NOTIFICATION_EXPOSED_STATUS = Arrays.asList(
             RewardNotificationStatus.EXPORTED,
             RewardNotificationStatus.COMPLETED_OK,
-            RewardNotificationStatus.COMPLETED_KO
+            RewardNotificationStatus.COMPLETED_KO,
+            RewardNotificationStatus.RECOVERED
     );
 }
 

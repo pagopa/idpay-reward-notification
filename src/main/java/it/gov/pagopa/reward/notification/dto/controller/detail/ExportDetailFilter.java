@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExportDetailFilter {
+
+    // TODO for each exposed combination of filters, verify if an index is necessary
     private String status;
     private String cro;
 }

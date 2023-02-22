@@ -59,4 +59,8 @@ public final class Utils {
     public static long calcPercentage(long value, long total) {
         return (long) ((((double) value) / total) * 100_00);
     }
+
+    public static BigDecimal cents2Eur(Long cents) {
+        return BigDecimal.valueOf(cents/100);
+    }
 }

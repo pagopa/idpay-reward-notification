@@ -1,18 +1,18 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.reward.notification.dto.controller.detail.RefundDetailDTO;
+import it.gov.pagopa.reward.notification.dto.controller.detail.RewardNotificationDetailDTO;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.User;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RewardsNotification2RefundDetailDTOMapper implements BaseDetailMapper{
+public class RewardsNotification2DetailDTOMapper {
 
-    public RefundDetailDTO apply(RewardsNotification notification, User user) {
-        return RefundDetailDTO.builder()
-                .fiscalCode(user.getFiscalCode())
+    public RewardNotificationDetailDTO apply(RewardsNotification notification) {
+        return RewardNotificationDetailDTO.builder()
+                .userId(notification.getUserId())
                 .iban(notification.getIban())
-                .amount(centsToEur(notification.getRewardCents()))
+                .amount(Utils.cents2Eur(notification.getRewardCents()))
                 .startDate(notification.getStartDepositDate())
                 .endDate(notification.getNotificationDate())
                 .status(notification.getStatus())
@@ -23,11 +23,11 @@ public class RewardsNotification2RefundDetailDTOMapper implements BaseDetailMapp
                 .build();
     }
 
-    private RefundDetailDTO.RefundDetailType getRefundType(RewardsNotification notification) {
+    private RewardNotificationDetailDTO.RefundDetailType getRefundType(RewardsNotification notification) {
         if (notification.getOrdinaryId() != null) {
-            return RefundDetailDTO.RefundDetailType.REMEDIAL;
+            return RewardNotificationDetailDTO.RefundDetailType.REMEDIAL;
         } else {
-            return RefundDetailDTO.RefundDetailType.ORDINARY;
+            return RewardNotificationDetailDTO.RefundDetailType.ORDINARY;
         }
     }
 }

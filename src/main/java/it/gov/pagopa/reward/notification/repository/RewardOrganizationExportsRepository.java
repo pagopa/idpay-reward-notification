@@ -16,7 +16,7 @@ public interface RewardOrganizationExportsRepository extends ReactiveMongoReposi
 
     Flux<RewardOrganizationExport> findByStatusIn(Collection<RewardOrganizationExportStatus> statuses);
     Flux<RewardOrganizationExport> findByExportDate(LocalDate exportDate);
-    Mono<RewardOrganizationExport> findByOrganizationIdAndInitiativeIdAndId(String organizationId, String initiativeId, String exportId);
+    Mono<RewardOrganizationExport> findByIdAndOrganizationIdAndInitiativeId(String exportId, String organizationId, String initiativeId);
 
     default Flux<RewardOrganizationExport> findPendingOrTodayExports(){
         return findByStatusIn(PENDING_STATUSES)

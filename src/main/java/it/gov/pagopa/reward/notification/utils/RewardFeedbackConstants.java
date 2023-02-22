@@ -31,6 +31,7 @@ public final class RewardFeedbackConstants {
     public enum ImportFeedbackRowErrors {
         INVALID_RESULT("Esito non riconosciuto, gli unici valori ammessi sono :%s".formatted(Arrays.stream(RewardOrganizationImportResult.values()).map(x->"'%s'".formatted(x.value)).collect(Collectors.joining(",")))),
         NOT_FOUND("UniqueId non esistente"),
+        CANNOT_UPDATE_RECOVERED_NOTIFICATION("Non è possibile recepire esiti su una disposizione già recuperata da una disposizione correttiva"),
 
         GENERIC_ERROR("Qualcosa è andato storto durante l'elaborazione della riga");
 

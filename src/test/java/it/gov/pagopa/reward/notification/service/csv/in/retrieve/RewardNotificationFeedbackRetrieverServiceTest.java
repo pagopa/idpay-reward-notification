@@ -105,7 +105,7 @@ class RewardNotificationFeedbackRetrieverServiceTest {
         row.setUniqueID("EXTERNALID");
 
         RewardsNotification rn = new RewardsNotification();
-        rn.setInitiativeId("INITITATIVEID");
+        rn.setInitiativeId("INITIATIVEID");
         rn.setOrganizationId("UNEXPECTEDORGANIZATIONID");
 
         Mockito.when(repositoryMock.findByExternalId(row.getUniqueID())).thenReturn(Mono.just(rn));
@@ -119,6 +119,35 @@ class RewardNotificationFeedbackRetrieverServiceTest {
             Assertions.fail("Exception expected");
         } catch (FeedbackEvaluationException e){
             Assertions.assertEquals(RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND, e.getError());
+        }
+    }
+
+    @Test
+    void testRetrieve_RecoveredReward(){
+        // Given
+        RewardOrganizationImport importRequest = new RewardOrganizationImport();
+        importRequest.setInitiativeId("INITIATIVEID");
+        importRequest.setOrganizationId("ORGANIZATIONID");
+
+        RewardNotificationImportCsvDto row = new RewardNotificationImportCsvDto();
+        row.setUniqueID("EXTERNALID");
+
+        RewardsNotification rn = new RewardsNotification();
+        rn.setInitiativeId("INITIATIVEID");
+        rn.setOrganizationId("ORGANIZATIONID");
+        rn.setStatus(RewardNotificationStatus.RECOVERED);
+
+        Mockito.when(repositoryMock.findByExternalId(row.getUniqueID())).thenReturn(Mono.just(rn));
+
+        // When
+        Mono<RewardsNotification> mono = service.retrieve(row, importRequest);
+
+        // Then
+        try {
+            mono.block();
+            Assertions.fail("Exception expected");
+        } catch (FeedbackEvaluationException e){
+            Assertions.assertEquals(RewardFeedbackConstants.ImportFeedbackRowErrors.CANNOT_UPDATE_RECOVERED_NOTIFICATION, e.getError());
         }
     }
 

@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.NotificationConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -95,6 +96,12 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
                         .set(FIELD_EXPORT_ID, exportId),
                 RewardsNotification.class
         ).map(x->rewardNotificationId);
+    }
+
+    @Override
+    public Mono<RewardsNotification> saveIfNotExists(RewardsNotification rewardsNotification) {
+        return mongoTemplate.insert(rewardsNotification)
+                .onErrorResume(DuplicateKeyException.class, e -> Mono.empty());
     }
 
     @Override

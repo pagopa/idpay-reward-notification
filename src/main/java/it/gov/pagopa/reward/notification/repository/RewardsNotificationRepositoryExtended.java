@@ -16,6 +16,8 @@ public interface RewardsNotificationRepositoryExtended {
 
     Mono<String> updateExportStatus(String rewardNotificationId, String iban, String checkIbanResult, String exportId);
 
+    Mono<RewardsNotification> saveIfNotExists(RewardsNotification rewardsNotification);
+
     Flux<RewardsNotification> findAllWithFilters(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters);
     Mono<Long> countAll(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters);
 }

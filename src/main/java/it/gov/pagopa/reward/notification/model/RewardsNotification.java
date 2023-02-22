@@ -53,6 +53,7 @@ public class RewardsNotification {
     private String resultCode;
     private String rejectionReason;
     private LocalDateTime feedbackDate;
+    private LocalDateTime feedbackElaborationDate;
     @Builder.Default private List<RewardNotificationHistory> feedbackHistory = new ArrayList<>();
     private LocalDate executionDate;
     private String cro;

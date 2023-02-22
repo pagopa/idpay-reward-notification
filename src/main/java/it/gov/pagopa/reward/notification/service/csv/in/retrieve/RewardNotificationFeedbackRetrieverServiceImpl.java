@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 public class RewardNotificationFeedbackRetrieverServiceImpl implements RewardNotificationFeedbackRetrieverService {
@@ -63,6 +65,7 @@ public class RewardNotificationFeedbackRetrieverServiceImpl implements RewardNot
         if (newestFeedback) {
             notification.getFeedbackHistory().add(history);
 
+            notification.setFeedbackElaborationDate(LocalDateTime.now());
             notification.setFeedbackDate(importRequest.getFeedbackDate());
             notification.setExecutionDate(row.getExecutionDate());
             notification.setCro(row.getCro());

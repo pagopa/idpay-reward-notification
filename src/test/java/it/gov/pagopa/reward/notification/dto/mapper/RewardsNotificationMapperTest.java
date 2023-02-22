@@ -47,6 +47,7 @@ class RewardsNotificationMapperTest {
                 "resultCode",
                 "rejectionReason",
                 "feedbackDate",
+                "feedbackElaborationDate",
                 "feedbackHistory",
                 "orderDate",
                 "executionDate",

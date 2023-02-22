@@ -13,19 +13,18 @@ public class RewardsNotification2RefundDetailDTOMapper implements BaseDetailMapp
                 .fiscalCode(user.getFiscalCode())
                 .iban(notification.getIban())
                 .amount(centsToEur(notification.getRewardCents()))
-                // TODO .startDate()
-                // TODO .endDate()
+                .startDate(notification.getStartDepositDate())
+                .endDate(notification.getNotificationDate())
                 .status(notification.getStatus())
                 .refundType(getRefundType(notification))
                 .cro(notification.getCro())
-                .creationDate(notification.getExportDate())
-                // TODO .sendDate()
-                // TODO .notificationDate()
+                .transferDate(notification.getExecutionDate())
+                .userNotificationDate(notification.getFeedbackElaborationDate().toLocalDate())
                 .build();
     }
 
     private RefundDetailDTO.RefundDetailType getRefundType(RewardsNotification notification) {
-        if (notification.getId() != null) { // TODO ordinaryId != null
+        if (notification.getOrdinaryId() != null) {
             return RefundDetailDTO.RefundDetailType.REMEDIAL;
         } else {
             return RefundDetailDTO.RefundDetailType.ORDINARY;

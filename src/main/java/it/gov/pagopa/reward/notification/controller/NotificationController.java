@@ -68,11 +68,10 @@ public interface NotificationController {
             @PageableDefault(size = 10) Pageable pageable,
             ExportDetailFilter filters);
 
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/refund/{eventId}")
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/event/{eventId}")
     Mono<RefundDetailDTO> getSingleRefund(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("exportId") String exportId,
             @PathVariable("eventId") String eventId);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports")

@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardExportsDTOFaker;
@@ -44,6 +45,8 @@ class NotificationControllerImplTest {
     private OrganizationImportsServiceImpl organizationImportsServiceMock;
     @MockBean
     private RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
+    @MockBean
+    private ExportDetailService exportDetailServiceMock;
     @MockBean
     private AuditUtilities auditUtilities;
     @Autowired

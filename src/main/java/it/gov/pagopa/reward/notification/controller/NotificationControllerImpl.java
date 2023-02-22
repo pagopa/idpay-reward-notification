@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
-public class NotificationControllerImpl implements NotificationController{
+public class NotificationControllerImpl implements NotificationController {
 
     // region exports
     private final OrganizationExportsServiceImpl organizationExportsService;
@@ -70,8 +70,8 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Flux<RewardExportsDTO> getExports(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
-           return organizationExportsService
-                   .findAllBy(organizationId, initiativeId, pageable, filters);
+        return organizationExportsService
+                .findAllBy(organizationId, initiativeId, pageable, filters);
     }
 
     @Override
@@ -107,7 +107,7 @@ public class NotificationControllerImpl implements NotificationController{
     }
 
     @Override
-    public Mono<RefundDetailDTO> getSingleRefund(String organizationId, String initiativeId, String exportId, String eventId) {
+    public Mono<RefundDetailDTO> getSingleRefund(String organizationId, String initiativeId, String eventId) {
         return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, eventId);
     }
 
@@ -135,8 +135,8 @@ public class NotificationControllerImpl implements NotificationController{
     public Mono<ResponseEntity<String>> getImportErrors(String organizationId, String initiativeId, String fileName) {
         return organizationImportsService
                 .getErrorsCsvByImportId(organizationId, initiativeId, buildImportId(organizationId, initiativeId, fileName))
-                .map(csv->ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION,  ContentDisposition.attachment().filename(fileName).build().toString())
+                .map(csv -> ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName).build().toString())
                         .body(csv))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }

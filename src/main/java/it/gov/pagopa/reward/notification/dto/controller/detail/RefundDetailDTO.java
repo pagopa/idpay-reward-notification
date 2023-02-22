@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -23,9 +22,8 @@ public class RefundDetailDTO {
     private RewardNotificationStatus status;
     private RefundDetailType refundType;
     private String cro;
-    private LocalDateTime creationDate;
-    private LocalDateTime sendDate;
-    private LocalDateTime notificationDate;
+    private LocalDate transferDate;
+    private LocalDate userNotificationDate;
 
     public enum RefundDetailType {
         ORDINARY,

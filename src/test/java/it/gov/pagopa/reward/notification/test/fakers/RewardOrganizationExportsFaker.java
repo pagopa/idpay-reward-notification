@@ -27,23 +27,24 @@ public class RewardOrganizationExportsFaker {
         String organizationId = "ORGANIZATION_ID_%d".formatted(bias);
         String initiativeId = "INITIATIVE_ID_%d".formatted(bias);
 
-        out.id("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.initiativeId(initiativeId);
-        out.initiativeName("INITIATIVE_NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.organizationId(organizationId);
-        out.filePath("%s/%s/export/dispositive-rewards-%d.zip".formatted(organizationId, initiativeId, bias));
-        out.notificationDate(CHOSEN_DATE);
-        out.exportDate(CHOSEN_DATE);
-        out.rewardsExportedCents(bias*10000L);
-        out.rewardsResultsCents(bias*10000L);
-        out.rewardNotified(bias+1L);
-        out.rewardsResulted(bias+1L);
-        out.rewardsResultedOk(bias.longValue());
-        out.percentageResulted((bias+1L)*1000L);
-        out.percentageResultedOk(bias*1000L);
-        out.percentageResults((bias*10000L)/50L);
-        out.feedbackDate(LocalDateTime.now());
-        out.status(RewardOrganizationExportStatus.EXPORTED);
+        out.id("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")))
+                .initiativeId(initiativeId)
+                .initiativeName("INITIATIVE_NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")))
+                .organizationId(organizationId)
+                .filePath("%s/%s/export/dispositive-rewards-%d.zip".formatted(organizationId, initiativeId, bias))
+                .notificationDate(CHOSEN_DATE)
+                .progressive(0L)
+                .exportDate(CHOSEN_DATE)
+                .rewardsExportedCents(bias * 10000L)
+                .rewardsResultsCents(bias * 10000L)
+                .rewardNotified(bias + 1L)
+                .rewardsResulted(bias + 1L)
+                .rewardsResultedOk(bias.longValue())
+                .percentageResulted((bias + 1L) * 1000L)
+                .percentageResultedOk(bias * 1000L)
+                .percentageResults((bias * 10000L) / 50L)
+                .feedbackDate(LocalDateTime.now())
+                .status(RewardOrganizationExportStatus.EXPORTED);
 
 
         TestUtils.checkNotNullFields(out);

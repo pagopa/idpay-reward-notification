@@ -28,7 +28,7 @@ public class RewardOrganizationExport {
     private String filePath;
     private LocalDate notificationDate;
     private LocalDate exportDate;
-    private long progressive;
+    private Long progressive;
 
     /** Total reward notified in cents */
     private Long rewardsExportedCents;

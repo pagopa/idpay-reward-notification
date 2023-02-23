@@ -7,12 +7,12 @@ import reactor.core.publisher.Mono;
 
 public interface ExportDetailService {
 
-    Mono<ExportSummaryDTO> getExportSummary(String organizationId, String initiativeId, String exportId);
+    Mono<ExportSummaryDTO> getExport(String organizationId, String initiativeId, String exportId);
 
-    Flux<RewardNotificationDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters);
-    Mono<ExportContentPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters);
-    Mono<ExportContentPageDTO> getExportDetailEmptyPage(Pageable pageable);
+    Flux<RewardNotificationDTO> getExportNotifications(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);
+    Mono<ExportContentPageDTO> getExportNotificationsPaged(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);
+    Mono<ExportContentPageDTO> getExportNotificationEmptyPage(Pageable pageable);
 
 
-    Mono<RewardNotificationDetailDTO> getSingleRefundDetail(String organizationId, String initiativeId, String eventId);
+    Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId);
 }

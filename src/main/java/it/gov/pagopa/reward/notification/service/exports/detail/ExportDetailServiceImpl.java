@@ -46,14 +46,14 @@ public class ExportDetailServiceImpl implements ExportDetailService {
 
 
     @Override
-    public Mono<ExportSummaryDTO> getExportSummary(String organizationId, String initiativeId, String exportId) {
+    public Mono<ExportSummaryDTO> getExport(String organizationId, String initiativeId, String exportId) {
         return exportsRepository.findByIdAndOrganizationIdAndInitiativeId(organizationId, initiativeId, exportId)
                 .map(summaryMapper);
     }
 
     @Override
-    public Flux<RewardNotificationDTO> getSingleExport(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
-        return exportsRepository.findByIdAndOrganizationIdAndInitiativeId(organizationId, initiativeId, exportId)
+    public Flux<RewardNotificationDTO> getExportNotifications(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
+        return exportsRepository.findByIdAndOrganizationIdAndInitiativeId(exportId, organizationId, initiativeId)
                 .flatMapMany(export ->
                         notificationRepository.findAll(export.getOrganizationId(), export.getInitiativeId(), export.getId(), filters, pageable)
                                 .map(exportDetailMapper::apply)
@@ -61,7 +61,7 @@ public class ExportDetailServiceImpl implements ExportDetailService {
     }
 
     @Override
-    public Mono<ExportContentPageDTO> getSingleExportPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
+    public Mono<ExportContentPageDTO> getExportNotificationsPaged(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
         return exportsRepository.findByIdAndOrganizationIdAndInitiativeId(exportId, organizationId, initiativeId)
                 .flatMapMany(export ->
                         notificationRepository.findAll(export.getOrganizationId(), export.getInitiativeId(), export.getId(), filters, pageable)
@@ -74,14 +74,14 @@ public class ExportDetailServiceImpl implements ExportDetailService {
     }
 
     @Override
-    public Mono<ExportContentPageDTO> getExportDetailEmptyPage(Pageable pageable) {
+    public Mono<ExportContentPageDTO> getExportNotificationEmptyPage(Pageable pageable) {
         return Mono.just(pageable)
                 .map(pageMapper::apply);
     }
 
     @Override
-    public Mono<RewardNotificationDetailDTO> getSingleRefundDetail(String organizationId, String initiativeId, String notificationId) {
-        return notificationRepository.findByExternalIdAndOrganizationIdAndInitiativeId(notificationId, organizationId, initiativeId)
+    public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String initiativeId, String notificationId) {
+        return notificationRepository.findByExternalIdAndOrganizationIdAndInitiativeId(notificationId, notificationExternalId, initiativeId)
                 .map(refundMapper::apply);
     }
 }

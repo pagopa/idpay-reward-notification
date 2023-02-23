@@ -87,25 +87,25 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Mono<ExportSummaryDTO> getExport(String organizationId, String initiativeId, String exportId) {
-        return exportDetailService.getExportSummary(organizationId, initiativeId, exportId);
+    public Mono<ExportSummaryDTO> getExport(String exportId, String organizationId, String initiativeId) {
+        return exportDetailService.getExport(exportId, organizationId, initiativeId);
     }
 
     @Override
-    public Flux<RewardNotificationDTO> getExportNotifications(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
-        return exportDetailService.getSingleExport(organizationId, initiativeId, exportId, pageable, filters);
+    public Flux<RewardNotificationDTO> getExportNotifications(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
+        return exportDetailService.getExportNotifications(exportId, organizationId, initiativeId, filters, pageable);
     }
 
     @Override
-    public Mono<ExportContentPageDTO> getExportNotificationsPaged(String organizationId, String initiativeId, String exportId, Pageable pageable, ExportDetailFilter filters) {
+    public Mono<ExportContentPageDTO> getExportNotificationsPaged(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
         return exportDetailService
-                .getSingleExportPaged(organizationId, initiativeId, exportId, pageable, filters)
-                .switchIfEmpty(exportDetailService.getExportDetailEmptyPage(pageable));
+                .getExportNotificationsPaged(exportId, organizationId, initiativeId, filters, pageable)
+                .switchIfEmpty(exportDetailService.getExportNotificationEmptyPage(pageable));
     }
 
     @Override
-    public Mono<RewardNotificationDetailDTO> getRewardNotification(String organizationId, String initiativeId, String notificationId) {
-        return exportDetailService.getSingleRefundDetail(organizationId, initiativeId, notificationId);
+    public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
+        return exportDetailService.getRewardNotification(notificationExternalId, organizationId, initiativeId);
     }
 
     @Override

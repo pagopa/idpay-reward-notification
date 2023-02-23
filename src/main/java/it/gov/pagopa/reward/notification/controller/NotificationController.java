@@ -45,31 +45,31 @@ public interface NotificationController {
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}")
     Mono<ExportSummaryDTO> getExport(
+            @PathVariable("exportId") String exportId,
             @PathVariable("organizationId") String organizationId,
-            @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("exportId") String exportId);
+            @PathVariable("initiativeId") String initiativeId);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/content")
     Flux<RewardNotificationDTO> getExportNotifications(
+            @PathVariable("exportId") String exportId,
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("exportId") String exportId,
-            @PageableDefault(size = 10) Pageable pageable,
-            ExportDetailFilter filters);
+            ExportDetailFilter filters,
+            @PageableDefault(size = 10) Pageable pageable);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports/{exportId}/content/paged")
     Mono<ExportContentPageDTO> getExportNotificationsPaged(
-            @PathVariable("organizationId") String organizationId,
-            @PathVariable("initiativeId") String initiativeId,
             @PathVariable("exportId") String exportId,
-            @PageableDefault(size = 10) Pageable pageable,
-            ExportDetailFilter filters);
-
-    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/{notificationId}")
-    Mono<RewardNotificationDetailDTO> getRewardNotification(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("notificationId") String notificationId);
+            ExportDetailFilter filters,
+            @PageableDefault(size = 10) Pageable pageable);
+
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/byExternalId/{notificationExternalId}")
+    Mono<RewardNotificationDetailDTO> getRewardNotification(
+            @PathVariable("notificationExternalId") String notificationExternalId,
+            @PathVariable("organizationId") String organizationId,
+            @PathVariable("initiativeId") String initiativeId);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/reward/notification/imports")
     Flux<RewardImportsDTO> getImports(

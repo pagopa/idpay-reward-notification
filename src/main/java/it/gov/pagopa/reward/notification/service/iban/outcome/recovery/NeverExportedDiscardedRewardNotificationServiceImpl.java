@@ -33,11 +33,11 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
 
     @Override
     public Mono<List<RewardsNotification>> handleNeverExportedDiscardedRewardNotification(RewardIban rewardIban) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Searching for never exported discarded rewardNotification on userId {} and initiativeId {}",
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Searching for never exported discarded rewardNotification on userId {} and initiativeId {}",
                 rewardIban.getUserId(), rewardIban.getInitiativeId());
 
         // case 1 - Notification never exported
-        return PerformanceLogger.logTimingOnNext("REWARD_NOTIFICATION_IBAN_OUTCOME",
+        return PerformanceLogger.logTimingOnNext("IBAN_OUTCOME_RECOVER_ERROR_IBAN",
                 rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
                         rewardIban.getUserId(),
                         rewardIban.getInitiativeId(),
@@ -52,7 +52,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
     }
 
     private Mono<RewardsNotification> recoverNeverExportedDiscardedRewardNotification(RewardsNotification notification) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Found discarded never exported rewardNotification having id {} on userId {} and initiativeId {}",
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Found discarded never exported rewardNotification having id {} on userId {} and initiativeId {}",
                 notification.getId(), notification.getUserId(), notification.getInitiativeId());
 
         return Mono.just(notification)
@@ -60,7 +60,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
                 .flatMap(n -> setRemedialNotificationDate(n.getInitiativeId(), n))
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
-                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",
+                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",
                             notification.getId(), notification.getUserId(), notification.getInitiativeId(), e);
                     return Mono.empty();
                 });

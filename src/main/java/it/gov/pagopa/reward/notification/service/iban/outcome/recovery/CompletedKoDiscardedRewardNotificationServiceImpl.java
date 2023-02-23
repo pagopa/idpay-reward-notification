@@ -36,11 +36,11 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
 
     @Override
     public Mono<List<RewardsNotification>> handleCompletedKoDiscardedRewardNotification(RewardIban rewardIban) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Searching for COMPLETED_KO discarded rewardNotification on userId {} and initiativeId {}",
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_COMPLETED_KO] Searching for COMPLETED_KO discarded rewardNotification on userId {} and initiativeId {}",
                 rewardIban.getUserId(), rewardIban.getInitiativeId());
 
         // case 2 - Exported notification having KO result
-        return PerformanceLogger.logTimingOnNext("REWARD_NOTIFICATION_IBAN_OUTCOME",
+        return PerformanceLogger.logTimingOnNext("IBAN_OUTCOME_RECOVER_COMPLETED_KO",
                 rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatusAndRemedialIdNull(
                                 rewardIban.getUserId(),
                                 rewardIban.getInitiativeId(),
@@ -54,7 +54,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
     }
 
     private Mono<RewardsNotification> createRemedialNotification(RewardsNotification discarded) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] Found discarded COMPLETED_KO rewardNotification having id {} on userId {} and initiativeId {}",
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_COMPLETED_KO] Found discarded COMPLETED_KO rewardNotification having id {} on userId {} and initiativeId {}",
                 discarded.getId(), discarded.getUserId(), discarded.getInitiativeId());
 
         return Mono.just(discarded)
@@ -62,7 +62,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
                 .flatMap(remedialNotification -> updateDiscardedAndStoreRemedial(discarded, remedialNotification))
 
                 .onErrorResume(e -> {
-                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] Something went wrong while recovering COMPLETED_KO rewardNotification having id {} related to userId {} and initiativeId {}",
+                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_COMPLETED_KO] Something went wrong while recovering COMPLETED_KO rewardNotification having id {} related to userId {} and initiativeId {}",
                             discarded.getId(), discarded.getUserId(), discarded.getInitiativeId(), e);
                     return Mono.empty();
                 });

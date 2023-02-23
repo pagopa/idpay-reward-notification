@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.in.retrieve;
 
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -37,6 +38,11 @@ public class RewardNotificationFeedbackRetrieverServiceImpl implements RewardNot
                     if (!importRequest.getOrganizationId().equals(rn.getOrganizationId())) {
                         log.info("[REWARD_NOTIFICATION_FEEDBACK] provided feedback for an unexpected organization {} at row {} of import {}", rn.getOrganizationId(), row.getRowNumber(), importRequest.getFilePath());
                         throw new FeedbackEvaluationException(RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND);
+                    }
+
+                    if(RewardNotificationStatus.RECOVERED.equals(rn.getStatus())){
+                        log.info("[REWARD_NOTIFICATION_FEEDBACK] provided feedback for a RECOVERED notification (status sent: {}) at row {} of import {} which has been recovered by {}", row.getResult(), row.getRowNumber(), importRequest.getFilePath(), rn.getRemedialId());
+                        throw new FeedbackEvaluationException(RewardFeedbackConstants.ImportFeedbackRowErrors.CANNOT_UPDATE_RECOVERED_NOTIFICATION);
                     }
                 })
 

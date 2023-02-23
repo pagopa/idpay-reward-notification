@@ -192,6 +192,11 @@ class Initiative2ExportRetrieverServiceTest {
 
         RewardOrganizationExport result = service.retrieve().block();
         Assertions.assertSame(expectedNewRewardNotification1, result);
+
+        Mockito.verify(rewardOrganizationExportRepositoryMock, Mockito.never()).count(Mockito.argThat(i -> {
+            TestUtils.checkNullFields(i.getProbe(), "initiativeId", "notificationDate");
+            return false;
+        }));
     }
 
     private RewardOrganizationExport buildNewExpectedRewardNotification(RewardNotificationRule rule, long progressive) {

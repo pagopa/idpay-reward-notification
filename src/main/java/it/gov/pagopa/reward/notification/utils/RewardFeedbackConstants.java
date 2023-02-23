@@ -13,14 +13,14 @@ public final class RewardFeedbackConstants {
     public static final String AZURE_STORAGE_SUBJECT_PREFIX = "/blobServices/default/containers/refund/blobs/";
 
     public enum ImportFileErrors {
-        NO_ROWS("Nessuna riga del csv è stata correttamente elaborata, si prega di verificare la correttezza del contenuto"),
-        NO_SIZE("L'archivio zip caricato è vuoto"),
-        EMPTY_ZIP("L'archivio zip caricato è vuoto"),
+        NO_ROWS("Nessuna riga del csv e' stata correttamente elaborata, si prega di verificare la correttezza del contenuto"),
+        NO_SIZE("L'archivio zip caricato e' vuoto"),
+        EMPTY_ZIP("L'archivio zip caricato e' vuoto"),
         INVALID_CONTENT("L'archivio zip deve contenere un unico file csv avente lo stesso nome dell'archivio"),
         INVALID_CSV_NAME("L'archivio zip deve contenere un unico file csv avente lo stesso nome dell'archivio"),
-        INVALID_HEADERS("L'intestazione del csv non è valida"),
+        INVALID_HEADERS("L'intestazione del csv non e' valida"),
 
-        GENERIC_ERROR("Qualcosa è andato storto durante l'elaborazione del file");
+        GENERIC_ERROR("Qualcosa e' andato storto durante l'elaborazione del file");
 
         public final String description;
         ImportFileErrors(String description){
@@ -31,8 +31,9 @@ public final class RewardFeedbackConstants {
     public enum ImportFeedbackRowErrors {
         INVALID_RESULT("Esito non riconosciuto, gli unici valori ammessi sono :%s".formatted(Arrays.stream(RewardOrganizationImportResult.values()).map(x->"'%s'".formatted(x.value)).collect(Collectors.joining(",")))),
         NOT_FOUND("UniqueId non esistente"),
+        CANNOT_UPDATE_RECOVERED_NOTIFICATION("Non e' possibile recepire esiti su una disposizione gia' recuperata da una disposizione correttiva"),
 
-        GENERIC_ERROR("Qualcosa è andato storto durante l'elaborazione della riga");
+        GENERIC_ERROR("Qualcosa e' andato storto durante l'elaborazione della riga");
 
         public final String description;
         ImportFeedbackRowErrors(String description){

@@ -10,6 +10,8 @@ public class RewardsNotification2DetailDTOMapper {
 
     public RewardNotificationDetailDTO apply(RewardsNotification notification) {
         return RewardNotificationDetailDTO.builder()
+                .id(notification.getId())
+                .externalId(notification.getExternalId())
                 .userId(notification.getUserId())
                 .iban(notification.getIban())
                 .amount(Utils.cents2Eur(notification.getRewardCents()))

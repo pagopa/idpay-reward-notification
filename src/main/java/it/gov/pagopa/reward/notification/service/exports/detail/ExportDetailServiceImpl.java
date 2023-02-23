@@ -81,7 +81,7 @@ public class ExportDetailServiceImpl implements ExportDetailService {
 
     @Override
     public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
-        log.info("[REWARD_NOTIFICATION][EXPORT_DETAIL] Fetching notification detail with externalId {}", notificationExternalId);
+        log.info("[REWARD_NOTIFICATION][NOTIFICATION_DETAIL] Fetching notification detail with externalId {}", notificationExternalId);
         return notificationRepository.findByExternalIdAndOrganizationIdAndInitiativeId(notificationExternalId, organizationId, initiativeId)
                 .map(refundMapper::apply);
     }

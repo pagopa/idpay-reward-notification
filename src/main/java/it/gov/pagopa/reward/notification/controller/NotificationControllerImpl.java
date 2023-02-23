@@ -105,6 +105,8 @@ public class NotificationControllerImpl implements NotificationController {
 
     @Override
     public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
+        log.info("[REWARD_NOTIFICATION][NOTIFICATION_DETAIL][CONTROLLER] Get notification details with externalId {}, organizationId {} and initiativeId {}",
+                notificationExternalId, organizationId, initiativeId);
         return exportDetailService.getRewardNotification(notificationExternalId, organizationId, initiativeId);
     }
 

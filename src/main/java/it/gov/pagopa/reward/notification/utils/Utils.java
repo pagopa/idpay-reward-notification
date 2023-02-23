@@ -93,7 +93,7 @@ public final class Utils {
     }
 
     public static BigDecimal cents2EurBigDecimal(Long cents) {
-        return new BigDecimal(cents2Eur(cents));
+        return BigDecimal.valueOf(cents/100).setScale(2, RoundingMode.HALF_DOWN);
     }
 
     public static String percentageFormat(Long p) {

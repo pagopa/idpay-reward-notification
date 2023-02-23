@@ -32,7 +32,7 @@ public class RewardNotificationDetailDTO {
     @JsonProperty(value = "status")
     private RewardNotificationStatus status;
     @JsonProperty(value = "refundType")
-    private RefundDetailType refundType;
+    private RefundType refundType;
     @JsonProperty(value = "cro")
     private String cro;
     @JsonProperty(value = "transferDate")
@@ -40,7 +40,7 @@ public class RewardNotificationDetailDTO {
     @JsonProperty(value = "userNotificationDate")
     private LocalDate userNotificationDate;
 
-    public enum RefundDetailType {
+    public enum RefundType {
         ORDINARY,
         REMEDIAL
     }

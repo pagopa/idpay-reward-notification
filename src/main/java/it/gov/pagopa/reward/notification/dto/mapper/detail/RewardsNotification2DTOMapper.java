@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RewardsNotification2ExportDetailDTOMapper {
+public class RewardsNotification2DTOMapper {
 
     public RewardNotificationDTO apply(RewardsNotification notification) {
         return RewardNotificationDTO.builder()

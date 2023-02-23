@@ -105,7 +105,7 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Flux<RewardsNotification> findAll(String organizationId, String initiativeId, String exportId, ExportDetailFilter filters, Pageable pageable) {
+    public Flux<RewardsNotification> findAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
         if (filters != null && filters.getStatus() != null && checkStatusNotValid(filters.getStatus())) {
             return Flux.empty();
         } else {
@@ -118,7 +118,7 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Mono<Long> countAll(String organizationId, String initiativeId, String exportId, ExportDetailFilter filters, Pageable pageable) {
+    public Mono<Long> countAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
         if (filters != null && filters.getStatus() != null && checkStatusNotValid(filters.getStatus())) {
             return Mono.just(0L);
         } else {

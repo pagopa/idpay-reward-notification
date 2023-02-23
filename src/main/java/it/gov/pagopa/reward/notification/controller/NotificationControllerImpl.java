@@ -88,12 +88,14 @@ public class NotificationControllerImpl implements NotificationController {
 
     @Override
     public Mono<ExportSummaryDTO> getExport(String exportId, String organizationId, String initiativeId) {
-        return exportDetailService.getExport(exportId, organizationId, initiativeId);
+        return exportDetailService.getExport(exportId, organizationId, initiativeId)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 
     @Override
     public Flux<RewardNotificationDTO> getExportNotifications(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
-        return exportDetailService.getExportNotifications(exportId, organizationId, initiativeId, filters, pageable);
+        return exportDetailService.getExportNotifications(exportId, organizationId, initiativeId, filters, pageable)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 
     @Override
@@ -105,9 +107,8 @@ public class NotificationControllerImpl implements NotificationController {
 
     @Override
     public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
-        log.info("[REWARD_NOTIFICATION][NOTIFICATION_DETAIL][CONTROLLER] Get notification details with externalId {}, organizationId {} and initiativeId {}",
-                notificationExternalId, organizationId, initiativeId);
-        return exportDetailService.getRewardNotification(notificationExternalId, organizationId, initiativeId);
+        return exportDetailService.getRewardNotification(notificationExternalId, organizationId, initiativeId)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 
     @Override

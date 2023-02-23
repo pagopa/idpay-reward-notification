@@ -18,6 +18,6 @@ public interface RewardsNotificationRepositoryExtended {
 
     Mono<RewardsNotification> saveIfNotExists(RewardsNotification rewardsNotification);
 
-    Flux<RewardsNotification> findAll(String organizationId, String initiativeId, String exportId, ExportDetailFilter filters, Pageable pageable);
-    Mono<Long> countAll(String organizationId, String initiativeId, String exportId, ExportDetailFilter filters, Pageable pageable);
+    Flux<RewardsNotification> findAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);
+    Mono<Long> countAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);
 }

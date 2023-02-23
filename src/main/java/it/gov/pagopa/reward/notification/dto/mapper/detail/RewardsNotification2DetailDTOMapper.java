@@ -25,11 +25,11 @@ public class RewardsNotification2DetailDTOMapper {
                 .build();
     }
 
-    private RewardNotificationDetailDTO.RefundDetailType getRefundType(RewardsNotification notification) {
+    private RewardNotificationDetailDTO.RefundType getRefundType(RewardsNotification notification) {
         if (notification.getOrdinaryId() != null) {
-            return RewardNotificationDetailDTO.RefundDetailType.REMEDIAL;
+            return RewardNotificationDetailDTO.RefundType.REMEDIAL;
         } else {
-            return RewardNotificationDetailDTO.RefundDetailType.ORDINARY;
+            return RewardNotificationDetailDTO.RefundType.ORDINARY;
         }
     }
 }

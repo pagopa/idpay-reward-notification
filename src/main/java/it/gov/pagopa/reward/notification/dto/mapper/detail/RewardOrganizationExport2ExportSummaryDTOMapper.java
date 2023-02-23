@@ -19,6 +19,7 @@ public class RewardOrganizationExport2ExportSummaryDTOMapper implements Function
                 .totalRefundedAmount(Utils.cents2EurBigDecimal(rewardOrganizationExport.getRewardsResultsCents()))
                 .totalRefunds(rewardOrganizationExport.getRewardNotified())
                 .successPercentage(Utils.percentageFormat(rewardOrganizationExport.getPercentageResultedOk()))
+                .status(rewardOrganizationExport.getStatus())
                 .build();
     }
 }

@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 public interface ExportDetailService {
 
-    Mono<ExportSummaryDTO> getExport(String organizationId, String initiativeId, String exportId);
+    Mono<ExportSummaryDTO> getExport(String exportId, String organizationId, String initiativeId);
 
     Flux<RewardNotificationDTO> getExportNotifications(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);
     Mono<ExportContentPageDTO> getExportNotificationsPaged(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);

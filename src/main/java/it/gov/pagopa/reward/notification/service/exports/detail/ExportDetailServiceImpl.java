@@ -83,6 +83,9 @@ public class ExportDetailServiceImpl implements ExportDetailService {
     public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
         log.info("[REWARD_NOTIFICATION][NOTIFICATION_DETAIL] Fetching notification detail with externalId {}", notificationExternalId);
         return notificationRepository.findByExternalIdAndOrganizationIdAndInitiativeId(notificationExternalId, organizationId, initiativeId)
-                .map(refundMapper::apply);
+                .map(n -> {
+                    log.info("[REWARD_NOTIFICATION][NOTIFICATION_DETAIL] Found notification {}", n);
+                    return refundMapper.apply(n);
+                });
     }
 }

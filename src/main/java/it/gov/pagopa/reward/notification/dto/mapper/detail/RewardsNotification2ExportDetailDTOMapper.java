@@ -12,7 +12,7 @@ public class RewardsNotification2ExportDetailDTOMapper {
         return RewardNotificationDTO.builder()
                 .id(notification.getExternalId())
                 .iban(notification.getIban())
-                .amount(Utils.cents2Eur(notification.getRewardCents()))
+                .amount(Utils.cents2EurBigDecimal(notification.getRewardCents()))
                 .status(notification.getStatus())
                 .build();
     }

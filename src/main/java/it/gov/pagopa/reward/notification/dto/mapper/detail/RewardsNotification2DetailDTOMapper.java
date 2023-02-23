@@ -14,7 +14,7 @@ public class RewardsNotification2DetailDTOMapper {
                 .externalId(notification.getExternalId())
                 .userId(notification.getUserId())
                 .iban(notification.getIban())
-                .amount(Utils.cents2Eur(notification.getRewardCents()))
+                .amount(Utils.cents2EurBigDecimal(notification.getRewardCents()))
                 .startDate(notification.getStartDepositDate())
                 .endDate(notification.getNotificationDate())
                 .status(notification.getStatus())

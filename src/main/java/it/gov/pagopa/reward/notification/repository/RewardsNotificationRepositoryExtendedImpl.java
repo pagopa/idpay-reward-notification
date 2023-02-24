@@ -118,13 +118,13 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Mono<Long> countAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
+    public Mono<Long> countAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters) {
         if (filters != null && filters.getStatus() != null && checkStatusNotValid(filters.getStatus())) {
             return Mono.just(0L);
         } else {
             return mongoTemplate
                     .count(
-                            Query.query(getCriteria(organizationId, initiativeId, exportId, filters)).with(getPageable(pageable)),
+                            Query.query(getCriteria(organizationId, initiativeId, exportId, filters)),
                             RewardsNotification.class
                     );
         }

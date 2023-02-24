@@ -21,7 +21,9 @@ public class RewardsNotification2DetailDTOMapper {
                 .refundType(getRefundType(notification))
                 .cro(notification.getCro())
                 .transferDate(notification.getExecutionDate())
-                .userNotificationDate(notification.getFeedbackElaborationDate().toLocalDate())
+                .userNotificationDate(notification.getFeedbackElaborationDate() != null
+                        ? notification.getFeedbackElaborationDate().toLocalDate()
+                        : null)
                 .build();
     }
 

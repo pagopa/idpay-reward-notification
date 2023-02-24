@@ -74,7 +74,7 @@ public class ExportDetailServiceImpl implements ExportDetailService {
                                 .map(exportDetailMapper::apply)
                 )
                 .collectList()
-                .zipWith(notificationRepository.countAll(exportId, organizationId, initiativeId, filters, pageable))
+                .zipWith(notificationRepository.countAll(exportId, organizationId, initiativeId, filters))
                 .map(t -> new PageImpl<>(t.getT1(), pageable, t.getT2()))
                 .map(pageMapper::apply);
     }

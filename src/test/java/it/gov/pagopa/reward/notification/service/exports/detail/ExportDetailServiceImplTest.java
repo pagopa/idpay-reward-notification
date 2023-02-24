@@ -118,7 +118,7 @@ class ExportDetailServiceImplTest {
                 .thenReturn(Mono.just(export));
         Mockito.when(notificationRepositoryMock.findAll(export.getId(), export.getOrganizationId(), export.getInitiativeId(), EMPTY_FILTERS, pageable))
                 .thenReturn(Flux.fromIterable(notificationList));
-        Mockito.when(notificationRepositoryMock.countAll(export.getId(), export.getOrganizationId(), export.getInitiativeId(), EMPTY_FILTERS, pageable))
+        Mockito.when(notificationRepositoryMock.countAll(export.getId(), export.getOrganizationId(), export.getInitiativeId(), EMPTY_FILTERS))
                 .thenReturn(Mono.just((long) NOTIFICATION_LIST_SIZE));
 
         ExportContentPageDTO result = service.getExportNotificationsPaged(export.getId(), export.getOrganizationId(), export.getInitiativeId(), EMPTY_FILTERS, pageable).block();

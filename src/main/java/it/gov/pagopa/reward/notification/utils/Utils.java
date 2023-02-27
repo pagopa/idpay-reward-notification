@@ -15,18 +15,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 public final class Utils {
-    private Utils() {
-    }
-
-    public static final DecimalFormatSymbols decimalFormatterSymbols = new DecimalFormatSymbols();
-    private static final DecimalFormat decimalFormatter = new DecimalFormat("0.00", decimalFormatterSymbols);
-    private static final DecimalFormat percentageFormatter = new DecimalFormat("0");
+    private Utils() {}
 
     public static final DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
     public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+    public static final DecimalFormatSymbols decimalFormatterSymbols = new DecimalFormatSymbols();
+    private static final DecimalFormat decimalFormatter;
+    private static final DecimalFormat percentageFormatter = new DecimalFormat("0");
 
     static {
         decimalFormatterSymbols.setDecimalSeparator(',');
+        decimalFormatter = new DecimalFormat("0.00", decimalFormatterSymbols);
+
         percentageFormatter.setRoundingMode(RoundingMode.DOWN);
     }
 

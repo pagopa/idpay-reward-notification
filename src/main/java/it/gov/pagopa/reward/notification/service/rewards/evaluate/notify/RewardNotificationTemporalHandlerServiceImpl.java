@@ -40,14 +40,15 @@ public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNoti
 
         return rewardsNotificationRepository.findById(notificationId)
                 .flatMap(r -> {
-                    if(RewardNotificationStatus.TO_SEND.equals(r.getStatus())){
+                    if (RewardNotificationStatus.TO_SEND.equals(r.getStatus())) {
                         return Mono.just(r);
                     } else {
-                        log.info("[REWARD_NOTIFICATION] Find exported notification even if scheduled for the future. Probably manually changed: {} having status {}", r.getId(), r.getStatus());
-                        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(trx.getUserId(), rule.getInitiativeId(), notificationDate, RewardNotificationStatus.TO_SEND)
-                                .switchIfEmpty(createNewNotification(trx, rule, notificationDate, notificationId))
-                                .last()
-                                .doOnNext(n -> n.setId("%s_%d".formatted(n.getId(), n.getProgressive())));
+                        log.info("[REWARD_NOTIFICATION] Found exported notification even if scheduled for the future. Probably manually changed: {} having status {}", r.getId(), r.getStatus());
+                        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), notificationDate, RewardNotificationStatus.TO_SEND)
+                                .switchIfEmpty(
+                                        createNewNotificationWithProgressiveId(trx, rule, notificationDate, notificationId)
+                                )
+                                .last();
                     }
                 })
                 .switchIfEmpty(createNewNotification(trx, rule, notificationDate, notificationId))

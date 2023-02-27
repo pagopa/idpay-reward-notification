@@ -13,4 +13,6 @@ public interface RewardsNotificationRepositoryExtended {
     Flux<RewardsNotification> findExportRewards(String exportId);
 
     Mono<String> updateExportStatus(String rewardNotificationId, String iban, String checkIbanResult, String exportId);
+
+    Mono<RewardsNotification> saveIfNotExists(RewardsNotification rewardsNotification);
 }

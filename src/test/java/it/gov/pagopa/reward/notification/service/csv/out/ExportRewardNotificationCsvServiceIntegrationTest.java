@@ -121,7 +121,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         // stuck export
         exportsRepository.save(RewardOrganizationExport.builder()
                 .id("STUCKEXPORTID.5")
-                .progressive(5)
+                .progressive(5L)
                 .filePath("rewards/notifications/ORGANIZATION_ID_2_izn/INITIATIVEID2/export/STUCKEXPORT.5.zip")
                 .initiativeId(rule2.getInitiativeId())
                 .initiativeName(rule2.getInitiativeName())

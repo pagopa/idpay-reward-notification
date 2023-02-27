@@ -38,6 +38,8 @@ class RewardsNotificationMapperTest {
                 "remedialId",
                 "ordinaryId",
                 "ordinaryExternalId",
+                "recoveredId",
+                "recoveredExternalId",
                 "depositType",
                 "endDepositDate",
                 "sendDate",

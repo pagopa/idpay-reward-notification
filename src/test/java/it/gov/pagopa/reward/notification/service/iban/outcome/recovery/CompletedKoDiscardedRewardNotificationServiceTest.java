@@ -115,6 +115,8 @@ class CompletedKoDiscardedRewardNotificationServiceTest extends BaseDiscardedRew
         Assertions.assertEquals(expectedRemedialExternalId, result.getExternalId());
         Assertions.assertEquals(ObjectUtils.firstNonNull(recovered.getOrdinaryId(), recovered.getId()), result.getOrdinaryId());
         Assertions.assertEquals(ObjectUtils.firstNonNull(recovered.getOrdinaryExternalId(), recovered.getExternalId()), result.getOrdinaryExternalId());
+        Assertions.assertEquals(recovered.getId(), result.getRecoveredId());
+        Assertions.assertEquals(recovered.getExternalId(), result.getRecoveredExternalId());
         verifyRemedialStatusFields(result, expectedNotificationDate);
     }
 

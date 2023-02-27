@@ -31,6 +31,8 @@ public class RewardsNotification {
     private String remedialId;
     private String ordinaryId;
     private String ordinaryExternalId;
+    private String recoveredId;
+    private String recoveredExternalId;
     private String initiativeId;
     private String initiativeName;
     private String organizationId;

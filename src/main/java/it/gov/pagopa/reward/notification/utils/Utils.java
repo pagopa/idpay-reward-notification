@@ -19,20 +19,16 @@ public final class Utils {
     }
 
     public static final DecimalFormatSymbols decimalFormatterSymbols = new DecimalFormatSymbols();
-
-    static {
-        decimalFormatterSymbols.setDecimalSeparator(',');
-    }
-
     private static final DecimalFormat decimalFormatter = new DecimalFormat("0.00", decimalFormatterSymbols);
     private static final DecimalFormat percentageFormatter = new DecimalFormat("0");
 
-    static {
-        percentageFormatter.setRoundingMode(RoundingMode.DOWN);
-    }
-
     public static final DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
     public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+
+    static {
+        decimalFormatterSymbols.setDecimalSeparator(',');
+        percentageFormatter.setRoundingMode(RoundingMode.DOWN);
+    }
 
     /**
      * It will try to deserialize a message, eventually notifying the error

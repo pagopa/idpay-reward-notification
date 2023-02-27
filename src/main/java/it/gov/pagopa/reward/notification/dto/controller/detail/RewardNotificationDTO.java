@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 public class RewardNotificationDTO {
     @JsonProperty(value = "id")
     private String id;
+    @JsonProperty(value = "externalId")
+    private String externalId;
     @JsonProperty(value = "iban")
     private String iban;
     @JsonProperty(value = "amount")

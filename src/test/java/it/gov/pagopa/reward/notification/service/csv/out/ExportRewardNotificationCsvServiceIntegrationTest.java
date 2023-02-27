@@ -37,10 +37,12 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -63,6 +65,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
     private long N;
     private LocalDate stuckNotificationDate;
 
+    private RewardNotificationRule rule00;
+    private RewardNotificationRule rule0;
     private RewardNotificationRule rule1;
     private RewardNotificationRule rule2;
     private RewardNotificationRule rule3;
@@ -86,10 +90,20 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         N = (long) splitSize * 2 + 8; // use multiple of 4
         stuckNotificationDate = TODAY.minusDays(dayBefore);
 
+        rule0=ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(0).initiativeId("INITIATIVEID0").build()).block();
+        rule00=ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(0).initiativeId("INITIATIVEID00").build()).block();
+
         rule1=ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(1).initiativeId("INITIATIVEID").build()).block();
         rule2=ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(2).initiativeId("INITIATIVEID2").build()).block();
         rule3=ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(3).initiativeId("INITIATIVEID3").build()).block();
         rule4=ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(4).initiativeId("INITIATIVEID4").build()).block();
+
+        // useCase rewards to be notified, but without reward amount, initiative without other rewards
+        storeRewardsUseCases(1, rule0.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
+        storeRewardsUseCases(1, rule00.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
+
+        // useCase rewards to be notified, but without reward amount
+        storeRewardsUseCases(3, rule1.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
 
         // useCase rewards not to be notified
         storeRewardsUseCases(N, rule1.getInitiativeId(), null, null, true, true);
@@ -113,21 +127,27 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         storeRewardsUseCases(1, rule4.getInitiativeId(), YESTERDAY, null, true, false);
         storeRewardsUseCases(5, rule4.getInitiativeId(), YESTERDAY, null, true, true);
 
-        // useCase rewards to be notified, but without reward amount
-        storeRewardsUseCases(3, rule1.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
-
         Assertions.assertEquals(testCases.get(), rewardsRepository.count().block());
 
-        // stuck export
+        // stuck exports
+
+        // storing twice useCase without rewards in order to test the behavior when both executions start with a stuck execution without rewards (we are launching twice the execute method in order to test parallel execution)
+        storeStuckExport("STUCKEXPORTIDWithoutRewards.1", 1L, "rewards/notifications/ORGANIZATION_ID_0_hpd/INITIATIVEID0/export/STUCKEXPORTIDWithoutRewards.1.zip", rule0, stuckNotificationDate);
+        storeStuckExport("STUCKEXPORTIDWithoutRewards2.1", 1L, "rewards/notifications/ORGANIZATION_ID_0_hpd/INITIATIVEID00/export/STUCKEXPORTIDWithoutRewards2.1.zip", rule00, YESTERDAY);
+
+        storeStuckExport("STUCKEXPORTID.5", 5L, "rewards/notifications/ORGANIZATION_ID_2_izn/INITIATIVEID2/export/STUCKEXPORT.5.zip", rule2, stuckNotificationDate);
+    }
+
+    private void storeStuckExport(String id, long progressive, String filePath, RewardNotificationRule rule, LocalDate notificationDate) {
         exportsRepository.save(RewardOrganizationExport.builder()
-                .id("STUCKEXPORTID.5")
-                .progressive(5L)
-                .filePath("rewards/notifications/ORGANIZATION_ID_2_izn/INITIATIVEID2/export/STUCKEXPORT.5.zip")
-                .initiativeId(rule2.getInitiativeId())
-                .initiativeName(rule2.getInitiativeName())
-                .organizationId(rule2.getOrganizationId())
-                .notificationDate(stuckNotificationDate)
-                .exportDate(stuckNotificationDate)
+                .id(id)
+                .progressive(progressive)
+                .filePath(filePath)
+                .initiativeId(rule.getInitiativeId())
+                .initiativeName(rule.getInitiativeName())
+                .organizationId(rule.getOrganizationId())
+                .notificationDate(notificationDate)
+                .exportDate(notificationDate)
                 .rewardsExportedCents(0L)
                 .rewardsResultsCents(0L)
                 .rewardNotified(0L)
@@ -193,6 +213,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         storeTestData();
 
         // When
+        //Calling twice in order to test parallel execution
         CompletableFuture<List<RewardOrganizationExport>> execute1 = exportRewardNotificationCsvService.execute().collectList().toFuture();
         CompletableFuture<List<RewardOrganizationExport>> execute2 = exportRewardNotificationCsvService.execute().collectList().toFuture();
 
@@ -202,7 +223,39 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(3 * 2 +1, result.size(), "Unexpected result size: %s".formatted(result)); // 3 split for INITIATIVEID, 3 split for INITIATIVEID2, 1 for INITIATIVEID3
+
+        List<RewardOrganizationExport> successfulExports = result.stream().filter(e -> RewardOrganizationExportStatus.EXPORTED.equals(e.getStatus())).toList();
+
+        Assertions.assertEquals(Set.of(
+                        // 3 split for INITIATIVEID
+                        "INITIATIVEID_%s.1".formatted(TODAY_STR),
+                        "INITIATIVEID_%s.2".formatted(TODAY_STR),
+                        "INITIATIVEID_%s.3".formatted(TODAY_STR),
+
+                        // 3 split for INITIATIVEID2, all related to a previous stuck export
+                        "STUCKEXPORTID.5",
+                        "STUCKEXPORTID.6",
+                        "STUCKEXPORTID.7",
+
+                        // 1 for INITIATIVEID4
+                        "INITIATIVEID4_%s.1".formatted(TODAY_STR)
+                ),
+                successfulExports.stream().map(RewardOrganizationExport::getId).collect(Collectors.toSet()),
+                "Unexpected exported files size: %s".formatted(result));
+
+        Assertions.assertEquals(Set.of(
+                        // stuck rules 0 and 00
+                        "STUCKEXPORTIDWithoutRewards.1",
+                        "STUCKEXPORTIDWithoutRewards2.1",
+
+                        // rule 0, due to reward 0 and notification date != stuck export notification date
+                        "INITIATIVEID0_%s.1".formatted(TODAY_STR),
+
+                        // rule 3 because made of just IBANKO
+                        "INITIATIVEID3_%s.1".formatted(TODAY_STR)
+                ),
+                result.stream().filter(e -> RewardOrganizationExportStatus.SKIPPED.equals(e.getStatus())).map(RewardOrganizationExport::getId).collect(Collectors.toSet()),
+                "Unexpected result size: %s".formatted(result));
 
         Assertions.assertEquals(Collections.emptyList(), rewardsRepository.findInitiatives2Notify(Collections.emptyList()).collectList().block(), "There are still initiative to be notified!");
 
@@ -210,7 +263,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 .sort(Comparator.comparing(RewardOrganizationExport::getId))
                 .collectList().block();
 
-        Assertions.assertEquals(exports, result);
+        Assertions.assertEquals(exports, successfulExports);
 
         checkInitiativeExports("INITIATIVEID_%s.1".formatted(TODAY_STR), rule1, "rewards/notifications/ORGANIZATION_ID_1_uww/INITIATIVEID/export/NAME_1_jmy_%s.1.zip".formatted(TODAY_STR), 1L, TODAY, result);
         checkInitiativeExports("STUCKEXPORTID.5", rule2, "rewards/notifications/ORGANIZATION_ID_2_izn/INITIATIVEID2/export/STUCKEXPORT.5.zip", 5L, stuckNotificationDate, result);
@@ -362,12 +415,14 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 .status(RewardNotificationStatus.SKIPPED)
                 .build())).collectList().block();
 
+        Set<String> skippedRewardsInitiativeIds = Set.of(rule0.getInitiativeId(), rule00.getInitiativeId(), rule1.getInitiativeId());
+
         Assertions.assertNotNull(expectedSkipped);
-        Assertions.assertEquals(3, expectedSkipped.size());
+        Assertions.assertEquals(5, expectedSkipped.size());
         expectedSkipped.forEach(r->{
             Assertions.assertNull(r.getIban());
             Assertions.assertNull(r.getCheckIbanResult());
-            Assertions.assertEquals(rule1.getInitiativeId(), r.getInitiativeId());
+            Assertions.assertTrue(skippedRewardsInitiativeIds.contains(r.getInitiativeId()), "Unexpected initiativeId skipped: " + r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.SKIPPED, r.getStatus());
             Assertions.assertNull(r.getRejectionReason());
             Assertions.assertNull(r.getResultCode());
@@ -379,6 +434,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertEquals(0,
                 exportsRepository.findAll(Example.of(RewardOrganizationExport.builder().initiativeId(rule3.getInitiativeId()).build())).count().block()
         );
+
+        Assertions.assertNull(exportsRepository.findById("STUCKEXPORTIDWithoutRewards.1").block());
     }
 
     @SneakyThrows

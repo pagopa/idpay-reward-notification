@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
@@ -66,7 +67,11 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 // 3.1. if no rows has been correctly transformed into csvLines
                 .switchIfEmpty(Mono.defer(()->deleteExportRequestWhenEmpty(export, splitNumber)))
                 // 4. write CSV for each split and finalize the export
-                .flatMap(csvLines -> writeAndFinalizeSplit(export, startTime, splitNumber, csvLines));
+                .flatMap(csvLines -> writeAndFinalizeSplit(export, startTime, splitNumber, csvLines))
+                .switchIfEmpty(Flux.defer(()->{
+                    export.setStatus(RewardOrganizationExportStatus.SKIPPED);
+                    return Flux.just(export);
+                }));
     }
 
     private Flux<RewardsNotification> retrieveRewards2Notify(RewardOrganizationExport export, boolean isStuckExport) {

@@ -36,6 +36,11 @@ class RewardNotificationExport2CsvMapperTest {
         RewardNotificationExportCsvDto result2 = mapper.apply(reward, user);
         reward.setDepositType(DepositType.FINAL);// default filled if null
         checkResults(reward, result2);
+
+        reward.setRecoveredId("RECOVEREDID");
+        reward.setRecoveredExternalId("RECOVEREDID");
+        RewardNotificationExportCsvDto result3 = mapper.apply(reward, user);
+        checkResults(reward, result3);
     }
 
     private void checkResults(RewardsNotification reward, RewardNotificationExportCsvDto result) {
@@ -58,7 +63,7 @@ class RewardNotificationExport2CsvMapperTest {
         Assertions.assertEquals(reward.getOrganizationFiscalCode(), result.getOrganizationFiscalCode());
         Assertions.assertEquals(reward.getCheckIbanResult(), result.getCheckIban());
         Assertions.assertEquals("finale", result.getTypologyReward());
-        Assertions.assertNull(result.getRelatedPaymentID());
+        Assertions.assertEquals(reward.getRecoveredId() != null ? reward.getRecoveredExternalId() : null, result.getRelatedPaymentID());
 
         TestUtils.checkNotNullFields(result, "relatedPaymentID");
     }

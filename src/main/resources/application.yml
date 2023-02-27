@@ -248,7 +248,7 @@ app:
       # column separator to use when exporting csv
       separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
       # The maximum number of rows to store in each csv
-      split-size: ${EXPORT_CSV_SPLIT_SIZE:50000}
+      split-size: ${EXPORT_CSV_SPLIT_SIZE:500000}
     import:
       # column separator to use when importing csv
       separator: ${IMPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}

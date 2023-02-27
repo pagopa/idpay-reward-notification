@@ -31,6 +31,8 @@ public class RewardsNotification {
     private String remedialId;
     private String ordinaryId;
     private String ordinaryExternalId;
+    private String recoveredId;
+    private String recoveredExternalId;
     private String initiativeId;
     private String initiativeName;
     private String organizationId;
@@ -53,6 +55,7 @@ public class RewardsNotification {
     private String resultCode;
     private String rejectionReason;
     private LocalDateTime feedbackDate;
+    private LocalDateTime feedbackElaborationDate;
     @Builder.Default private List<RewardNotificationHistory> feedbackHistory = new ArrayList<>();
     private LocalDate executionDate;
     private String cro;

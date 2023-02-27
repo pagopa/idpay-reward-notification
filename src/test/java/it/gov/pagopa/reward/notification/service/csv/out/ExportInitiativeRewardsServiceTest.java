@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.service.csv.out;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
@@ -255,7 +256,10 @@ class ExportInitiativeRewardsServiceTest {
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(0, result.size());
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(RewardOrganizationExportStatus.SKIPPED, result.get(0).getStatus());
+
+        Mockito.verify(csvWriterServiceMock, Mockito.never()).writeCsvAndFinalize(Mockito.any(), Mockito.any());
     }
 
     @Test

@@ -49,7 +49,7 @@ class RewardNotificationExport2CsvMapperTest {
         Assertions.assertEquals("SURNAME", result.getAccountHolderSurname());
         Assertions.assertEquals(reward.getIban(), result.getIban());
         Assertions.assertEquals(reward.getRewardCents(), result.getAmount());
-        Assertions.assertEquals("USERID1_INITIATIVEID_20220131, NAME_1_jmy, 2022-01-01, 2022-01-31", result.getPaymentReason());
+        Assertions.assertEquals("Rimborso NAME_1_jmy 2022-01-01 2022-01-31", result.getPaymentReason());
         Assertions.assertEquals(reward.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(reward.getInitiativeId(), result.getInitiativeID());
         Assertions.assertEquals("2022-01-01", result.getStartDatePeriod());

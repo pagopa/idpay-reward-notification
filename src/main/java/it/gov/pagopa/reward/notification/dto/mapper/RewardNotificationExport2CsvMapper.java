@@ -41,8 +41,7 @@ public class RewardNotificationExport2CsvMapper {
     }
 
     private String buildPaymentReason(RewardsNotification reward, String depositStartDateStr, String depositEndDateStr) {
-        return "%s, %s, %s, %s".formatted(
-                reward.getId(),
+        return "Rimborso %s %s %s".formatted(
                 reward.getInitiativeName(),
                 depositStartDateStr,
                 depositEndDateStr

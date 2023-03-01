@@ -193,8 +193,7 @@ class ExportDetailServiceImplTest {
 
     private RewardNotificationDTO rewardNotificationDTOMockInstance(int bias) {
         return RewardNotificationDTO.builder()
-                .id("USERID%s_INITIATIVEID_%s".formatted(bias, DATE.format(Utils.FORMATTER_DATE)))
-                .externalId("EXTERNALID%s".formatted(bias))
+                .eventId("EXTERNALID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))
                 .amount(BigDecimal.valueOf((bias + 1) * 100L, 2))
                 .status(RewardNotificationStatus.EXPORTED)

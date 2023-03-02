@@ -1,14 +1,13 @@
 package it.gov.pagopa.reward.notification.controller;
 
-import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
-import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
-import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
+import it.gov.pagopa.reward.notification.dto.controller.*;
+import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
@@ -25,12 +24,13 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
-public class NotificationControllerImpl implements NotificationController{
+public class NotificationControllerImpl implements NotificationController {
 
     // region exports
     private final OrganizationExportsServiceImpl organizationExportsService;
     private final ExportRewardNotificationCsvService exportRewardNotificationCsvService;
     private final RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
+    private final ExportDetailService exportDetailService;
     // endregion
 
     // region imports
@@ -42,11 +42,13 @@ public class NotificationControllerImpl implements NotificationController{
             OrganizationExportsServiceImpl organizationExportsService,
             ExportRewardNotificationCsvService exportRewardNotificationCsvService,
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
+            ExportDetailService exportDetailService,
             OrganizationImportsServiceImpl organizationImportsService,
             AuditUtilities auditUtilities) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
+        this.exportDetailService = exportDetailService;
         this.organizationImportsService = organizationImportsService;
         this.auditUtilities = auditUtilities;
     }
@@ -65,8 +67,8 @@ public class NotificationControllerImpl implements NotificationController{
 
     @Override
     public Flux<RewardExportsDTO> getExports(String organizationId, String initiativeId, Pageable pageable, ExportFilter filters) {
-           return organizationExportsService
-                   .findAllBy(organizationId, initiativeId, pageable, filters);
+        return organizationExportsService
+                .findAllBy(organizationId, initiativeId, pageable, filters);
     }
 
     @Override
@@ -82,6 +84,30 @@ public class NotificationControllerImpl implements NotificationController{
         return organizationExportsService
                 .findAllPaged(organizationId, initiativeId, pageable, filters)
                 .switchIfEmpty(Mono.just(Page.empty(pageable)));
+    }
+
+    @Override
+    public Mono<ExportSummaryDTO> getExport(String exportId, String organizationId, String initiativeId) {
+        return exportDetailService.getExport(exportId, organizationId, initiativeId)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
+    }
+
+    @Override
+    public Flux<RewardNotificationDTO> getExportNotifications(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
+        return exportDetailService.getExportNotifications(exportId, organizationId, initiativeId, filters, pageable);
+    }
+
+    @Override
+    public Mono<ExportContentPageDTO> getExportNotificationsPaged(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable) {
+        return exportDetailService
+                .getExportNotificationsPaged(exportId, organizationId, initiativeId, filters, pageable)
+                .switchIfEmpty(exportDetailService.getExportNotificationEmptyPage(pageable));
+    }
+
+    @Override
+    public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
+        return exportDetailService.getRewardNotification(notificationExternalId, organizationId, initiativeId)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 
     @Override
@@ -108,8 +134,8 @@ public class NotificationControllerImpl implements NotificationController{
     public Mono<ResponseEntity<String>> getImportErrors(String organizationId, String initiativeId, String fileName) {
         return organizationImportsService
                 .getErrorsCsvByImportId(organizationId, initiativeId, buildImportId(organizationId, initiativeId, fileName))
-                .map(csv->ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION,  ContentDisposition.attachment().filename(fileName).build().toString())
+                .map(csv -> ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName).build().toString())
                         .body(csv))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }

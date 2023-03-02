@@ -17,6 +17,7 @@ public interface RewardsNotificationRepository extends ReactiveMongoRepository<R
     Mono<RewardsNotification> findByExternalId(String externalId);
 
     Flux<RewardsNotification> findByInitiativeIdAndNotificationDate(String initiativeId, LocalDate notificationDate);
+    Mono<RewardsNotification> findByExternalIdAndOrganizationIdAndInitiativeId(String externalId, String organizationId, String initiativeId);
 
     Flux<RewardsNotification> findByUserIdAndInitiativeIdAndStatusAndRemedialIdNull(String userId, String initiativeId, RewardNotificationStatus status);
 

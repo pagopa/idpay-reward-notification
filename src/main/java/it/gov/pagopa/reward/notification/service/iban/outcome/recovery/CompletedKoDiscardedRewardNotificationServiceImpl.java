@@ -84,13 +84,13 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
                 .remedialId(null)
                 .build();
 
-        setNewIdAndOrdinaryId(remedial, discarded);
+        setRemedialNotificationIds(discarded, remedial);
 
 
         return setRemedialNotificationDate(discarded.getInitiativeId(), remedial);
     }
 
-    private void setNewIdAndOrdinaryId(RewardsNotification remedial, RewardsNotification discarded) {
+    private void setRemedialNotificationIds(RewardsNotification discarded, RewardsNotification remedial) {
         String id = discarded.getId();
         String externalId = discarded.getExternalId();
 
@@ -109,6 +109,9 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
             remedial.setOrdinaryId(id);
             remedial.setOrdinaryExternalId(externalId);
         }
+
+        remedial.setRecoveredId(discarded.getId());
+        remedial.setRecoveredExternalId(discarded.getExternalId());
     }
 
     /**

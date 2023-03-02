@@ -42,6 +42,7 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
         return PerformanceLogger.logTimingFinally(
                 "REWARD_NOTIFICATION_EXPORT_CSV",
                 exportInitiative(retrieveStuckInitiativeExportsThenNew)
+                        // expand in order to repeat until an export has been reserved to be evaluated
                         .expand(x -> exportInitiative((
                                 isStuckExecution(x)
                                         ? retrieveStuckInitiativeExportsThenNew

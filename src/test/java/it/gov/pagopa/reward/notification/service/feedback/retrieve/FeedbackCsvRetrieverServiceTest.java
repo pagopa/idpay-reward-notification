@@ -180,6 +180,20 @@ class FeedbackCsvRetrieverServiceTest {
         Assertions.assertEquals(expectedCsvPath, result);
     }
 
+    @Test
+    void testSuccessfulWithMacGeneratedZip() {
+        // Given
+        importRequest.setFilePath("valid/macOs/validUseCaseFromMAC.zip");
+        Path expectedCsvPath = buildExpectedCsvLocalPath();
+
+        // When
+        Path result = service.retrieveCsv(importRequest).block();
+
+        // Then
+        Assertions.assertNotNull(result, "retrieveCsv resulted into error: %s".formatted(importRequest.getErrors()));
+        Assertions.assertEquals(expectedCsvPath, result);
+    }
+
     private void checkInvalidZip(Path result, RewardFeedbackConstants.ImportFileErrors expectedError) {
         Assertions.assertNull(result);
         Assertions.assertEquals(List.of(new RewardOrganizationImport.RewardOrganizationImportError(expectedError)), importRequest.getErrors());

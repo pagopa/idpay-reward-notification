@@ -95,4 +95,9 @@ public final class Utils {
     public static String percentageFormat(Long p) {
         return percentageFormatter.format(p / 100);
     }
+
+    public static String filePath2FileName(String filePath) {
+        // TODO better control
+        return filePath.split("/import/")[1];
+    }
 }

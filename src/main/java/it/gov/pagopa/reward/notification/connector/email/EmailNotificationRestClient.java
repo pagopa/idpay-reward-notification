@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface EmailNotificationRestClient {
 
-    Mono<Void> notify(Mono<EmailMessageDTO> emailMessageDTO);
+    Mono<Void> send(EmailMessageDTO emailMessage);
 }

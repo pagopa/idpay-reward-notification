@@ -16,7 +16,7 @@ public class EmailNotificationRestClientImpl implements EmailNotificationRestCli
     private static final String URI = "/notification";
     private final WebClient webClient;
 
-    public EmailNotificationRestClientImpl(@Value("/idpay/email-notification") String emailNotificationUrl,
+    public EmailNotificationRestClientImpl(@Value("${app.email-notification.base-url}") String emailNotificationUrl,
                                            WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.clone()
                 .baseUrl(emailNotificationUrl)
@@ -24,11 +24,11 @@ public class EmailNotificationRestClientImpl implements EmailNotificationRestCli
     }
 
     @Override
-    public Mono<Void> notify(Mono<EmailMessageDTO> emailMessageMono) {
+    public Mono<Void> send(EmailMessageDTO emailMessage) {
         log.info("[REWARD_NOTIFICATION][EMAIL] Sending email");
         return webClient.method(HttpMethod.POST)
                 .uri(URI)
-                .body(emailMessageMono, EmailMessageDTO.class)
+                .body(emailMessage, EmailMessageDTO.class)
                 .retrieve()
                 .bodyToMono(Void.class)
 

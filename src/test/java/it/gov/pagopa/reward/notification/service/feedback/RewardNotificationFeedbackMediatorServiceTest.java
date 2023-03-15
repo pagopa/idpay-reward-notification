@@ -165,6 +165,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME, EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();

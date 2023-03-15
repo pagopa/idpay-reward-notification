@@ -9,6 +9,7 @@ import org.springframework.messaging.Message;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.format.DateTimeFormatter;
@@ -97,7 +98,6 @@ public final class Utils {
     }
 
     public static String filePath2FileName(String filePath) {
-        // TODO better control
-        return filePath.split("/import/")[1];
+        return Path.of(filePath).getFileName().toString();
     }
 }

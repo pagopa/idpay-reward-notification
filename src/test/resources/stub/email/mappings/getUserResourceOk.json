@@ -1,0 +1,38 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/institutions/(TEST_EMAIL_ORGID[0-9?]*)/products/prod-idpay/users",
+    "headers": {
+      "Ocp-Apim-Subscription-Key": {
+        "matches": "(subscriptionKey[0-9?]*)"
+      },
+      "x-selfcare-uid": {
+        "matches": "(selfcareUid[0-9?]*)"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [
+      {
+        "name": "name1",
+        "surname": "surname1",
+        "email": "test.email1@orgId.it",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      {
+        "name": "name2",
+        "surname": "surname2",
+        "email": "test.email2@orgId.it",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

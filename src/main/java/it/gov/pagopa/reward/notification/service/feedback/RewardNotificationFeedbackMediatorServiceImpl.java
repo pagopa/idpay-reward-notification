@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBlockingPartitionConsumer<List<StorageEventDto>, List<RewardOrganizationImport>> implements RewardNotificationFeedbackMediatorService {
-
     private final StorageEvent2OrganizationImportMapper mapper;
     private final RewardOrganizationImportsRepository importsRepository;
     private final FeedbackCsvRetrieverService csvRetrieverService;
@@ -111,16 +110,20 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
                 .flatMap(this::retrieveAndElaborateCsv)
                 // finalize import request state and store it
                 .flatMap(this::finalizeImportRequest)
-                // TODO check if correct
-                .flatMap(i -> i.getStatus().equals(RewardOrganizationImportStatus.COMPLETE)
-                        ? emailNotificationService.send(
-                            i,
-                            EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME,
-                            EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT
-                        )
-                        : Mono.just(i))
+                .flatMap(this::sendEmail)
                 .doOnNext(i -> log.info("[REWARD_NOTIFICATION_FEEDBACK] Import request processing results stored: {}", i.getFilePath()))
                 .collectList();
+    }
+
+    private Mono<RewardOrganizationImport> sendEmail(RewardOrganizationImport i) {
+
+        return EmailNotificationConstants.IMPORT_ELABORATED_STATUS_LIST.contains(i.getStatus())
+                ? emailNotificationService.send(
+                    i,
+                    EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME,
+                    EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT
+                )
+                : Mono.just(i);
     }
 
     private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/import/[^/]*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));

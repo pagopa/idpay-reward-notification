@@ -28,7 +28,7 @@ public class EmailNotificationRestClientImpl implements EmailNotificationRestCli
         log.info("[REWARD_NOTIFICATION][EMAIL] Sending email");
         return webClient.method(HttpMethod.POST)
                 .uri(URI)
-                .body(emailMessage, EmailMessageDTO.class)
+                .bodyValue(emailMessage)
                 .retrieve()
                 .bodyToMono(Void.class)
 

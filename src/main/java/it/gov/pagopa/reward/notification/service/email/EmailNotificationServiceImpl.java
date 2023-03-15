@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.email.EmailMessageDTO;
 import it.gov.pagopa.reward.notification.dto.selc.UserResource;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,18 +41,28 @@ public class EmailNotificationServiceImpl implements EmailNotificationService{
     @Override
     public Mono<RewardOrganizationImport> send(RewardOrganizationImport organizationImport, String templateName, String subject) {
 
-        return getInstitutionProductUsers(organizationImport.getOrganizationId())
-                .map(UserResource::getEmail)
-                .collectList()
-                .map(l -> String.join(commaDelimiter, l))
-                .zipWith(notificationRuleRepository.findById(organizationImport.getInitiativeId()))
-                .map(t -> {
-                    String initiativeName = t.getT2().getInitiativeName();
-                    Map<String, String> templateValues = getTemplateValues(initiativeName, organizationImport);
-                    return buildEmailMessage(templateName, templateValues, subject, null, t.getT1());
-                })
-                .flatMap(emailRestClient::send)
-                .then(Mono.just(organizationImport));
+        return PerformanceLogger.logTimingOnNext(
+                "FEEDBACK_ELABORATION_NOTIFICATION",
+                getInstitutionProductUsers(organizationImport.getOrganizationId())
+                        .map(UserResource::getEmail)
+                        .collectList()
+                        .map(l -> String.join(commaDelimiter, l))
+                        .zipWith(notificationRuleRepository.findById(organizationImport.getInitiativeId()))
+                        .map(t -> {
+                            String initiativeName = t.getT2().getInitiativeName();
+                            Map<String, String> templateValues = getTemplateValues(initiativeName, organizationImport);
+                            return buildEmailMessage(templateName, templateValues, subject, null, t.getT1());
+                        })
+                        .flatMap(emailRestClient::send)
+
+                        .onErrorResume(e -> {
+                            log.error("Something went wrong sending the email notification", e);
+                            return Mono.empty();
+                        })
+
+                        .then(Mono.just(organizationImport)),
+                imp -> "Sent email notification related to import having id %s and status %s".formatted(imp.getFilePath(), imp.getStatus())
+        );
     }
 
     private Flux<UserResource> getInstitutionProductUsers(String organizationId) {

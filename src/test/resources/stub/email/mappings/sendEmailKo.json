@@ -1,0 +1,35 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/notification",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "templateName": "TEST_EMAIL_KO",
+          "templateValues": {
+            "initiativeName": "TEST_EMAIL_INITIATIVENAME",
+            "fileName": "testEmail.zip",
+            "elabDate": "15-03-2023"
+          },
+          "content": null,
+          "senderEmail": null,
+          "subject": "TEST_EMAIL_KO",
+          "recipientEmail": "test.email1@orgId.it,test.email2@orgId.it"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "404",
+    "jsonBody": {
+      "type": "type",
+      "title": "Not found",
+      "status": "404",
+      "details": "details",
+      "instance": "instance"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class EmailNotificationRestClientImpl implements EmailNotificationRestClient {
 
-    private static final String URI = "/notification";
+    private static final String URI = "/notify";
     private final WebClient webClient;
 
     public EmailNotificationRestClientImpl(@Value("${app.email-notification.base-url}") String emailNotificationUrl,

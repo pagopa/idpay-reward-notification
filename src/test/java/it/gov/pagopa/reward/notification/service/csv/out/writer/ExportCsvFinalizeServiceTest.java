@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -40,6 +41,7 @@ class ExportCsvFinalizeServiceTest {
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock private RewardOrganizationExportsRepository rewardOrganizationExportsRepositoryMock;
     @Mock private RewardsNotificationBlobClient rewardsNotificationBlobClientMock;
+    @Mock private EmailNotificationService emailNotificationServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     private ExportCsvFinalizeService service;
 
@@ -47,7 +49,7 @@ class ExportCsvFinalizeServiceTest {
     void init() {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         char csvSeparator = ';';
-        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock, emailNotificationService, auditUtilitiesMock);
+        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock, emailNotificationServiceMock, auditUtilitiesMock);
     }
 
     @Test
@@ -100,6 +102,8 @@ class ExportCsvFinalizeServiceTest {
                     Mockito.when(responseMocked.getStatusCode()).thenReturn(201);
                     return Mono.just(responseMocked);
                 });
+
+        Mockito.when(emailNotificationServiceMock.send(export)).thenReturn(Mono.just(export));
 
         // When
         RewardOrganizationExport result = service.writeCsvAndFinalize(csvLines, export).block();

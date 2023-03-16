@@ -96,7 +96,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                         return Mono.empty();
                     }
                 })
-                .flatMap()
+                .flatMap(emailNotificationService::send)
 
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while writing export {}", export.getId(), e);

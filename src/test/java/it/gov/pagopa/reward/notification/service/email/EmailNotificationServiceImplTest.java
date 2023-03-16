@@ -11,8 +11,8 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +42,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
     public static final String FILE_NAME = "testEmail.zip";
     public static final LocalDateTime DATE = LocalDateTime.of(2023, 3, 15, 0, 0);
     @Value("${app.email-notification.delimiter}")
-    private String commaDelimiter;
+    private String delimiter;
     @SpyBean
     private EmailNotificationRestClient emailRestClientSpy;
     @Autowired
@@ -52,9 +52,17 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
 
     private EmailNotificationService service;
 
-    @BeforeEach
-    void setup() {
-        service = new EmailNotificationServiceImpl(commaDelimiter, emailRestClientSpy, selcRestClient, notificationRuleRepository, );
+
+    void setup(boolean ko) {
+        service = new EmailNotificationServiceImpl(
+                delimiter,
+                emailRestClientSpy,
+                selcRestClient,
+                notificationRuleRepository,
+                ko ? TEST_EMAIL_KO : TEST_EMAIL_OK,
+                ko ? TEST_EMAIL_KO : TEST_EMAIL_OK,
+                ko ? TEST_EMAIL_KO : TEST_EMAIL_OK,
+                ko ? TEST_EMAIL_KO : TEST_EMAIL_OK);
         prepareTestData();
     }
 
@@ -63,29 +71,18 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
         notificationRuleRepository.deleteById(INITIATIVEID).block();
     }
 
-    @Test
-    void testOk() {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void test(boolean ko) {
+        setup(ko);
 
-        RewardOrganizationImport expectedImport = buildExpectedImport(false);
-
-        RewardOrganizationImport result = service.send(expectedImport).block();
-
-        Assertions.assertEquals(expectedImport, result);
-
-        EmailMessageDTO expectedMessage = buildExpectedMessageDTO(false);
-        Mockito.verify(emailRestClientSpy).send(expectedMessage);
-    }
-
-    @Test
-    void testKo() {
-
-        RewardOrganizationImport expectedImport = buildExpectedImport(true);
+        RewardOrganizationImport expectedImport = buildExpectedImport(ko);
 
         RewardOrganizationImport result = service.send(expectedImport).block();
 
         Assertions.assertEquals(expectedImport, result);
 
-        EmailMessageDTO expectedMessage = buildExpectedMessageDTO(true);
+        EmailMessageDTO expectedMessage = buildExpectedMessageDTO(ko);
         Mockito.verify(emailRestClientSpy).send(expectedMessage);
     }
 
@@ -125,7 +122,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
                 .templateValues(templateValues)
                 .subject(ko ? TEST_EMAIL_KO : TEST_EMAIL_OK)
                 .senderEmail(null)
-                .recipientEmail(ko ? "" : String.join(commaDelimiter, List.of("test.email1@orgId.it", "test.email2@orgId.it")))
+                .recipientEmail(ko ? "" : String.join(delimiter, List.of("test.email1@orgId.it", "test.email2@orgId.it")))
                 .build();
     }
 }

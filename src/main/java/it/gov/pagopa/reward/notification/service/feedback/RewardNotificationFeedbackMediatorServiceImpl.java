@@ -39,8 +39,6 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     private final ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService;
     private final ErrorNotifierService errorNotifierService;
     private final EmailNotificationService emailNotificationService;
-    private final String importEmailSubject;
-    private final String importEmailTemplateName;
 
     private final Duration commitDelay;
 
@@ -58,8 +56,6 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
             FeedbackCsvRetrieverService csvRetrieverService,
             ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService,
             ErrorNotifierService errorNotifierService, EmailNotificationService emailNotificationService,
-            @Value("${app.email-notification.imports.subject}") String importEmailSubject,
-            @Value("${app.email-notification.imports.template-name}") String importEmailTemplateName,
             ObjectMapper objectMapper) {
         super(applicationName, lockService);
         this.mapper = mapper;
@@ -70,8 +66,6 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.emailNotificationService = emailNotificationService;
-        this.importEmailSubject = importEmailSubject;
-        this.importEmailTemplateName = importEmailTemplateName;
 
         this.objectReader = objectMapper.readerFor(new TypeReference<List<StorageEventDto>>() {
         });
@@ -126,7 +120,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     }
 
     private Mono<RewardOrganizationImport> sendEmail(RewardOrganizationImport i) {
-        return emailNotificationService.send(i, importEmailSubject, importEmailTemplateName);
+        return emailNotificationService.send(i);
     }
 
     private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/import/[^/]*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));

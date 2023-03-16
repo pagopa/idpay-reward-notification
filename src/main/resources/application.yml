@@ -270,6 +270,9 @@ app:
     imports:
       subject: ${IMPORT_ELABORATION_EMAIL_SUBJECT:File esiti elaborato}
       template-name: ${IMPORT_ELABORATION_EMAIL_TEMPLATE_NAME:Email_EsitiFile}
+    exports:
+      subject: ${EXPORT_UPLOAD_EMAIL_SUBJECT:Nuovo rimborso - azione richiesta}
+      template-name: ${EXPOR_UPLOAD_EMAIL_TEMPLATE_NAME:Email_RimborsiFile}
   selc:
     base-url: ${SELC_BASE_URL:/external/v1}
     headers:

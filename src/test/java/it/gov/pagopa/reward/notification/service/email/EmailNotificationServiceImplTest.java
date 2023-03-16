@@ -54,7 +54,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setup() {
-        service = new EmailNotificationServiceImpl(commaDelimiter, emailRestClientSpy, selcRestClient, notificationRuleRepository);
+        service = new EmailNotificationServiceImpl(commaDelimiter, emailRestClientSpy, selcRestClient, notificationRuleRepository, );
         prepareTestData();
     }
 
@@ -68,7 +68,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
 
         RewardOrganizationImport expectedImport = buildExpectedImport(false);
 
-        RewardOrganizationImport result = service.send(expectedImport, TEST_EMAIL_OK, TEST_EMAIL_OK).block();
+        RewardOrganizationImport result = service.send(expectedImport).block();
 
         Assertions.assertEquals(expectedImport, result);
 
@@ -81,7 +81,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
 
         RewardOrganizationImport expectedImport = buildExpectedImport(true);
 
-        RewardOrganizationImport result = service.send(expectedImport, TEST_EMAIL_KO, TEST_EMAIL_KO).block();
+        RewardOrganizationImport result = service.send(expectedImport).block();
 
         Assertions.assertEquals(expectedImport, result);
 

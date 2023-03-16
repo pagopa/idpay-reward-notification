@@ -16,7 +16,6 @@ import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRetrieverService;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
-import it.gov.pagopa.reward.notification.utils.EmailNotificationConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -40,6 +39,8 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     private final ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService;
     private final ErrorNotifierService errorNotifierService;
     private final EmailNotificationService emailNotificationService;
+    private final String importEmailSubject;
+    private final String importEmailTemplateName;
 
     private final Duration commitDelay;
 
@@ -52,7 +53,14 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
             StorageEvent2OrganizationImportMapper mapper,
 
-            LockService lockService, RewardOrganizationImportsRepository importsRepository, FeedbackCsvRetrieverService csvRetrieverService, ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService, ErrorNotifierService errorNotifierService, EmailNotificationService emailNotificationService, ObjectMapper objectMapper) {
+            LockService lockService,
+            RewardOrganizationImportsRepository importsRepository,
+            FeedbackCsvRetrieverService csvRetrieverService,
+            ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService,
+            ErrorNotifierService errorNotifierService, EmailNotificationService emailNotificationService,
+            @Value("${app.email-notification.imports.subject}") String importEmailSubject,
+            @Value("${app.email-notification.imports.template-name}") String importEmailTemplateName,
+            ObjectMapper objectMapper) {
         super(applicationName, lockService);
         this.mapper = mapper;
         this.importsRepository = importsRepository;
@@ -62,6 +70,8 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.emailNotificationService = emailNotificationService;
+        this.importEmailSubject = importEmailSubject;
+        this.importEmailTemplateName = importEmailTemplateName;
 
         this.objectReader = objectMapper.readerFor(new TypeReference<List<StorageEventDto>>() {
         });
@@ -116,11 +126,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     }
 
     private Mono<RewardOrganizationImport> sendEmail(RewardOrganizationImport i) {
-        return emailNotificationService.send(
-                    i,
-                    EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME,
-                    EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT
-                );
+        return emailNotificationService.send(i, importEmailSubject, importEmailTemplateName);
     }
 
     private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/import/[^/]*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));

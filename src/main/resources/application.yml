@@ -267,6 +267,9 @@ app:
   email-notification:
     delimiter: ${$EMAIL_NOTIFICATION_DELIMITER:,}
     base-url: ${EMAIL_NOTIFICATION_BASE_URL:/idpay/email-notification}
+    imports:
+      subject: ${IMPORT_ELABORATION_EMAIL_SUBJECT:File esiti elaborato}
+      template-name: ${IMPORT_ELABORATION_EMAIL_TEMPLATE_NAME:Email_EsitiFile}
   selc:
     base-url: ${SELC_BASE_URL:/external/v1}
     headers:

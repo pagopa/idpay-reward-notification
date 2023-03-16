@@ -271,7 +271,7 @@ app:
       subject: ${IMPORT_ELABORATION_EMAIL_SUBJECT:File esiti elaborato}
       template-name: ${IMPORT_ELABORATION_EMAIL_TEMPLATE_NAME:Email_EsitiFile}
   selc:
-    base-url: ${SELC_BASE_URL:/external/v1}
+    base-url: ${SELC_BASE_URL:}/external/v1
     headers:
       subscription-key: ${SELC_EXTERNAL_API_KEY:}
       uid: ${SELC_UID:idpay}

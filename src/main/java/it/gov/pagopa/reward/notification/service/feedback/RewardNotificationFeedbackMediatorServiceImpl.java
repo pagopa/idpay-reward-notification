@@ -126,7 +126,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     }
 
     private Mono<RewardOrganizationImport> sendEmail(RewardOrganizationImport i) {
-        return emailNotificationService.send(i, importEmailSubject, importEmailTemplateName);
+        return emailNotificationService.send(i, importEmailTemplateName, importEmailSubject);
     }
 
     private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/import/[^/]*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));

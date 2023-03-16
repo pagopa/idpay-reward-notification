@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.util.Collections;
+import java.util.Map;
 
 
 @Service
@@ -35,7 +36,7 @@ public class SelcRestClientImpl implements SelcRestClient {
     @Override
     public Flux<UserResource> getInstitutionProductUsers(String organizationId) {
         return webClient.method(HttpMethod.GET)
-                .uri(URI, organizationId)
+                .uri(URI, Map.of("organizationId", organizationId))
                 .retrieve()
                 .bodyToFlux(UserResource.class)
 

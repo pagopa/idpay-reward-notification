@@ -78,6 +78,8 @@ microservice-chart:
       KAFKA_CHECKIBAN_OUTCOME_TOPIC: idpay_checkiban_outcome_topic
     rest-client:
       PDV_BASE_URL: pdv_decrypt_base_url
+      SELC_BASE_URL: selc_base_url
+      EMAIL_NOTIFICATION_MS_HOST: email_notification_ms_host
 
   envSecret:
     MONGODB_URI: mongodb-connection-string
@@ -88,4 +90,5 @@ microservice-chart:
     KAFKA_REWARD_NOTIFICATION_UPLOAD_SASL_JAAS_CONFIG: evh-idpay-reward-notification-storage-events-idpay-reward-notification-storage-consumer-jaas-config-idpay-01
     KAFKA_REWARD_NOTIFICATION_FEEDBACK_SASL_JAAS_CONFIG: evh-idpay-reward-notification-response-idpay-reward-notification-response-producer-jaas-config-idpay-01
     PDV_DECRYPT_API_KEY: pdv-api-key
+    SELC_EXTERNAL_API_KEY: selc-external-api-key
     EXPORT_AZURE_STORAGE_CONNECTION_STRING: refund-storage-blob-connection-string

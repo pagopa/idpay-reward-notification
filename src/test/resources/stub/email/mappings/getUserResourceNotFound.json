@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/institutions/(ORGID_NOTFOUND[0-9?]*)/products/prod-idpay/users",
+    "headers": {
+      "Ocp-Apim-Subscription-Key": {
+        "matches": "subscriptionKey([0-9]?)+"
+      },
+      "x-selfcare-uid": {
+        "matches": "selfcareUid([0-9]?)+"
+      }
+    }
+  },
+  "response": {
+    "status": "404",
+    "jsonBody": {
+      "type": "type",
+      "title": "Not found",
+      "status": "404",
+      "details": "details",
+      "instance": "instance"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

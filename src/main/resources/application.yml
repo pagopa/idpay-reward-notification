@@ -266,7 +266,7 @@ app:
     write.handler.timeout: ${WRITE_TIMEOUT_HANDLER:60000}
   email-notification:
     delimiter: ${$EMAIL_NOTIFICATION_DELIMITER:,}
-    base-url: ${EMAIL_NOTIFICATION_BASE_URL:/idpay/email-notification}
+    base-url: ${EMAIL_NOTIFICATION_MS_HOST:/idpay/email-notification}
     imports:
       subject: ${IMPORT_ELABORATION_EMAIL_SUBJECT:File esiti elaborato}
       template-name: ${IMPORT_ELABORATION_EMAIL_TEMPLATE_NAME:Email_EsitiFile}

@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationImportsRep
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
 import it.gov.pagopa.reward.notification.service.csv.in.ImportRewardNotificationFeedbackCsvService;
+import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRetrieverService;
 import it.gov.pagopa.reward.notification.test.fakers.StorageEventDtoFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
@@ -31,7 +32,6 @@ import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class RewardNotificationFeedbackMediatorServiceTest {
-
     private final StorageEvent2OrganizationImportMapper mapper = new StorageEvent2OrganizationImportMapper();
     @Mock
     private LockService lockServiceMock;
@@ -43,12 +43,14 @@ class RewardNotificationFeedbackMediatorServiceTest {
     private ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvServiceMock;
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
+    @Mock
+    private EmailNotificationService emailNotificationServiceMock;
 
     private RewardNotificationFeedbackMediatorServiceImpl feedbackMediatorService;
 
     @BeforeEach
     void init() {
-        feedbackMediatorService = new RewardNotificationFeedbackMediatorServiceImpl("APPNAME", 500, mapper, lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, errorNotifierServiceMock, TestUtils.objectMapper);
+        feedbackMediatorService = new RewardNotificationFeedbackMediatorServiceImpl("APPNAME", 500, mapper, lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, errorNotifierServiceMock, emailNotificationServiceMock, TestUtils.objectMapper);
     }
 
     @AfterEach
@@ -111,6 +113,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         Mockito.when(importsRepositoryMock.createIfNotExistsOrReturnEmpty(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
         Mockito.when(csvRetrieverServiceMock.retrieveCsv(expectedImportRequest)).thenAnswer(i -> Mono.empty());
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
@@ -131,6 +135,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         Mockito.when(csvRetrieverServiceMock.retrieveCsv(expectedImportRequest)).thenAnswer(i -> Mono.just(expectedLocalCsvPath));
         Mockito.when(importRewardNotificationFeedbackCsvServiceMock.evaluate(expectedLocalCsvPath, expectedImportRequest)).thenReturn(Mono.empty());
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
@@ -161,6 +167,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
@@ -188,6 +196,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
@@ -213,6 +223,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();

@@ -124,12 +124,14 @@ import static org.awaitility.Awaitility.await;
                 //endregion
 
                 //region wiremock
-                "logging.level.WireMock=OFF",
-                "app.pdv.base-url=http://localhost:${wiremock.server.port}"
+                "logging.level.WireMock=ERROR",
+                "app.pdv.base-url=http://localhost:${wiremock.server.port}",
+                "app.email-notification.base-url=http://localhost:${wiremock.server.port}",
+                "app.selc.base-url=http://localhost:${wiremock.server.port}"
                 //endregion
         })
 @AutoConfigureDataMongo
-@AutoConfigureWireMock(stubs = "classpath:/stub/pdv", port = 0)
+@AutoConfigureWireMock(stubs = "classpath:/stub", port = 0)
 @AutoConfigureWebTestClient
 public abstract class BaseIntegrationTest {
 

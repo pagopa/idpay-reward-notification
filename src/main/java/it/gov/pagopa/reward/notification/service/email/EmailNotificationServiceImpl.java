@@ -43,7 +43,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService{
     public Mono<RewardOrganizationImport> send(RewardOrganizationImport organizationImport, String templateName, String subject) {
 
         return PerformanceLogger.logTimingOnNext(
-                EmailNotificationConstants.FLOW_NAME,
+                EmailNotificationConstants.IMPORTS_ELABORATION_FLOW_NAME,
                 getInstitutionProductUsers(organizationImport.getOrganizationId())
                         .map(UserResource::getEmail)
                         .collectList()

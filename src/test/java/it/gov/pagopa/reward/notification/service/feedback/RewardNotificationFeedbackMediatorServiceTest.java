@@ -115,7 +115,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
         Mockito.when(importsRepositoryMock.createIfNotExistsOrReturnEmpty(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
         Mockito.when(csvRetrieverServiceMock.retrieveCsv(expectedImportRequest)).thenAnswer(i -> Mono.empty());
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
-        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, SUBJECT, TEMPLATE_NAME))
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, TEMPLATE_NAME, SUBJECT))
                 .thenReturn(Mono.just(expectedImportRequest));
 
         // When
@@ -137,7 +137,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
         Mockito.when(csvRetrieverServiceMock.retrieveCsv(expectedImportRequest)).thenAnswer(i -> Mono.just(expectedLocalCsvPath));
         Mockito.when(importRewardNotificationFeedbackCsvServiceMock.evaluate(expectedLocalCsvPath, expectedImportRequest)).thenReturn(Mono.empty());
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
-        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, SUBJECT, TEMPLATE_NAME))
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, TEMPLATE_NAME, SUBJECT))
                 .thenReturn(Mono.just(expectedImportRequest));
 
         // When
@@ -169,7 +169,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
-        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, SUBJECT, TEMPLATE_NAME))
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, TEMPLATE_NAME, SUBJECT))
                 .thenReturn(Mono.just(expectedImportRequest));
 
         // When
@@ -198,7 +198,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
-        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, SUBJECT, TEMPLATE_NAME))
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, TEMPLATE_NAME, SUBJECT))
                 .thenReturn(Mono.just(expectedImportRequest));
 
         // When
@@ -225,7 +225,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
-        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, SUBJECT, TEMPLATE_NAME))
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, TEMPLATE_NAME, SUBJECT))
                 .thenReturn(Mono.just(expectedImportRequest));
 
         // When

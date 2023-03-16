@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.email.EmailMessageDTO;
 import it.gov.pagopa.reward.notification.dto.selc.UserResource;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.utils.EmailNotificationConstants;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +24,16 @@ import java.util.Map;
 public class EmailNotificationServiceImpl implements EmailNotificationService{
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-    private final String commaDelimiter;
+    private final String delimiter;
     private final EmailNotificationRestClient emailRestClient;
     private final SelcRestClient selcRestClient;
     private final RewardNotificationRuleRepository notificationRuleRepository;
 
-    public EmailNotificationServiceImpl(@Value("${app.email-notification.comma-delimiter}") String commaDelimiter,
+    public EmailNotificationServiceImpl(@Value("${app.email-notification.delimiter}") String delimiter,
                                         EmailNotificationRestClient emailRestClient,
                                         SelcRestClient selcRestClient,
                                         RewardNotificationRuleRepository notificationRuleRepository) {
-        this.commaDelimiter = commaDelimiter;
+        this.delimiter = delimiter;
         this.emailRestClient = emailRestClient;
         this.selcRestClient = selcRestClient;
         this.notificationRuleRepository = notificationRuleRepository;
@@ -42,11 +43,11 @@ public class EmailNotificationServiceImpl implements EmailNotificationService{
     public Mono<RewardOrganizationImport> send(RewardOrganizationImport organizationImport, String templateName, String subject) {
 
         return PerformanceLogger.logTimingOnNext(
-                "FEEDBACK_ELABORATION_NOTIFICATION",
+                EmailNotificationConstants.FLOW_NAME,
                 getInstitutionProductUsers(organizationImport.getOrganizationId())
                         .map(UserResource::getEmail)
                         .collectList()
-                        .map(l -> String.join(commaDelimiter, l))
+                        .map(l -> String.join(delimiter, l))
                         .zipWith(notificationRuleRepository.findById(organizationImport.getInitiativeId()))
                         .map(t -> {
                             String initiativeName = t.getT2().getInitiativeName();

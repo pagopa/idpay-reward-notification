@@ -27,7 +27,7 @@ import java.util.Map;
 
 @TestPropertySource(
         properties = {
-                "app.email-notification.comma-delimiter=,",
+                "app.email-notification.delimiter=,",
                 "app.selc.headers.subscription-key=subscriptionKey1",
                 "app.selc.headers.uid=selfcareUid1"
         }
@@ -41,7 +41,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
     public static final String TEST_EMAIL_KO = "TEST_EMAIL_KO";
     public static final String FILE_NAME = "testEmail.zip";
     public static final LocalDateTime DATE = LocalDateTime.of(2023, 3, 15, 0, 0);
-    @Value("${app.email-notification.comma-delimiter}")
+    @Value("${app.email-notification.delimiter}")
     private String commaDelimiter;
     @SpyBean
     private EmailNotificationRestClient emailRestClientSpy;

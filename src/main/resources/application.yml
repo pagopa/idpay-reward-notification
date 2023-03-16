@@ -265,7 +265,7 @@ app:
     read.handler.timeout: ${READ_TIMEOUT_HANDLER:60000}
     write.handler.timeout: ${WRITE_TIMEOUT_HANDLER:60000}
   email-notification:
-    comma-delimiter: ${$EMAIL_NOTIFICATION_COMMA_DELIMITER:,}
+    delimiter: ${$EMAIL_NOTIFICATION_DELIMITER:,}
     base-url: ${EMAIL_NOTIFICATION_BASE_URL:/idpay/email-notification}
   selc:
     base-url: ${SELC_BASE_URL:/external/v1}

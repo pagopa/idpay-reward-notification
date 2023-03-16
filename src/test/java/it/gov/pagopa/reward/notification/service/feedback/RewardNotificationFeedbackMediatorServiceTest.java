@@ -115,6 +115,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         Mockito.when(importsRepositoryMock.createIfNotExistsOrReturnEmpty(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
         Mockito.when(csvRetrieverServiceMock.retrieveCsv(expectedImportRequest)).thenAnswer(i -> Mono.empty());
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME, EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
@@ -135,6 +137,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
         Mockito.when(csvRetrieverServiceMock.retrieveCsv(expectedImportRequest)).thenAnswer(i -> Mono.just(expectedLocalCsvPath));
         Mockito.when(importRewardNotificationFeedbackCsvServiceMock.evaluate(expectedLocalCsvPath, expectedImportRequest)).thenReturn(Mono.empty());
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME, EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();
@@ -194,6 +198,8 @@ class RewardNotificationFeedbackMediatorServiceTest {
                 }
         );
         Mockito.when(importsRepositoryMock.save(expectedImportRequest)).thenReturn(Mono.just(expectedImportRequest));
+        Mockito.when(emailNotificationServiceMock.send(expectedImportRequest, EmailNotificationConstants.ELABORATED_IMPORT_TEMPLATE_NAME, EmailNotificationConstants.ELABORATED_IMPORT_SUBJECT))
+                .thenReturn(Mono.just(expectedImportRequest));
 
         // When
         List<RewardOrganizationImport> result = feedbackMediatorService.execute(List.of(event), MessageBuilder.withPayload("").build(), new HashMap<>()).block();

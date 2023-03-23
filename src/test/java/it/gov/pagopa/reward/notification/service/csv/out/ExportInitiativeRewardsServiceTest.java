@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.repository.SuspendedUsersRepository;
 import it.gov.pagopa.reward.notification.service.csv.out.mapper.RewardNotification2ExportCsvService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.writer.ExportCsvFinalizeService;
@@ -45,12 +46,13 @@ class ExportInitiativeRewardsServiceTest {
     @Mock private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
     @Mock private RewardOrganizationExportsRepository exportsRepositoryMock;
     @Mock private ExportCsvFinalizeService csvWriterServiceMock;
+    @Mock private SuspendedUsersRepository suspendedUsersRepositoryMock;
 
     private ExportInitiativeRewardsService service;
 
     @BeforeEach
     void init() {
-        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock);
+        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, suspendedUsersRepositoryMock, csvWriterServiceMock);
     }
 
     @AfterEach

@@ -1,6 +1,9 @@
 package it.gov.pagopa.reward.notification.controller;
 
-import it.gov.pagopa.reward.notification.dto.controller.*;
+import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
+import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -96,4 +99,10 @@ public interface NotificationController {
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("fileName") String fileName);
+
+    @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
+    Mono<Void> suspendUserOnInitiative(
+            @PathVariable("organizationId") String organizationId,
+            @PathVariable("initiativeId") String initiativeId,
+            @PathVariable("userId") String userId);
 }

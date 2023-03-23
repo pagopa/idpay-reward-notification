@@ -140,6 +140,11 @@ public class NotificationControllerImpl implements NotificationController {
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
     }
 
+    @Override
+    public Mono<Void> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
+        return null;
+    }
+
     private String buildImportId(String organizationId, String initiativeId, String fileName) {
         return "%s/%s/import/%s".formatted(organizationId, initiativeId, fileName);
     }

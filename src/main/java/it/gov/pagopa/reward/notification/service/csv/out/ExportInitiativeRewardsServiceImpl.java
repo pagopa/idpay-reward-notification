@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.repository.SuspendedUsersRepository;
 import it.gov.pagopa.reward.notification.service.csv.out.mapper.RewardNotification2ExportCsvService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.writer.ExportCsvFinalizeService;
@@ -31,18 +32,20 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
     private final RewardNotification2ExportCsvService reward2CsvLineService;
     private final Initiative2ExportRetrieverService initiative2ExportRetrieverService;
     private final RewardOrganizationExportsRepository exportsRepository;
+    private final SuspendedUsersRepository suspendedUsersRepository;
     private final ExportCsvFinalizeService csvWriterService;
 
     private final Scheduler splitScheduler;
 
     public ExportInitiativeRewardsServiceImpl(
             @Value("${app.csv.export.split-size}") int csvMaxRows,
-            RewardsNotificationRepository rewardsNotificationRepository, RewardNotification2ExportCsvService rewardNotification2ExportCsvService, Initiative2ExportRetrieverService initiative2ExportRetrieverService, RewardOrganizationExportsRepository exportsRepository, ExportCsvFinalizeService csvWriterService) {
+            RewardsNotificationRepository rewardsNotificationRepository, RewardNotification2ExportCsvService rewardNotification2ExportCsvService, Initiative2ExportRetrieverService initiative2ExportRetrieverService, RewardOrganizationExportsRepository exportsRepository, SuspendedUsersRepository suspendedUsersRepository, ExportCsvFinalizeService csvWriterService) {
         this.csvMaxRows = csvMaxRows;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.reward2CsvLineService = rewardNotification2ExportCsvService;
         this.initiative2ExportRetrieverService = initiative2ExportRetrieverService;
         this.exportsRepository = exportsRepository;
+        this.suspendedUsersRepository = suspendedUsersRepository;
         this.csvWriterService = csvWriterService;
 
         splitScheduler = Schedulers.newSingle("exportSplitProcessor");
@@ -91,7 +94,12 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 // 2. let's search new rewards to notify not related to any exports
                 .concatWith(
                         rewardsNotificationRepository.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())
-                );
+                )
+                .filterWhen(this::isNotSuspendedUser);
+    }
+
+    private Mono<Boolean> isNotSuspendedUser(RewardsNotification n) {
+        return suspendedUsersRepository.existsById(n.getUserId()).map(b -> !b);
     }
 
     private Mono<List<RewardNotificationExportCsvDto>> deleteExportRequestWhenEmpty(RewardOrganizationExport emptyExport, AtomicInteger splitNumber) {
@@ -120,5 +128,4 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 .flatMap(exp -> csvWriterService.writeCsvAndFinalize(csvLines, exp)),
                 exp -> "Completed export of reward notification related to initiative from the beginning of the process:  initiative %s, fileName %s, split number %s".formatted(export.getInitiativeId(), exp.getFilePath(), n));
     }
-
 }

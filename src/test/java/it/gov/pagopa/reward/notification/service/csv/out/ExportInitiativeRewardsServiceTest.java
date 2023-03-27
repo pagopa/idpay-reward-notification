@@ -8,10 +8,10 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.repository.SuspendedUsersRepository;
 import it.gov.pagopa.reward.notification.service.csv.out.mapper.RewardNotification2ExportCsvService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.writer.ExportCsvFinalizeService;
+import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
@@ -46,13 +46,13 @@ class ExportInitiativeRewardsServiceTest {
     @Mock private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
     @Mock private RewardOrganizationExportsRepository exportsRepositoryMock;
     @Mock private ExportCsvFinalizeService csvWriterServiceMock;
-    @Mock private SuspendedUsersRepository suspendedUsersRepositoryMock;
+    @Mock private UserSuspensionService userSuspensionServiceMock;
 
     private ExportInitiativeRewardsService service;
 
     @BeforeEach
     void init() {
-        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, suspendedUsersRepositoryMock, csvWriterServiceMock);
+        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock, userSuspensionServiceMock);
     }
 
     @AfterEach

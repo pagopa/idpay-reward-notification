@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.model.SuspendedUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -101,7 +102,7 @@ public interface NotificationController {
             @PathVariable("fileName") String fileName);
 
     @GetMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
-    Mono<Void> suspendUserOnInitiative(
+    Mono<SuspendedUser> suspendUserOnInitiative(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("userId") String userId);

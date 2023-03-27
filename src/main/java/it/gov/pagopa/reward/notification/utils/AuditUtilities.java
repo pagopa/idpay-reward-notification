@@ -26,6 +26,7 @@ public class AuditUtilities {
 
     private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s", SRCIP);
     private static final String CEF_PATTERN = CEF + " msg={} cs1Label=initiativeId cs1={} cs2Label=organizationId cs2={}";
+    private static final String CEF_USER_PATTERN = CEF_PATTERN + " suser={}";
     private static final String CEF_PATTERN_FILE = CEF_PATTERN + " cs3Label=fileName cs3={}";
 
     private void logAuditString(String pattern, String... parameters) {
@@ -50,6 +51,20 @@ public class AuditUtilities {
         logAuditString(
                 CEF_PATTERN,
                 "Export detail page about refunds.", initiativeId, organizationId
+        );
+    }
+
+    public void logSuspension(String initiativeId, String organizationId, String userId) {
+        logAuditString(
+                CEF_USER_PATTERN,
+                "Onboarding suspended", initiativeId, organizationId, userId
+        );
+    }
+
+    public void logSuspensionKO(String initiativeId, String organizationId, String userId) {
+        logAuditString(
+                CEF_USER_PATTERN,
+                "Onboarding suspension failed", initiativeId, organizationId, userId
         );
     }
 }

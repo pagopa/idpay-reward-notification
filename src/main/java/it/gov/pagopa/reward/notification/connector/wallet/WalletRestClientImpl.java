@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.connector.wallet;
 
+import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -29,6 +30,15 @@ public class WalletRestClientImpl implements WalletRestClient {
         return webClient.method(HttpMethod.PUT)
                 .uri(URI, initiativeId, userId)
                 .retrieve()
-                .toBodilessEntity();
+                .toBodilessEntity()
+                .flatMap(this::validateWalletResponse);
+    }
+
+    private Mono<ResponseEntity<Void>> validateWalletResponse(ResponseEntity<Void> r) {
+        if (r.getStatusCode().is2xxSuccessful()) {
+            return Mono.just(r);
+        } else {
+            return Mono.error(new ClientExceptionNoBody(r.getStatusCode()));
+        }
     }
 }

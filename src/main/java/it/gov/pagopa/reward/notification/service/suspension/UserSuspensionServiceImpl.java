@@ -35,26 +35,30 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
         return PerformanceLogger.logTimingFinally("SUSPENSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
                         .flatMap(i -> suspendedUsersRepository.findByUserIdAndOrganizationIdAndInitiativeId(
-                                userId,
-                                organizationId,
-                                initiativeId
-                        ))
-                        .doOnNext(u -> log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] User having id {} already suspended on initiative {}",
-                                userId, initiativeId))
-                        .switchIfEmpty(
-                                suspendedUsersRepository.save(new SuspendedUser(userId, initiativeId, organizationId))
-                                        .flatMap(u ->
-                                                walletRestClient.suspend(u.getInitiativeId(), u.getUserId())
-                                                        // TODO notificare wallet di transazioni sospese?
-                                                        .doOnNext(r -> auditUtilities.logSuspension(initiativeId, organizationId, userId))
-                                                        .map(r -> u))
-                                        .onErrorResume(e -> {
-                                            auditUtilities.logSuspensionKO(initiativeId, organizationId, userId);
+                                                userId,
+                                                organizationId,
+                                                initiativeId
+                                        )
+                                        .doOnNext(u ->
+                                                log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] User having id {} already suspended on initiative {}",
+                                                        u.getUserId(), u.getInitiativeId())
+                                        )
+                                        .switchIfEmpty(
+                                                suspendedUsersRepository.save(new SuspendedUser(userId, initiativeId, organizationId))
+                                                        .flatMap(u ->
+                                                                walletRestClient.suspend(u.getInitiativeId(), u.getUserId())
+                                                                        .doOnNext(r -> auditUtilities.logSuspension(initiativeId, organizationId, userId))
+                                                                        .map(r -> u)
+                                                        )
+                                                        .onErrorResume(e -> {
+                                                            auditUtilities.logSuspensionKO(initiativeId, organizationId, userId);
 
-                                            return suspendedUsersRepository.deleteById(SuspendedUser.buildId(userId, initiativeId))
-                                                    .then(Mono.error(e));
-                                        })
+                                                            return suspendedUsersRepository.deleteById(SuspendedUser.buildId(userId, initiativeId))
+                                                                    .then(Mono.error(e));
+                                                        })
+                                        )
                         )
+
                 , "Suspended user %s".formatted(userId));
     }
 

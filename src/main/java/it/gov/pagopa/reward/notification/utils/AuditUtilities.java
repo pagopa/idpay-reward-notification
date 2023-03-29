@@ -57,14 +57,14 @@ public class AuditUtilities {
     public void logSuspension(String initiativeId, String organizationId, String userId) {
         logAuditString(
                 CEF_USER_PATTERN,
-                "Onboarding suspended", initiativeId, organizationId, userId
+                "User suspended", initiativeId, organizationId, userId
         );
     }
 
     public void logSuspensionKO(String initiativeId, String organizationId, String userId) {
         logAuditString(
                 CEF_USER_PATTERN,
-                "Onboarding suspension failed", initiativeId, organizationId, userId
+                "User suspension failed", initiativeId, organizationId, userId
         );
     }
 }

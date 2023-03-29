@@ -438,7 +438,7 @@ class NotificationControllerImplTest {
         Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
                 .thenReturn(Mono.just(expected));
 
-        webClient.get()
+        webClient.put()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
                         .build("orgId", "initiativeId", "userId"))
                 .exchange()
@@ -454,7 +454,7 @@ class NotificationControllerImplTest {
         Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
                 .thenReturn(Mono.empty());
 
-        webClient.get()
+        webClient.put()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
                         .build("orgId", "initiativeId", "userId"))
                 .exchange()

@@ -124,4 +124,13 @@ class UserSuspensionServiceImplTest {
 
         Mockito.verify(suspendedUsersRepositoryMock).deleteById(SuspendedUser.buildId(USER_ID, INITIATIVE_ID));
     }
+
+    @Test
+    void testNotSuspendedUser() {
+        Mockito.when(suspendedUsersRepositoryMock.existsById(Mockito.anyString())).thenReturn(Mono.just(Boolean.FALSE));
+
+        Boolean result = userSuspensionService.isNotSuspendedUser(INITIATIVE_ID, USER_ID).block();
+
+        Assertions.assertEquals(Boolean.TRUE, result);
+    }
 }

@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 import wiremock.org.eclipse.jetty.util.BlockingArrayQueue;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,8 @@ import java.util.stream.Stream;
 @ExtendWith(MockitoExtension.class)
 class ExportInitiativeRewardsServiceTest {
 
+    public static final String INITIATIVEID = "INITIATIVEID";
+    public static final String SUSPENDED_USER_INITIATIVEID = INITIATIVEID + "S";
     private final int csvMaxRows = 100;
 
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
@@ -53,6 +56,7 @@ class ExportInitiativeRewardsServiceTest {
     @BeforeEach
     void init() {
         service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock, userSuspensionServiceMock);
+        Mockito.when(userSuspensionServiceMock.isNotSuspendedUser(Mockito.eq(INITIATIVEID), Mockito.anyString())).thenReturn(Mono.just(Boolean.TRUE));
     }
 
     @AfterEach
@@ -68,7 +72,7 @@ class ExportInitiativeRewardsServiceTest {
 
         RewardOrganizationExport stuckExport = new RewardOrganizationExport();
         stuckExport.setId("STUCKEXPORTID");
-        stuckExport.setInitiativeId("INITIATIVEID");
+        stuckExport.setInitiativeId(INITIATIVEID);
         stuckExport.setNotificationDate(LocalDate.now().minusDays(7));
         stuckExport.setExportDate(LocalDate.now());
         stuckExport.setProgressive(0L);
@@ -151,7 +155,7 @@ class ExportInitiativeRewardsServiceTest {
 
         RewardOrganizationExport export = new RewardOrganizationExport();
         export.setId("EXPORTID");
-        export.setInitiativeId("INITIATIVEID");
+        export.setInitiativeId(INITIATIVEID);
         export.setNotificationDate(LocalDate.now());
         export.setProgressive(0L);
         export.setExportDate(LocalDate.now());
@@ -221,14 +225,40 @@ class ExportInitiativeRewardsServiceTest {
         return rewardNotification2Notify;
     }
 
+    private List<RewardsNotification> mockRewards(int baseIndex, int n, RewardOrganizationExport export, boolean withSuspended) {
+        List<RewardsNotification> rewardNotification2Notify = buildMockRewardInstances(baseIndex, n);
+
+        if (withSuspended) {
+
+            List<RewardsNotification> rewardNotification2NotifyWithSuspended = new ArrayList<>();
+            rewardNotification2NotifyWithSuspended.addAll(rewardNotification2Notify);
+            rewardNotification2NotifyWithSuspended.addAll(buildMockRewardInstancesSuspended(baseIndex+n, n));
+
+            Mockito.when(rewardsNotificationRepositoryMock.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())).thenReturn(Flux.fromIterable(rewardNotification2NotifyWithSuspended));
+
+            return rewardNotification2NotifyWithSuspended;
+        }
+
+        Mockito.when(rewardsNotificationRepositoryMock.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())).thenReturn(Flux.fromIterable(rewardNotification2Notify));
+        return rewardNotification2Notify;
+    }
+
     private static List<RewardsNotification> buildMockRewardInstances(int baseIndex, int n) {
         return IntStream.range(baseIndex, baseIndex + n).mapToObj(RewardsNotificationFaker::mockInstance).toList();
+    }
+
+    private static List<RewardsNotification> buildMockRewardInstancesSuspended(int baseIndex, int n) {
+        return IntStream.range(baseIndex, baseIndex + n).mapToObj(i ->
+                RewardsNotificationFaker.mockInstanceBuilder(i)
+                        .initiativeId(SUSPENDED_USER_INITIATIVEID)
+                        .build()
+        ).toList();
     }
 
     private RewardOrganizationExport mockNextSplitInvocation(RewardOrganizationExport export) {
         RewardOrganizationExport exportSplit2 = new RewardOrganizationExport();
         exportSplit2.setId("EXPORTID.1");
-        exportSplit2.setInitiativeId("INITIATIVEID");
+        exportSplit2.setInitiativeId(INITIATIVEID);
         exportSplit2.setProgressive(1L);
         exportSplit2.setExportDate(LocalDate.now());
 
@@ -243,7 +273,7 @@ class ExportInitiativeRewardsServiceTest {
 
         RewardOrganizationExport export = new RewardOrganizationExport();
         export.setId("EXPORTID");
-        export.setInitiativeId("INITIATIVEID");
+        export.setInitiativeId(INITIATIVEID);
         export.setNotificationDate(LocalDate.now());
         export.setProgressive(0L);
         export.setExportDate(LocalDate.now());
@@ -269,7 +299,7 @@ class ExportInitiativeRewardsServiceTest {
         // Given
         RewardOrganizationExport export = new RewardOrganizationExport();
         export.setId("EXPORTID");
-        export.setInitiativeId("INITIATIVEID");
+        export.setInitiativeId(INITIATIVEID);
         export.setNotificationDate(LocalDate.now());
         export.setProgressive(0L);
         export.setExportDate(LocalDate.now());
@@ -291,5 +321,35 @@ class ExportInitiativeRewardsServiceTest {
         Assertions.assertEquals(1, result.size());
 
         Assertions.assertSame(export, result.get(0));
+    }
+
+    @Test
+    void testWithSuspendedUser(){
+        // Given
+        Mockito.when(userSuspensionServiceMock.isNotSuspendedUser(Mockito.eq(SUSPENDED_USER_INITIATIVEID), Mockito.anyString())).thenReturn(Mono.just(Boolean.FALSE));
+
+        int newRewards = csvMaxRows *2;
+
+        RewardOrganizationExport export = new RewardOrganizationExport();
+        export.setId("EXPORTID");
+        export.setInitiativeId(SUSPENDED_USER_INITIATIVEID);
+        export.setNotificationDate(LocalDate.now());
+        export.setProgressive(0L);
+        export.setExportDate(LocalDate.now());
+
+        Mockito.when(rewardsNotificationRepositoryMock.findExportRewards(export.getId())).thenReturn(Flux.empty());
+        Mockito.when(exportsRepositoryMock.delete(Mockito.same(export))).thenReturn(Mono.empty());
+
+        mockRewards(0, newRewards, export, true);
+        Mockito.when(reward2CsvLineServiceMock.apply(Mockito.any())).thenReturn(Mono.empty());
+        // When
+        List<RewardOrganizationExport> result = service.performExport(export, false).collectList().block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(RewardOrganizationExportStatus.SKIPPED, result.get(0).getStatus());
+
+        Mockito.verify(csvWriterServiceMock, Mockito.never()).writeCsvAndFinalize(Mockito.any(), Mockito.any());
     }
 }

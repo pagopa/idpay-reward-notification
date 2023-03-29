@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -31,14 +32,17 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .uri(URI, initiativeId, userId)
                 .retrieve()
                 .toBodilessEntity()
-                .flatMap(this::validateWalletResponse);
+                .map(this::validateWalletResponse)
+                .onErrorResume(WebClientResponseException.class, e -> {
+                    throw new ClientExceptionNoBody(e.getStatusCode());
+                });
     }
 
-    private Mono<ResponseEntity<Void>> validateWalletResponse(ResponseEntity<Void> r) {
+    private ResponseEntity<Void> validateWalletResponse(ResponseEntity<Void> r) {
         if (r.getStatusCode().is2xxSuccessful()) {
-            return Mono.just(r);
+            return r;
         } else {
-            return Mono.error(new ClientExceptionNoBody(r.getStatusCode()));
+            throw new ClientExceptionNoBody(r.getStatusCode());
         }
     }
 }

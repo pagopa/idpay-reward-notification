@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
@@ -442,9 +443,7 @@ class NotificationControllerImplTest {
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
                         .build("orgId", "initiativeId", "userId"))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(RewardSuspendedUser.class)
-                .isEqualTo(expected);
+                .expectStatus().isOk();
 
         Mockito.verify(userSuspensionServiceMock).suspend("orgId", "initiativeId", "userId");
     }

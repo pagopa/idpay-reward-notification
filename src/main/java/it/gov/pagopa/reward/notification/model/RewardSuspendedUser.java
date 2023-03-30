@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "suspended_users")
+@Document(collection = "rewards_suspended_users")
 @FieldNameConstants
-public class SuspendedUser {
+public class RewardSuspendedUser {
     @Id
     private String id;
     private String userId;
@@ -24,7 +24,7 @@ public class SuspendedUser {
     private String organizationId;
     private LocalDateTime suspensionDate;
 
-    public SuspendedUser(String userId, String initiativeId, String organizationId) {
+    public RewardSuspendedUser(String userId, String initiativeId, String organizationId) {
         this.id = buildId(userId, initiativeId);
         this.userId = userId;
         this.initiativeId = initiativeId;

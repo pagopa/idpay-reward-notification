@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.SuspendedUser;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
@@ -145,7 +145,7 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Mono<SuspendedUser> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
+    public Mono<RewardSuspendedUser> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
         return suspensionService.suspend(organizationId, initiativeId, userId)
                 .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
     }

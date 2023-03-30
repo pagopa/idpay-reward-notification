@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.SuspendedUser;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
@@ -434,7 +434,7 @@ class NotificationControllerImplTest {
 
     @Test
     void testSuspendOk() {
-        SuspendedUser expected = new SuspendedUser("userId", "initiativeId", "orgId");
+        RewardSuspendedUser expected = new RewardSuspendedUser("userId", "initiativeId", "orgId");
         Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
                 .thenReturn(Mono.just(expected));
 
@@ -443,7 +443,7 @@ class NotificationControllerImplTest {
                         .build("orgId", "initiativeId", "userId"))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(SuspendedUser.class)
+                .expectBody(RewardSuspendedUser.class)
                 .isEqualTo(expected);
 
         Mockito.verify(userSuspensionServiceMock).suspend("orgId", "initiativeId", "userId");

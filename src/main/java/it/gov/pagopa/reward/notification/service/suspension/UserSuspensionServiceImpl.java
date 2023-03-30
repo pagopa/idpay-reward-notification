@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.notification.service.suspension;
 
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
-import it.gov.pagopa.reward.notification.model.SuspendedUser;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
-import it.gov.pagopa.reward.notification.repository.SuspendedUsersRepository;
+import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -14,27 +14,27 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class UserSuspensionServiceImpl implements UserSuspensionService {
 
-    private final SuspendedUsersRepository suspendedUsersRepository;
+    private final RewardsSuspendedUserRepository rewardsSuspendedUserRepository;
     private final RewardNotificationRuleRepository notificationRuleRepository;
     private final WalletRestClient walletRestClient;
 
     private final AuditUtilities auditUtilities;
 
-    public UserSuspensionServiceImpl(SuspendedUsersRepository suspendedUsersRepository, RewardNotificationRuleRepository notificationRuleRepository, WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
-        this.suspendedUsersRepository = suspendedUsersRepository;
+    public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository, RewardNotificationRuleRepository notificationRuleRepository, WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
+        this.rewardsSuspendedUserRepository = rewardsSuspendedUserRepository;
         this.notificationRuleRepository = notificationRuleRepository;
         this.walletRestClient = walletRestClient;
         this.auditUtilities = auditUtilities;
     }
 
     @Override
-    public Mono<SuspendedUser> suspend(String organizationId, String initiativeId, String userId) {
+    public Mono<RewardSuspendedUser> suspend(String organizationId, String initiativeId, String userId) {
         log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Suspending user having id {} from initiative {}",
                 userId, initiativeId);
 
         return PerformanceLogger.logTimingFinally("SUSPENSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
-                        .flatMap(i -> suspendedUsersRepository.findByUserIdAndOrganizationIdAndInitiativeId(
+                        .flatMap(i -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
                                                 userId,
                                                 organizationId,
                                                 initiativeId
@@ -44,7 +44,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                         u.getUserId(), u.getInitiativeId())
                                         )
                                         .switchIfEmpty(
-                                                suspendedUsersRepository.save(new SuspendedUser(userId, initiativeId, organizationId))
+                                                rewardsSuspendedUserRepository.save(new RewardSuspendedUser(userId, initiativeId, organizationId))
                                                         .flatMap(u ->
                                                                 walletRestClient.suspend(u.getInitiativeId(), u.getUserId())
                                                                         .doOnNext(r -> auditUtilities.logSuspension(initiativeId, organizationId, userId))
@@ -53,7 +53,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                         .onErrorResume(e -> {
                                                             auditUtilities.logSuspensionKO(initiativeId, organizationId, userId);
 
-                                                            return suspendedUsersRepository.deleteById(SuspendedUser.buildId(userId, initiativeId))
+                                                            return rewardsSuspendedUserRepository.deleteById(RewardSuspendedUser.buildId(userId, initiativeId))
                                                                     .then(Mono.error(e));
                                                         })
                                         )
@@ -64,6 +64,6 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
 
     @Override
     public Mono<Boolean> isNotSuspendedUser(String initiativeId, String userId) {
-        return suspendedUsersRepository.existsById(SuspendedUser.buildId(userId, initiativeId)).map(b -> !b);
+        return rewardsSuspendedUserRepository.existsById(RewardSuspendedUser.buildId(userId, initiativeId)).map(b -> !b);
     }
 }

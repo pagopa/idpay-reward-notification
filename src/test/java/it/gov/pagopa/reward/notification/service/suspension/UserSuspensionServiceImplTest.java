@@ -3,9 +3,9 @@ package it.gov.pagopa.reward.notification.service.suspension;
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
-import it.gov.pagopa.reward.notification.model.SuspendedUser;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
-import it.gov.pagopa.reward.notification.repository.SuspendedUsersRepository;
+import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -27,7 +27,7 @@ class UserSuspensionServiceImplTest {
     private static final String USER_ID = "USER_ID";
 
     @Mock
-    private SuspendedUsersRepository suspendedUsersRepositoryMock;
+    private RewardsSuspendedUserRepository rewardsSuspendedUserRepositoryMock;
     @Mock
     private RewardNotificationRuleRepository notificationRuleRepositoryMock;
     @Mock
@@ -39,7 +39,7 @@ class UserSuspensionServiceImplTest {
 
     @BeforeEach
     void init() {
-        userSuspensionService = new UserSuspensionServiceImpl(suspendedUsersRepositoryMock, notificationRuleRepositoryMock, walletRestClientMock, auditUtilitiesMock);
+        userSuspensionService = new UserSuspensionServiceImpl(rewardsSuspendedUserRepositoryMock, notificationRuleRepositoryMock, walletRestClientMock, auditUtilitiesMock);
     }
 
     @Test
@@ -47,14 +47,14 @@ class UserSuspensionServiceImplTest {
         Mockito.when(notificationRuleRepositoryMock.findByInitiativeIdAndOrganizationId(Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(Mono.empty());
 
-        SuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+        RewardSuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
 
         Assertions.assertNull(result);
 
-        Mockito.verify(suspendedUsersRepositoryMock, Mockito.never())
+        Mockito.verify(rewardsSuspendedUserRepositoryMock, Mockito.never())
                 .findByUserIdAndOrganizationIdAndInitiativeId(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(suspendedUsersRepositoryMock, Mockito.never())
-                .save(Mockito.any(SuspendedUser.class));
+        Mockito.verify(rewardsSuspendedUserRepositoryMock, Mockito.never())
+                .save(Mockito.any(RewardSuspendedUser.class));
         Mockito.verify(walletRestClientMock, Mockito.never())
                 .suspend(Mockito.anyString(), Mockito.anyString());
     }
@@ -65,14 +65,14 @@ class UserSuspensionServiceImplTest {
         Mockito.when(notificationRuleRepositoryMock.findByInitiativeIdAndOrganizationId(INITIATIVE_ID, ORGANIZATION_ID))
                 .thenReturn(Mono.just(notificationRule));
 
-        SuspendedUser alreadySuspended = new SuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
-        Mockito.when(suspendedUsersRepositoryMock.findByUserIdAndOrganizationIdAndInitiativeId(USER_ID, ORGANIZATION_ID, INITIATIVE_ID))
+        RewardSuspendedUser alreadySuspended = new RewardSuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
+        Mockito.when(rewardsSuspendedUserRepositoryMock.findByUserIdAndOrganizationIdAndInitiativeId(USER_ID, ORGANIZATION_ID, INITIATIVE_ID))
                 .thenReturn(Mono.just(alreadySuspended));
 
-        Mockito.when(suspendedUsersRepositoryMock.save(Mockito.any(SuspendedUser.class)))
+        Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class)))
                 .thenAnswer(i -> Mono.just(i.getArgument(0)));
 
-        SuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+        RewardSuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(alreadySuspended, result);
@@ -87,19 +87,19 @@ class UserSuspensionServiceImplTest {
         Mockito.when(notificationRuleRepositoryMock.findByInitiativeIdAndOrganizationId(INITIATIVE_ID, ORGANIZATION_ID))
                 .thenReturn(Mono.just(notificationRule));
 
-        Mockito.when(suspendedUsersRepositoryMock.findByUserIdAndOrganizationIdAndInitiativeId(USER_ID, ORGANIZATION_ID, INITIATIVE_ID))
+        Mockito.when(rewardsSuspendedUserRepositoryMock.findByUserIdAndOrganizationIdAndInitiativeId(USER_ID, ORGANIZATION_ID, INITIATIVE_ID))
                 .thenReturn(Mono.empty());
-        SuspendedUser expected = new SuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
-        Mockito.when(suspendedUsersRepositoryMock.save(Mockito.any(SuspendedUser.class))).thenReturn(Mono.just(expected));
+        RewardSuspendedUser expected = new RewardSuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
+        Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class))).thenReturn(Mono.just(expected));
 
         Mockito.when(walletRestClientMock.suspend(INITIATIVE_ID, USER_ID)).thenReturn(Mono.just(ResponseEntity.ok().build()));
 
-        SuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+        RewardSuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expected, result);
 
-        Mockito.verify(suspendedUsersRepositoryMock, Mockito.never())
+        Mockito.verify(rewardsSuspendedUserRepositoryMock, Mockito.never())
                 .deleteById(Mockito.anyString());
     }
 
@@ -109,25 +109,25 @@ class UserSuspensionServiceImplTest {
         Mockito.when(notificationRuleRepositoryMock.findByInitiativeIdAndOrganizationId(INITIATIVE_ID, ORGANIZATION_ID))
                 .thenReturn(Mono.just(notificationRule));
 
-        Mockito.when(suspendedUsersRepositoryMock.findByUserIdAndOrganizationIdAndInitiativeId(USER_ID, ORGANIZATION_ID, INITIATIVE_ID))
+        Mockito.when(rewardsSuspendedUserRepositoryMock.findByUserIdAndOrganizationIdAndInitiativeId(USER_ID, ORGANIZATION_ID, INITIATIVE_ID))
                 .thenReturn(Mono.empty());
-        SuspendedUser expected = new SuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
-        Mockito.when(suspendedUsersRepositoryMock.save(Mockito.any(SuspendedUser.class))).thenReturn(Mono.just(expected));
+        RewardSuspendedUser expected = new RewardSuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
+        Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class))).thenReturn(Mono.just(expected));
 
         Mockito.when(walletRestClientMock.suspend(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR)));
 
-        Mockito.when(suspendedUsersRepositoryMock.deleteById(SuspendedUser.buildId(USER_ID, INITIATIVE_ID))).thenReturn(Mono.empty());
+        Mockito.when(rewardsSuspendedUserRepositoryMock.deleteById(RewardSuspendedUser.buildId(USER_ID, INITIATIVE_ID))).thenReturn(Mono.empty());
 
         Executable executable = () -> userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
 
         Assertions.assertThrows(ClientExceptionNoBody.class, executable);
 
-        Mockito.verify(suspendedUsersRepositoryMock).deleteById(SuspendedUser.buildId(USER_ID, INITIATIVE_ID));
+        Mockito.verify(rewardsSuspendedUserRepositoryMock).deleteById(RewardSuspendedUser.buildId(USER_ID, INITIATIVE_ID));
     }
 
     @Test
     void testNotSuspendedUser() {
-        Mockito.when(suspendedUsersRepositoryMock.existsById(Mockito.anyString())).thenReturn(Mono.just(Boolean.FALSE));
+        Mockito.when(rewardsSuspendedUserRepositoryMock.existsById(Mockito.anyString())).thenReturn(Mono.just(Boolean.FALSE));
 
         Boolean result = userSuspensionService.isNotSuspendedUser(INITIATIVE_ID, USER_ID).block();
 

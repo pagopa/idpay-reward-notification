@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.service.csv.out.mapper.RewardNotification2ExportCsvService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.writer.ExportCsvFinalizeService;
+import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionService;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,18 +33,24 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
     private final Initiative2ExportRetrieverService initiative2ExportRetrieverService;
     private final RewardOrganizationExportsRepository exportsRepository;
     private final ExportCsvFinalizeService csvWriterService;
-
+    private final UserSuspensionService suspensionService;
     private final Scheduler splitScheduler;
 
     public ExportInitiativeRewardsServiceImpl(
             @Value("${app.csv.export.split-size}") int csvMaxRows,
-            RewardsNotificationRepository rewardsNotificationRepository, RewardNotification2ExportCsvService rewardNotification2ExportCsvService, Initiative2ExportRetrieverService initiative2ExportRetrieverService, RewardOrganizationExportsRepository exportsRepository, ExportCsvFinalizeService csvWriterService) {
+            RewardsNotificationRepository rewardsNotificationRepository,
+            RewardNotification2ExportCsvService rewardNotification2ExportCsvService,
+            Initiative2ExportRetrieverService initiative2ExportRetrieverService,
+            RewardOrganizationExportsRepository exportsRepository,
+            ExportCsvFinalizeService csvWriterService,
+            UserSuspensionService suspensionService) {
         this.csvMaxRows = csvMaxRows;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.reward2CsvLineService = rewardNotification2ExportCsvService;
         this.initiative2ExportRetrieverService = initiative2ExportRetrieverService;
         this.exportsRepository = exportsRepository;
         this.csvWriterService = csvWriterService;
+        this.suspensionService = suspensionService;
 
         splitScheduler = Schedulers.newSingle("exportSplitProcessor");
     }
@@ -65,10 +72,10 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 // 3. wait to fill split or the end of the rewards
                 .buffer(csvMaxRows)
                 // 3.1. if no rows has been correctly transformed into csvLines
-                .switchIfEmpty(Mono.defer(()->deleteExportRequestWhenEmpty(export, splitNumber)))
+                .switchIfEmpty(Mono.defer(() -> deleteExportRequestWhenEmpty(export, splitNumber)))
                 // 4. write CSV for each split and finalize the export
                 .flatMap(csvLines -> writeAndFinalizeSplit(export, startTime, splitNumber, csvLines))
-                .switchIfEmpty(Flux.defer(()->{
+                .switchIfEmpty(Flux.defer(() -> {
                     export.setStatus(RewardOrganizationExportStatus.SKIPPED);
                     return Flux.just(export);
                 }));
@@ -78,7 +85,7 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
         //         1. let's search as first if there are rewards already related to the current export
         return rewardsNotificationRepository.findExportRewards(export.getId())
                 .switchIfEmpty(Mono.defer(() -> {
-                    if(isStuckExport){
+                    if (isStuckExport) {
                         log.info("[REWARD_NOTIFICATION_EXPORT_CSV][STUCK_EXECUTION] Stuck execution has no previous records {}", export.getId());
                     } else {
                         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Execution has no previous records {}", export.getId());
@@ -86,18 +93,27 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                     return Mono.empty();
                 }))
                 .doOnComplete(() -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV]{} execution of previous records completed {}"
-                        , isStuckExport? "[STUCK_EXECUTION] stuck" : ""
+                        , isStuckExport ? "[STUCK_EXECUTION] stuck" : ""
                         , export.getId()))
                 // 2. let's search new rewards to notify not related to any exports
                 .concatWith(
                         rewardsNotificationRepository.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())
+                )
+                .filterWhen(n ->
+                        suspensionService.isNotSuspendedUser(n.getInitiativeId(), n.getUserId())
+                                .doOnNext(suspensionOutcome -> {
+                                    if (Boolean.FALSE.equals(suspensionOutcome)) {
+                                        log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Skipping notification on suspended user: notificationId {}; userId {}; initiativeId {}",
+                                                n.getId(), n.getUserId(), n.getInitiativeId());
+                                    }
+                                })
                 );
     }
 
     private Mono<List<RewardNotificationExportCsvDto>> deleteExportRequestWhenEmpty(RewardOrganizationExport emptyExport, AtomicInteger splitNumber) {
         int split = splitNumber.get();
         log.warn("[REWARD_NOTIFICATION_EXPORT_CSV] no rewards were successfully transformed into csv line for export {} and split {}", emptyExport.getId(), split);
-        if(split==0){
+        if (split == 0) {
             return exportsRepository.delete(emptyExport).then(Mono.empty());
         } else {
             return Mono.empty();
@@ -117,8 +133,7 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
         return PerformanceLogger.logTimingOnNext(
                 "REWARD_NOTIFICATION_SPLIT_WRITE_AND_UPLOAD", startTime,
                 exportMono
-                .flatMap(exp -> csvWriterService.writeCsvAndFinalize(csvLines, exp)),
+                        .flatMap(exp -> csvWriterService.writeCsvAndFinalize(csvLines, exp)),
                 exp -> "Completed export of reward notification related to initiative from the beginning of the process:  initiative %s, fileName %s, split number %s".formatted(export.getInitiativeId(), exp.getFilePath(), n));
     }
-
 }

@@ -80,6 +80,7 @@ microservice-chart:
       PDV_BASE_URL: pdv_decrypt_base_url
       SELC_BASE_URL: selc_base_url
       EMAIL_NOTIFICATION_MS_HOST: email_notification_ms_host
+      WALLET_MS_HOST: idpay_wallet_host
 
   envSecret:
     MONGODB_URI: mongodb-connection-string

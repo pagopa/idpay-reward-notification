@@ -127,7 +127,8 @@ import static org.awaitility.Awaitility.await;
                 "logging.level.WireMock=ERROR",
                 "app.pdv.base-url=http://localhost:${wiremock.server.port}",
                 "app.email-notification.base-url=http://localhost:${wiremock.server.port}",
-                "app.selc.base-url=http://localhost:${wiremock.server.port}"
+                "app.selc.base-url=http://localhost:${wiremock.server.port}",
+                "app.wallet.base-url=http://localhost:${wiremock.server.port}"
                 //endregion
         })
 @AutoConfigureDataMongo

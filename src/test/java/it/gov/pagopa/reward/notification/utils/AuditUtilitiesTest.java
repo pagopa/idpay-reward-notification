@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 class AuditUtilitiesTest {
     private static final String INITIATIVE_ID = "TEST_INITIATIVE_ID";
     private static final String ORGANIZATION_ID = "TEST_ORGANIZATION_ID";
+    private static final String USER_ID = "TEST_USER_ID";
     private static final String FILE_NAME = "TEST_FILE_NAME";
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
@@ -72,4 +73,37 @@ class AuditUtilitiesTest {
         );
     }
 
+    @Test
+    void logSuspension() {
+        auditUtilities.logSuspension(INITIATIVE_ID,ORGANIZATION_ID,USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User suspended" +
+                        " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
+                        .formatted(
+                                AuditUtilities.SRCIP,
+                                INITIATIVE_ID,
+                                ORGANIZATION_ID,
+                                USER_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logSuspensionKO() {
+        auditUtilities.logSuspensionKO(INITIATIVE_ID,ORGANIZATION_ID,USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User suspension failed" +
+                        " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
+                        .formatted(
+                                AuditUtilities.SRCIP,
+                                INITIATIVE_ID,
+                                ORGANIZATION_ID,
+                                USER_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
 }

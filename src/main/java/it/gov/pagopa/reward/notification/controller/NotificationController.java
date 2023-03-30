@@ -102,7 +102,7 @@ public interface NotificationController {
             @PathVariable("fileName") String fileName);
 
     @PutMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
-    Mono<Void> suspendUserOnInitiative(
+    Mono<ResponseEntity<Void>> suspendUserOnInitiative(
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("userId") String userId);

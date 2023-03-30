@@ -147,8 +147,10 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Mono<Void> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
-        return suspensionService.suspend(organizationId, initiativeId, userId);
+    public Mono<ResponseEntity<Void>> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
+        return suspensionService.suspend(organizationId, initiativeId, userId)
+                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)))
+                .map(u -> new ResponseEntity<>(HttpStatus.OK));
     }
 
     private String buildImportId(String organizationId, String initiativeId, String fileName) {

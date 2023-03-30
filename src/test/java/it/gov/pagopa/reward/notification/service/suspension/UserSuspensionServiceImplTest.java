@@ -47,9 +47,9 @@ class UserSuspensionServiceImplTest {
         Mockito.when(notificationRuleRepositoryMock.findByInitiativeIdAndOrganizationId(Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(Mono.empty());
 
-        Executable executable = () -> userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+        RewardSuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
 
-        Assertions.assertThrows(ClientExceptionNoBody.class, executable);
+        Assertions.assertNull(result);
 
         Mockito.verify(rewardsSuspendedUserRepositoryMock, Mockito.never())
                 .findByUserIdAndOrganizationIdAndInitiativeId(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -72,7 +72,10 @@ class UserSuspensionServiceImplTest {
         Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class)))
                 .thenAnswer(i -> Mono.just(i.getArgument(0)));
 
-        userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+        RewardSuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(alreadySuspended, result);
 
         Mockito.verify(walletRestClientMock, Mockito.never())
                 .suspend(Mockito.anyString(), Mockito.anyString());
@@ -91,7 +94,10 @@ class UserSuspensionServiceImplTest {
 
         Mockito.when(walletRestClientMock.suspend(INITIATIVE_ID, USER_ID)).thenReturn(Mono.just(ResponseEntity.ok().build()));
 
-        userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+        RewardSuspendedUser result = userSuspensionService.suspend(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expected, result);
 
         Mockito.verify(rewardsSuspendedUserRepositoryMock, Mockito.never())
                 .deleteById(Mockito.anyString());

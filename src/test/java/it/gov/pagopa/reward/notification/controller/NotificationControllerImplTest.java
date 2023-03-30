@@ -8,11 +8,13 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
+import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.*;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,8 @@ class NotificationControllerImplTest {
     private ExportDetailService exportDetailServiceMock;
     @MockBean
     private AuditUtilities auditUtilities;
+    @MockBean
+    private UserSuspensionServiceImpl userSuspensionServiceMock;
     @Autowired
     protected WebTestClient webClient;
 
@@ -426,5 +430,36 @@ class NotificationControllerImplTest {
                 .expectStatus().isNotFound();
 
         Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", importId);
+    }
+
+    @Test
+    void testSuspendOk() {
+        RewardSuspendedUser expected = new RewardSuspendedUser("userId", "initiativeId", "orgId");
+        Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
+                .thenReturn(Mono.just(expected));
+
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
+                        .build("orgId", "initiativeId", "userId"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(RewardSuspendedUser.class)
+                .isEqualTo(expected);
+
+        Mockito.verify(userSuspensionServiceMock).suspend("orgId", "initiativeId", "userId");
+    }
+
+    @Test
+    void testSuspendKo() {
+        Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
+                .thenReturn(Mono.empty());
+
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
+                        .build("orgId", "initiativeId", "userId"))
+                .exchange()
+                .expectStatus().isNotFound();
+
+        Mockito.verify(userSuspensionServiceMock).suspend("orgId", "initiativeId", "userId");
     }
 }

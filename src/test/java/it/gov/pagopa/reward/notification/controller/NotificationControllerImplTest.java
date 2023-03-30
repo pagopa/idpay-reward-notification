@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
+import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -436,15 +438,13 @@ class NotificationControllerImplTest {
     void testSuspendOk() {
         RewardSuspendedUser expected = new RewardSuspendedUser("userId", "initiativeId", "orgId");
         Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
-                .thenReturn(Mono.just(expected));
+                .thenReturn(Mono.empty());
 
         webClient.put()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")
                         .build("orgId", "initiativeId", "userId"))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(RewardSuspendedUser.class)
-                .isEqualTo(expected);
+                .expectStatus().isOk();
 
         Mockito.verify(userSuspensionServiceMock).suspend("orgId", "initiativeId", "userId");
     }
@@ -452,7 +452,7 @@ class NotificationControllerImplTest {
     @Test
     void testSuspendKo() {
         Mockito.when(userSuspensionServiceMock.suspend("orgId", "initiativeId", "userId"))
-                .thenReturn(Mono.empty());
+                .thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
 
         webClient.put()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/suspend")

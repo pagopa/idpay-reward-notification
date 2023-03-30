@@ -1,12 +1,14 @@
 package it.gov.pagopa.reward.notification.service.suspension;
 
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
+import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -28,20 +30,21 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     }
 
     @Override
-    public Mono<RewardSuspendedUser> suspend(String organizationId, String initiativeId, String userId) {
+    public Mono<Void> suspend(String organizationId, String initiativeId, String userId) {
         log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Suspending user having id {} from initiative {}",
                 userId, initiativeId);
 
         return PerformanceLogger.logTimingFinally("SUSPENSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
+                        .switchIfEmpty(Mono.defer(() -> {
+                            log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Initiative having id {} not found", initiativeId);
+
+                            return Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND));
+                        }))
                         .flatMap(i -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
                                                 userId,
                                                 organizationId,
                                                 initiativeId
-                                        )
-                                        .doOnNext(u ->
-                                                log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] User having id {} already suspended on initiative {}",
-                                                        u.getUserId(), u.getInitiativeId())
                                         )
                                         .switchIfEmpty(
                                                 rewardsSuspendedUserRepository.save(new RewardSuspendedUser(userId, initiativeId, organizationId))
@@ -57,6 +60,12 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                                     .then(Mono.error(e));
                                                         })
                                         )
+                                        .doOnNext(u ->
+                                                log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] User having id {} already suspended on initiative {}",
+                                                        u.getUserId(), u.getInitiativeId())
+                                        )
+                                        .then()
+
                         )
 
                 , "Suspended user %s".formatted(userId));

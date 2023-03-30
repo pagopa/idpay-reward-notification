@@ -1,16 +1,18 @@
 package it.gov.pagopa.reward.notification.controller;
 
-import it.gov.pagopa.reward.notification.dto.controller.*;
+import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
+import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
+import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
-import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionServiceImpl;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -145,9 +147,8 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Mono<RewardSuspendedUser> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
-        return suspensionService.suspend(organizationId, initiativeId, userId)
-                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
+    public Mono<Void> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
+        return suspensionService.suspend(organizationId, initiativeId, userId);
     }
 
     private String buildImportId(String organizationId, String initiativeId, String fileName) {

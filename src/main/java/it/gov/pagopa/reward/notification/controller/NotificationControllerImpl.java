@@ -5,11 +5,13 @@ import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
+import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionServiceImpl;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,8 +37,9 @@ public class NotificationControllerImpl implements NotificationController {
 
     // region imports
     private final OrganizationImportsServiceImpl organizationImportsService;
-    private final AuditUtilities auditUtilities;
     // endregion
+    private final UserSuspensionServiceImpl suspensionService;
+    private final AuditUtilities auditUtilities;
 
     public NotificationControllerImpl(
             OrganizationExportsServiceImpl organizationExportsService,
@@ -44,12 +47,13 @@ public class NotificationControllerImpl implements NotificationController {
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
             ExportDetailService exportDetailService,
             OrganizationImportsServiceImpl organizationImportsService,
-            AuditUtilities auditUtilities) {
+            UserSuspensionServiceImpl suspensionService, AuditUtilities auditUtilities) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
         this.exportDetailService = exportDetailService;
         this.organizationImportsService = organizationImportsService;
+        this.suspensionService = suspensionService;
         this.auditUtilities = auditUtilities;
     }
 
@@ -138,6 +142,12 @@ public class NotificationControllerImpl implements NotificationController {
                         .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName).build().toString())
                         .body(csv))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))));
+    }
+
+    @Override
+    public Mono<RewardSuspendedUser> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
+        return suspensionService.suspend(organizationId, initiativeId, userId)
+                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
     }
 
     private String buildImportId(String organizationId, String initiativeId, String fileName) {

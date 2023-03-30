@@ -278,3 +278,5 @@ app:
     headers:
       subscription-key: ${SELC_EXTERNAL_API_KEY:}
       uid: ${SELC_UID:idpay}
+  wallet:
+    base-url: ${WALLET_MS_HOST:}/idpay/wallet

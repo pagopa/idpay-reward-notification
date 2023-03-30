@@ -165,7 +165,7 @@ class ExportDetailServiceImplTest {
                 .externalId("EXTERNALID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))
-                .amount(BigDecimal.valueOf((bias + 1) * 100L, 2))
+                .amount(BigDecimal.valueOf(getCents(bias), 2))
                 .startDate(DATE)
                 .endDate(DATE)
                 .status(RewardNotificationStatus.EXPORTED)
@@ -182,7 +182,7 @@ class ExportDetailServiceImplTest {
                 .id("USERID%s_INITIATIVEID_%s".formatted(bias, DATE.format(Utils.FORMATTER_DATE)))
                 .externalId("EXTERNALID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))
-                .rewardCents((bias + 1) * 100L)
+                .rewardCents(getCents(bias))
                 .status(RewardNotificationStatus.EXPORTED)
                 .cro("CRO%s".formatted(bias))
                 .startDepositDate(DATE)
@@ -191,11 +191,17 @@ class ExportDetailServiceImplTest {
                 .build();
     }
 
+    private static long getCents(int bias) {
+        return (long) (bias > 0
+                ? (bias + (1.47 * bias)) * 100L
+                : 1.47 * 100L);
+    }
+
     private RewardNotificationDTO rewardNotificationDTOMockInstance(int bias) {
         return RewardNotificationDTO.builder()
                 .eventId("EXTERNALID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))
-                .amount(BigDecimal.valueOf((bias + 1) * 100L, 2))
+                .amount(BigDecimal.valueOf(getCents(bias), 2))
                 .status(RewardNotificationStatus.EXPORTED)
                 .build();
     }

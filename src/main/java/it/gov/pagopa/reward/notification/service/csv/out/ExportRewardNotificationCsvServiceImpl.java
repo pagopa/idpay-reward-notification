@@ -2,12 +2,17 @@ package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
+import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -38,22 +43,28 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
                 initiative2ExportRetrieverService.retrieveStuckExecution()
                         .switchIfEmpty(retrieveNewInitiativeExport);
 
+        Set<String> exportedInitiativeIds = new HashSet<>();
+
         // repeat until not more initiatives
         return PerformanceLogger.logTimingFinally(
                 "REWARD_NOTIFICATION_EXPORT_CSV",
                 exportInitiative(retrieveStuckInitiativeExportsThenNew)
                         // expand in order to repeat until an export has been reserved to be evaluated
                         .expand(x -> exportInitiative((
-                                isStuckExecution(x)
-                                        ? retrieveStuckInitiativeExportsThenNew
-                                        : retrieveNewInitiativeExport
-                        ))),
+                                        isStuckExecution(x)
+                                                ? retrieveStuckInitiativeExportsThenNew
+                                                : retrieveNewInitiativeExport
+                                ).contextWrite(ctx -> {
+                                    exportedInitiativeIds.add(x.getInitiativeId());
+                                    return Context.of(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS, exportedInitiativeIds);
+                                })
+                        )),
                 null);
     }
 
     private Flux<RewardOrganizationExport> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {
         return PerformanceLogger.logTimingOnNext(
-                "REWARD_NOTIFICATION_LOCATE_INITIATIVE",
+                        "REWARD_NOTIFICATION_LOCATE_INITIATIVE",
                         exportRetriever,
                         e -> "starting reward notification export on initiative %s into %s".formatted(e.getInitiativeId(), e.getFilePath())
                 )

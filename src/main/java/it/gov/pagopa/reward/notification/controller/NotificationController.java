@@ -7,7 +7,6 @@ import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -19,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RequestMapping("/idpay")
 public interface NotificationController {
 
     @GetMapping("/reward/notification/exports/start")
-    Flux<RewardOrganizationExport> forceExportScheduling();
+    Flux<List<RewardOrganizationExport>> forceExportScheduling();
 
     @GetMapping("/reward/notification/expired-initiatives/start")
     Flux<RewardsNotification> forceExpiredInitiativesScheduling();

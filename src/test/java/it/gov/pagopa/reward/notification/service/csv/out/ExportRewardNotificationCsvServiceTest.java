@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -83,7 +84,7 @@ class ExportRewardNotificationCsvServiceTest {
                 .performExport(Mockito.any(), Mockito.anyBoolean());
 
         // When
-        List<RewardOrganizationExport> result = service.execute().collectList().block();
+        List<RewardOrganizationExport> result = Objects.requireNonNull(service.execute().collectList().block()).stream().flatMap(List::stream).toList();
         Assertions.assertNotNull(result);
 
         Assertions.assertEquals(

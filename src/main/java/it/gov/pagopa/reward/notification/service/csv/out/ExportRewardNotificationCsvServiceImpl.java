@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -34,7 +35,7 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
     }
 
     @Override
-    public Flux<RewardOrganizationExport> execute() {
+    public Flux<List<RewardOrganizationExport>> execute() {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting reward notifications export to CSV");
         Mono<RewardOrganizationExport> retrieveNewInitiativeExport =
                 initiative2ExportRetrieverService.retrieve();
@@ -50,25 +51,33 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
                 "REWARD_NOTIFICATION_EXPORT_CSV",
                 exportInitiative(retrieveStuckInitiativeExportsThenNew)
                         // expand in order to repeat until an export has been reserved to be evaluated
-                        .expand(x -> exportInitiative((
-                                        isStuckExecution(x)
-                                                ? retrieveStuckInitiativeExportsThenNew
-                                                : retrieveNewInitiativeExport
-                                ).contextWrite(ctx -> {
-                                    exportedInitiativeIds.add(x.getInitiativeId());
-                                    return Context.of(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS, exportedInitiativeIds);
-                                })
-                        )),
+                        .expand(x -> {
+                            if(x.isEmpty()){
+                                return Flux.empty();
+                            } else {
+                                RewardOrganizationExport firstSplit = x.get(0);
+                                return exportInitiative((
+                                                isStuckExecution(firstSplit)
+                                                        ? retrieveStuckInitiativeExportsThenNew
+                                                        : retrieveNewInitiativeExport
+                                        ).contextWrite(ctx -> {
+                                            exportedInitiativeIds.add(firstSplit.getInitiativeId());
+                                            return Context.of(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS, exportedInitiativeIds);
+                                        })
+                                );
+                            }
+                        }),
                 null);
     }
 
-    private Flux<RewardOrganizationExport> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {
+    private Mono<List<RewardOrganizationExport>> exportInitiative(Mono<RewardOrganizationExport> exportRetriever) {
         return PerformanceLogger.logTimingOnNext(
                         "REWARD_NOTIFICATION_LOCATE_INITIATIVE",
                         exportRetriever,
                         e -> "starting reward notification export on initiative %s into %s".formatted(e.getInitiativeId(), e.getFilePath())
                 )
-                .flatMapMany(exp -> exportInitiativeRewardsService.performExport(exp, isStuckExecution(exp)));
+                .flatMapMany(exp -> exportInitiativeRewardsService.performExport(exp, isStuckExecution(exp)))
+                .collectList();
     }
 
     private static boolean isStuckExecution(RewardOrganizationExport x) {

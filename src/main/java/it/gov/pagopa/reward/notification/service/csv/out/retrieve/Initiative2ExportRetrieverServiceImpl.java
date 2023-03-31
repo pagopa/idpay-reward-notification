@@ -68,10 +68,10 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
         return rewardOrganizationExportsRepository.findPendingOrTodayExports()
                 .map(RewardOrganizationExport::getInitiativeId)
                 .collect(Collectors.toSet())
-                .flatMap(initiativeIds -> Mono.deferContextual(ctx -> {
+                .transformDeferredContextual((ids, ctx) -> ids.map(initiativeIds ->{
                     Set<String> initiativeIds2exclude = new HashSet<>(initiativeIds);
                     initiativeIds2exclude.addAll(ctx.<Set<String>>getOrEmpty(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS).orElse(Collections.emptySet()));
-                    return Mono.just(initiativeIds2exclude);
+                    return initiativeIds2exclude;
                 }))
                 .doOnNext(excludes -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] excluding exports on initiatives because pending or performed today: {}", excludes))
                 .flatMapMany(rewardsNotificationRepository::findInitiatives2Notify)

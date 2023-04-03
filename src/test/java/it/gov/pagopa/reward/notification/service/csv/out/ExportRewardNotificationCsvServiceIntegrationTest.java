@@ -219,10 +219,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
         // When
         //Calling twice in order to test parallel execution
-        CompletableFuture<List<RewardOrganizationExport>> execute1 = exportRewardNotificationCsvService.execute().collectList().toFuture();
-        CompletableFuture<List<RewardOrganizationExport>> execute2 = exportRewardNotificationCsvService.execute().collectList().toFuture();
+        CompletableFuture<List<List<RewardOrganizationExport>>> execute1 = exportRewardNotificationCsvService.execute().collectList().toFuture();
+        CompletableFuture<List<List<RewardOrganizationExport>>> execute2 = exportRewardNotificationCsvService.execute().collectList().toFuture();
 
-        List<RewardOrganizationExport> result = Stream.concat(execute1.get().stream(), execute2.get().stream())
+        List<RewardOrganizationExport> result = Stream.concat(execute1.get().stream().flatMap(List::stream), execute2.get().stream().flatMap(List::stream))
                 .sorted(Comparator.comparing(RewardOrganizationExport::getId))
                 .toList();
 

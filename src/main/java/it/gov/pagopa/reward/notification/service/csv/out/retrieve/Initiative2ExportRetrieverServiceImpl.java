@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -64,7 +67,12 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
 
         return rewardOrganizationExportsRepository.findPendingOrTodayExports()
                 .map(RewardOrganizationExport::getInitiativeId)
-                .collectList()
+                .collect(Collectors.toSet())
+                .transformDeferredContextual((ids, ctx) -> ids.map(initiativeIds ->{
+                    Set<String> initiativeIds2exclude = new HashSet<>(initiativeIds);
+                    initiativeIds2exclude.addAll(ctx.<Set<String>>getOrEmpty(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS).orElse(Collections.emptySet()));
+                    return initiativeIds2exclude;
+                }))
                 .doOnNext(excludes -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] excluding exports on initiatives because pending or performed today: {}", excludes))
                 .flatMapMany(rewardsNotificationRepository::findInitiatives2Notify)
                 .flatMap(this::configureExport)

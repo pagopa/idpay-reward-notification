@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RequestMapping("/idpay")
 public interface NotificationController {
 
     @GetMapping("/reward/notification/exports/start")
-    Flux<RewardOrganizationExport> forceExportScheduling();
+    Flux<List<RewardOrganizationExport>> forceExportScheduling();
 
     @GetMapping("/reward/notification/expired-initiatives/start")
     Flux<RewardsNotification> forceExpiredInitiativesScheduling();

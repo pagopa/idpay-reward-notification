@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ExtendWith(MockitoExtension.class)
 class Initiative2ExportRetrieverServiceTest {
@@ -99,7 +100,7 @@ class Initiative2ExportRetrieverServiceTest {
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.empty());
         Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(
-                expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
+                expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).collect(Collectors.toSet())))
                 .thenReturn(Flux.empty());
 
         RewardOrganizationExport result = service.retrieve().block();
@@ -110,7 +111,7 @@ class Initiative2ExportRetrieverServiceTest {
     void testWhenReservationNotExistsAndInitiativeNotExists() {
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.empty());
         Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.empty());
-        Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(Collections.emptyList())).thenReturn(Flux.just("INITIATIVEID1"));
+        Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(Collections.emptySet())).thenReturn(Flux.just("INITIATIVEID1"));
 
         Mockito.when(rewardNotificationRuleRepositoryMock.findById("INITIATIVEID1")).thenReturn(Mono.empty());
 
@@ -132,7 +133,7 @@ class Initiative2ExportRetrieverServiceTest {
     void testWhenReservationNotExistsAndPendingExports(List<RewardOrganizationExport> expectedPendingExports) {
         Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(
-                expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
+                expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).collect(Collectors.toSet())))
                 .thenReturn(Flux.just("INITIATIVEID1", "INITIATIVEID2", "INITIATIVE_ALREADY_RESERVED", "INITIATIVE_EXPORT_JUST_STORED"));
 
         RewardNotificationRule rule1 = RewardNotificationRuleFaker.mockInstance(1);

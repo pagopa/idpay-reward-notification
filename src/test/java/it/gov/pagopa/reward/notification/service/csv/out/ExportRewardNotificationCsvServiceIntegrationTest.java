@@ -424,6 +424,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         List<RewardsNotification> expectedSuspended = rewardsRepository.findByInitiativeIdAndNotificationDate("INITIATIVEID5", YESTERDAY).collectList().block();
 
         Assertions.assertNotNull(expectedSuspended);
+        Assertions.assertEquals(1, expectedSuspended.size());
         expectedSuspended.forEach(n ->
                 Assertions.assertEquals(RewardNotificationStatus.SUSPENDED, n.getStatus())
         );

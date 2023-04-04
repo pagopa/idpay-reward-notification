@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
@@ -31,6 +32,8 @@ class UserSuspensionServiceImplTest {
     @Mock
     private RewardNotificationRuleRepository notificationRuleRepositoryMock;
     @Mock
+    private RewardsNotificationRepository rewardsNotificationRepositoryMock;
+    @Mock
     private WalletRestClient walletRestClientMock;
     @Mock
     private AuditUtilities auditUtilitiesMock;
@@ -39,7 +42,7 @@ class UserSuspensionServiceImplTest {
 
     @BeforeEach
     void init() {
-        userSuspensionService = new UserSuspensionServiceImpl(rewardsSuspendedUserRepositoryMock, notificationRuleRepositoryMock, walletRestClientMock, auditUtilitiesMock);
+        userSuspensionService = new UserSuspensionServiceImpl(rewardsSuspendedUserRepositoryMock, notificationRuleRepositoryMock, rewardsNotificationRepositoryMock, walletRestClientMock, auditUtilitiesMock);
     }
 
     @Test

@@ -27,4 +27,6 @@ public interface RewardsNotificationRepository extends ReactiveMongoRepository<R
             RewardNotificationStatus status,
             String rejectionReason
     );
+
+    Flux<RewardsNotification> findByUserIdAndInitiativeIdAndStatus(String userId, String initiativeId, RewardNotificationStatus status);
 }

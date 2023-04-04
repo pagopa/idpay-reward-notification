@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/notify"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

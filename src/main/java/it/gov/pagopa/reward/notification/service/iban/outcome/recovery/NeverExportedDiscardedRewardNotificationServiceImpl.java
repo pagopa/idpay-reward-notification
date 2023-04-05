@@ -57,7 +57,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
 
         return Mono.just(notification)
                 .doOnNext(this::resetRewardNotificationStatus)
-                .flatMap(n -> setRemedialNotificationDate(n.getInitiativeId(), n))
+                .flatMap(this::setRemedialNotificationDate)
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",

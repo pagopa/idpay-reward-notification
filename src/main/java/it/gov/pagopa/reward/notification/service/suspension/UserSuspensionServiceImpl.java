@@ -2,18 +2,18 @@ package it.gov.pagopa.reward.notification.service.suspension;
 
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
+import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
+import it.gov.pagopa.reward.notification.service.iban.outcome.recovery.DiscardedRewardNotificationService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDate;
 
 @Service
 @Slf4j
@@ -22,14 +22,20 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     private final RewardsSuspendedUserRepository rewardsSuspendedUserRepository;
     private final RewardNotificationRuleRepository notificationRuleRepository;
     private final RewardsNotificationRepository rewardsNotificationRepository;
+    private final DiscardedRewardNotificationService recoverNotificationService;
     private final WalletRestClient walletRestClient;
 
     private final AuditUtilities auditUtilities;
 
-    public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository, RewardNotificationRuleRepository notificationRuleRepository, RewardsNotificationRepository rewardsNotificationRepository, WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
+    public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository,
+                                     RewardNotificationRuleRepository notificationRuleRepository,
+                                     RewardsNotificationRepository rewardsNotificationRepository,
+                                     DiscardedRewardNotificationService recoverNotificationService,
+                                     WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
         this.rewardsSuspendedUserRepository = rewardsSuspendedUserRepository;
         this.notificationRuleRepository = notificationRuleRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
+        this.recoverNotificationService = recoverNotificationService;
         this.walletRestClient = walletRestClient;
         this.auditUtilities = auditUtilities;
     }
@@ -83,7 +89,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
 
         return PerformanceLogger.logTimingFinally("READMISSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
-                        .flatMap(i -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
+                        .flatMap(initiative -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
                                                 userId,
                                                 organizationId,
                                                 initiativeId
@@ -92,7 +98,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                 .then(Mono.just(u))
                                         )
                                         .flatMap(u -> rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatus(u.getUserId(), u.getInitiativeId(), RewardNotificationStatus.SUSPENDED)
-                                                .flatMap(this::readmitNotifications)
+                                                .flatMap(n -> readmitNotifications(initiative, n))
                                                 .then(Mono.just(u))
                                         )
                                         .flatMap(u -> walletRestClient.readmit(u.getInitiativeId(), u.getUserId())
@@ -115,9 +121,9 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                 , "Readmitted user %s".formatted(userId));
     }
 
-    private Mono<RewardsNotification> readmitNotifications(RewardsNotification r) {
-        r.setStatus(RewardNotificationStatus.TO_SEND);
-        r.setNotificationDate(LocalDate.now());
-        return rewardsNotificationRepository.save(r);
+    private Mono<RewardsNotification> readmitNotifications(RewardNotificationRule initiative, RewardsNotification notification) {
+        return recoverNotificationService.setRemedialNotificationDate(initiative, notification)
+                .doOnNext(n -> n.setStatus(RewardNotificationStatus.TO_SEND))
+                .flatMap(rewardsNotificationRepository::save);
     }
 }

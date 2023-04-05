@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.iban.outcome.recovery;
 
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
+import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationBudgetExhaustedHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationTemporalHandlerServiceImpl;
@@ -31,31 +32,46 @@ public abstract class BaseDiscardedRewardNotificationServiceImpl implements Disc
     }
 
     @Override
-    public Mono<RewardsNotification> setRemedialNotificationDate(String initiativeId, RewardsNotification notification) {
+    public Mono<RewardsNotification> setRemedialNotificationDate(RewardsNotification notification) {
 
-        return notificationRuleService.findById(initiativeId)
-                .map(rule -> {
-                    LocalDate today = LocalDate.now();
-
-                    if (rule.getEndDate() != null && rule.getEndDate().isBefore(today)) {
-                        return budgetExhaustedHandler.calculateNotificationDate();
-                    } else if(rule.getTimeParameter() != null){
-                        return temporalHandler.calculateNotificationDate(today, rule);
-                    } else if(rule.getAccumulatedAmount() != null){
-                        if(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED.equals(rule.getAccumulatedAmount().getAccumulatedType())){
-                            return budgetExhaustedHandler.calculateNotificationDate();
-                        } else if(rule.getAccumulatedAmount().getRefundThreshold() != null)  {
-                            return thresholdHandler.calculateNotificationDate();
-                        } else {
-                            throw new IllegalStateException("Not valid threshold rule %s".formatted(rule.getInitiativeId()));
-                        }
-                    } else {
-                        throw new IllegalStateException("Not valid rule %s".formatted(rule.getInitiativeId()));
-                    }
-                })
+        return notificationRuleService.findById(notification.getInitiativeId())
+                .map(this::getNotificationDate)
                 .map(date -> {
                     notification.setNotificationDate(date);
                     return notification;
                 });
+    }
+
+    @Override
+    public Mono<RewardsNotification> setRemedialNotificationDate(RewardNotificationRule notificationRule, RewardsNotification notification) {
+
+        return Mono.just(notificationRule)
+                .map(this::getNotificationDate)
+                .map(date -> {
+                    notification.setNotificationDate(date);
+                    return notification;
+                });
+    }
+
+
+
+    private LocalDate getNotificationDate(RewardNotificationRule r) {
+        LocalDate today = LocalDate.now();
+
+        if (r.getEndDate() != null && r.getEndDate().isBefore(today)) {
+            return budgetExhaustedHandler.calculateNotificationDate();
+        } else if(r.getTimeParameter() != null){
+            return temporalHandler.calculateNotificationDate(today, r);
+        } else if(r.getAccumulatedAmount() != null){
+            if(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED.equals(r.getAccumulatedAmount().getAccumulatedType())){
+                return budgetExhaustedHandler.calculateNotificationDate();
+            } else if(r.getAccumulatedAmount().getRefundThreshold() != null)  {
+                return thresholdHandler.calculateNotificationDate();
+            } else {
+                throw new IllegalStateException("Not valid threshold rule %s".formatted(r.getInitiativeId()));
+            }
+        } else {
+            throw new IllegalStateException("Not valid rule %s".formatted(r.getInitiativeId()));
+        }
     }
 }

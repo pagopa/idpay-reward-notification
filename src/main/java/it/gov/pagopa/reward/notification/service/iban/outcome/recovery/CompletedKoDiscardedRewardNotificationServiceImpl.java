@@ -87,7 +87,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl extends BaseDisca
         setRemedialNotificationIds(discarded, remedial);
 
 
-        return setRemedialNotificationDate(discarded.getInitiativeId(), remedial);
+        return setRemedialNotificationDate(remedial);
     }
 
     private void setRemedialNotificationIds(RewardsNotification discarded, RewardsNotification remedial) {

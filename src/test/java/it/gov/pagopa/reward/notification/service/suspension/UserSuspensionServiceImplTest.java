@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
+import it.gov.pagopa.reward.notification.service.iban.outcome.recovery.DiscardedRewardNotificationService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -34,6 +35,8 @@ class UserSuspensionServiceImplTest {
     @Mock
     private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock
+    private DiscardedRewardNotificationService recoverNotificationServiceMock;
+    @Mock
     private WalletRestClient walletRestClientMock;
     @Mock
     private AuditUtilities auditUtilitiesMock;
@@ -42,7 +45,12 @@ class UserSuspensionServiceImplTest {
 
     @BeforeEach
     void init() {
-        userSuspensionService = new UserSuspensionServiceImpl(rewardsSuspendedUserRepositoryMock, notificationRuleRepositoryMock, rewardsNotificationRepositoryMock, walletRestClientMock, auditUtilitiesMock);
+        userSuspensionService = new UserSuspensionServiceImpl(rewardsSuspendedUserRepositoryMock,
+                notificationRuleRepositoryMock,
+                rewardsNotificationRepositoryMock,
+                recoverNotificationServiceMock,
+                walletRestClientMock,
+                auditUtilitiesMock);
     }
 
     @Test

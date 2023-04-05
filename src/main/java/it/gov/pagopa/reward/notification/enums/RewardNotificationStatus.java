@@ -14,5 +14,7 @@ public enum RewardNotificationStatus {
     /** if the organization given OK */
     COMPLETED_OK,
     /** if the organization given a KO */
-    COMPLETED_KO
+    COMPLETED_KO,
+    /** if the user was suspended at the notification_date*/
+    SUSPENDED
 }

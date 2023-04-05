@@ -5,6 +5,8 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 public interface ExportRewardNotificationCsvService {
     /**
      * To verify if there are some initiative to be notified.
@@ -18,5 +20,5 @@ public interface ExportRewardNotificationCsvService {
      * </ol>
      * @see ExportInitiativeRewardsService
      * */
-    Flux<RewardOrganizationExport> execute();
+    Flux<List<RewardOrganizationExport>> execute();
 }

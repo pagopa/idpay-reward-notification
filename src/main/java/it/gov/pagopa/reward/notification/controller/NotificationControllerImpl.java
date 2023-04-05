@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 public class NotificationControllerImpl implements NotificationController {
@@ -60,7 +62,7 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Flux<RewardOrganizationExport> forceExportScheduling() {
+    public Flux<List<RewardOrganizationExport>> forceExportScheduling() {
         log.info("Forcing rewardNotification csv export");
         return exportRewardNotificationCsvService.execute();
     }

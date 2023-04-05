@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/institutions/(ORGANIZATION_ID_[0-9]+_[a-zA-Z]+)/products/prod-idpay/users"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [
+      {
+        "id": "f000aa01-0451-4000-b000-000000000000",
+        "name": "John",
+        "surname": "Doe",
+        "email": "john.doe@email.com",
+        "roles": []
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

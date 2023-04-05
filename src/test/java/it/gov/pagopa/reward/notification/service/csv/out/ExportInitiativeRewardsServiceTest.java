@@ -327,6 +327,7 @@ class ExportInitiativeRewardsServiceTest {
     void testWithSuspendedUser(){
         // Given
         Mockito.when(userSuspensionServiceMock.isNotSuspendedUser(Mockito.eq(SUSPENDED_USER_INITIATIVEID), Mockito.anyString())).thenReturn(Mono.just(Boolean.FALSE));
+        Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.any(RewardsNotification.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
         int newRewards = csvMaxRows *2;
 
@@ -342,6 +343,7 @@ class ExportInitiativeRewardsServiceTest {
 
         mockRewards(0, newRewards, export, true);
         Mockito.when(reward2CsvLineServiceMock.apply(Mockito.any())).thenReturn(Mono.empty());
+
         // When
         List<RewardOrganizationExport> result = service.performExport(export, false).collectList().block();
 

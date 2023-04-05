@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -99,12 +100,18 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                 .concatWith(
                         rewardsNotificationRepository.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())
                 )
-                .filterWhen(n ->
-                        suspensionService.isNotSuspendedUser(n.getInitiativeId(), n.getUserId())
-                                .doOnNext(suspensionOutcome -> {
+                .filterWhen(notification ->
+                        suspensionService.isNotSuspendedUser(notification.getInitiativeId(), notification.getUserId())
+                                .flatMap(suspensionOutcome -> {
                                     if (Boolean.FALSE.equals(suspensionOutcome)) {
                                         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Skipping notification on suspended user: notificationId {}; userId {}; initiativeId {}",
-                                                n.getId(), n.getUserId(), n.getInitiativeId());
+                                                notification.getId(), notification.getUserId(), notification.getInitiativeId());
+
+                                        notification.setStatus(RewardNotificationStatus.SUSPENDED);
+                                        return rewardsNotificationRepository.save(notification)
+                                                .map(n -> Boolean.FALSE);
+                                    } else {
+                                        return Mono.just(Boolean.TRUE);
                                     }
                                 })
                 );

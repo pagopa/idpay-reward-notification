@@ -8,5 +8,5 @@ public interface UserSuspensionService {
     Mono<RewardSuspendedUser> suspend(String organizationId, String initiativeId, String userId);
     Mono<Boolean> isNotSuspendedUser(String initiativeId, String userId);
 
-    Mono<Void> readmit(String organizationId, String initiativeId, String userId);
+    Mono<RewardSuspendedUser> readmit(String organizationId, String initiativeId, String userId);
 }

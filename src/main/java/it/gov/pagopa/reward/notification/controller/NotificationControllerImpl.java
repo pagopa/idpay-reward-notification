@@ -158,7 +158,7 @@ public class NotificationControllerImpl implements NotificationController {
     @Override
     public Mono<ResponseEntity<Void>> readmitUserOnInitiative(String organizationId, String initiativeId, String userId) {
         return suspensionService.readmit(organizationId, initiativeId, userId)
-                .map(m -> new ResponseEntity<Void>(HttpStatus.OK))
+                .map(u -> new ResponseEntity<Void>(HttpStatus.OK))
                 .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
     }
 

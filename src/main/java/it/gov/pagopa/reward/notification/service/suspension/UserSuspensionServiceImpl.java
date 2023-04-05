@@ -75,9 +75,11 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     }
 
     @Override
-    public Mono<Void> readmit(String organizationId, String initiativeId, String userId) {
+    public Mono<RewardSuspendedUser> readmit(String organizationId, String initiativeId, String userId) {
         log.info("[REWARD_NOTIFICATION][USER_READMISSION] Readmitting suspended user having id {} on initiative {}",
                 userId, initiativeId);
+
+        RewardSuspendedUser rollbackUser = new RewardSuspendedUser(userId, initiativeId, organizationId);
 
         return PerformanceLogger.logTimingFinally("READMISSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
@@ -86,23 +88,28 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                 organizationId,
                                                 initiativeId
                                         )
-                                        .flatMap(u ->
-                                                walletRestClient.readmit(u.getInitiativeId(), u.getUserId())
-                                                        .doOnNext(r -> auditUtilities.logReadmission(initiativeId, organizationId, userId))
-                                                        .map(r -> u)
+                                        .flatMap(u -> rewardsSuspendedUserRepository.delete(u)
+                                                .then(Mono.just(u))
                                         )
-                                        .flatMap(u ->
-                                                rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatus(u.getUserId(), u.getInitiativeId(), RewardNotificationStatus.SUSPENDED)
-                                                        .flatMap(this::readmitNotifications)
-                                                        .then(Mono.just(u))
+                                        .flatMap(u -> rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatus(u.getUserId(), u.getInitiativeId(), RewardNotificationStatus.SUSPENDED)
+                                                .flatMap(this::readmitNotifications)
+                                                .then(Mono.just(u))
                                         )
-                                        .flatMap(rewardsSuspendedUserRepository::delete)
+                                        .flatMap(u -> walletRestClient.readmit(u.getInitiativeId(), u.getUserId())
+                                                .doOnNext(r -> auditUtilities.logReadmission(initiativeId, organizationId, userId))
+                                                .map(r -> u)
+                                        )
                                         .onErrorResume(e -> {
                                                     auditUtilities.logReadmissionKO(initiativeId, organizationId, userId);
-                                                    return Mono.error(e);
+                                                    return rewardsSuspendedUserRepository.save(rollbackUser)
+                                                            .then(Mono.error(e));
                                                 }
                                         )
-                                // TODO log already active user
+                                .switchIfEmpty(Mono.defer(() -> {
+                                    log.info("[REWARD_NOTIFICATION][USER_READMISSION] User having id {} already active on initiative {}",
+                                            userId, initiativeId);
+                                    return Mono.just(rollbackUser);
+                                }))
                         )
 
                 , "Readmitted user %s".formatted(userId));

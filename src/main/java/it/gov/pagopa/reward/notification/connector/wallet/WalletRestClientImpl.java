@@ -43,7 +43,7 @@ public class WalletRestClientImpl implements WalletRestClient {
     public Mono<ResponseEntity<Void>> readmit(String initiativeId, String userId) {
         log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Sending readmission of user {} to Wallet", userId);
 
-        return webClient.method(HttpMethod.DELETE)
+        return webClient.method(HttpMethod.PUT)
                 .uri(READMIT_URI, initiativeId, userId)
                 .retrieve()
                 .toBodilessEntity()

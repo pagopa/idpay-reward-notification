@@ -56,13 +56,13 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     }
 
     @Override
-    public Mono<RewardOrganizationExport> retrieve() {
+    public Mono<RewardOrganizationExport> retrieve(LocalDate notificationDateToSearch) {
         return rewardOrganizationExportsRepository.reserveExport()
-                .switchIfEmpty(Mono.defer(this::retrieveNewExports))
+                .switchIfEmpty(retrieveNewExports(notificationDateToSearch))
                 .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
     }
 
-    private Mono<RewardOrganizationExport> retrieveNewExports() {
+    private Mono<RewardOrganizationExport> retrieveNewExports(LocalDate notificationDateToSearch) {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] searching for rewards to notify");
 
         return rewardOrganizationExportsRepository.findPendingOrTodayExports()
@@ -74,7 +74,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                     return initiativeIds2exclude;
                 }))
                 .doOnNext(excludes -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] excluding exports on initiatives because pending or performed today: {}", excludes))
-                .flatMapMany(rewardsNotificationRepository::findInitiatives2Notify)
+                .flatMapMany(excludes -> rewardsNotificationRepository.findInitiatives2Notify(excludes, notificationDateToSearch))
                 .flatMap(this::configureExport)
                 .collectList()
                 .doOnNext(newExports -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] new exports configured on initiatives: {}", newExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))

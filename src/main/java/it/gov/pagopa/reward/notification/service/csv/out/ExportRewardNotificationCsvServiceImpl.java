@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,15 +31,15 @@ public class ExportRewardNotificationCsvServiceImpl implements ExportRewardNotif
     @Scheduled(cron = "${app.csv.export.schedule}")
     void schedule() {
         log.debug("[REWARD_NOTIFICATION_EXPORT_CSV][SCHEDULE] Starting schedule to export reward notifications");
-        this.execute()
+        this.execute(LocalDate.now())
                 .subscribe(x -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV][SCHEDULE] Completed schedule to export reward notifications"));
     }
 
     @Override
-    public Flux<List<RewardOrganizationExport>> execute() {
+    public Flux<List<RewardOrganizationExport>> execute(LocalDate notificationDateToSearch) {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Starting reward notifications export to CSV");
         Mono<RewardOrganizationExport> retrieveNewInitiativeExport =
-                initiative2ExportRetrieverService.retrieve();
+                initiative2ExportRetrieverService.retrieve(notificationDateToSearch);
 
         Mono<RewardOrganizationExport> retrieveStuckInitiativeExportsThenNew =
                 initiative2ExportRetrieverService.retrieveStuckExecution()

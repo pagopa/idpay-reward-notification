@@ -9,7 +9,6 @@ import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
@@ -30,15 +29,19 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ContentDisposition;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
 @WebFluxTest(controllers = {NotificationController.class})
 @Import(JsonConfig.class)
 class NotificationControllerImplTest {
+
+    private static final LocalDate NOW = LocalDate.now();
 
     @MockBean
     private OrganizationExportsServiceImpl organizationExportsServiceMock;
@@ -61,16 +64,18 @@ class NotificationControllerImplTest {
 
     @Test
     void testforceExportScheduling() {
-        Mockito.when(exportRewardNotificationCsvServiceMock.execute())
+        Mockito.when(exportRewardNotificationCsvServiceMock.execute(NOW))
                 .thenReturn(Flux.empty());
 
         webClient.get()
-                .uri("/idpay/reward/notification/exports/start")
+                .uri(uriBuilder -> uriBuilder.path("/idpay/reward/notification/exports/start")
+                        .queryParam("notificationDateToSearch", NOW)
+                        .build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(RewardOrganizationExport.class).isEqualTo(Collections.emptyList());
 
-        Mockito.verify(exportRewardNotificationCsvServiceMock).execute();
+        Mockito.verify(exportRewardNotificationCsvServiceMock).execute(NOW);
     }
 
     @Test

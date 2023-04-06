@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 
 public interface RewardsNotificationRepositoryExtended {
-    Flux<String> findInitiatives2Notify(Collection<String> initiativeIds2Exclude);
+    Flux<String> findInitiatives2Notify(Collection<String> initiativeIds2Exclude, LocalDate notificationDateToSearch);
     Flux<RewardsNotification> findRewards2Notify(String initiativeId, LocalDate notificationDate);
     Flux<RewardsNotification> findExportRewards(String exportId);
 

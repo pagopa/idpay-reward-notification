@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -62,9 +63,9 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
-    public Flux<List<RewardOrganizationExport>> forceExportScheduling() {
+    public Flux<List<RewardOrganizationExport>> forceExportScheduling(LocalDate notificationDateToSearch) {
         log.info("Forcing rewardNotification csv export");
-        return exportRewardNotificationCsvService.execute();
+        return exportRewardNotificationCsvService.execute(notificationDateToSearch);
     }
 
     @Override

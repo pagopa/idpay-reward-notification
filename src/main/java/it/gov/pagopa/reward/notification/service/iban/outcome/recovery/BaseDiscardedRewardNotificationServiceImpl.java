@@ -7,11 +7,15 @@ import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardN
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationTemporalHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationThresholdHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
-public abstract class BaseDiscardedRewardNotificationServiceImpl implements DiscardedRewardNotificationService{
+@Primary
+@Service
+public class BaseDiscardedRewardNotificationServiceImpl implements DiscardedRewardNotificationService{
 
     private final RewardNotificationRuleService notificationRuleService;
 

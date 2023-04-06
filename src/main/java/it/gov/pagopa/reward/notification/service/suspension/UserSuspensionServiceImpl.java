@@ -27,6 +27,8 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
 
     private final AuditUtilities auditUtilities;
 
+    private RewardSuspendedUser rollbackUser = new RewardSuspendedUser();
+
     public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository,
                                      RewardNotificationRuleRepository notificationRuleRepository,
                                      RewardsNotificationRepository rewardsNotificationRepository,
@@ -85,8 +87,6 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
         log.info("[REWARD_NOTIFICATION][USER_READMISSION] Readmitting suspended user having id {} on initiative {}",
                 userId, initiativeId);
 
-        RewardSuspendedUser rollbackUser = new RewardSuspendedUser(userId, initiativeId, organizationId);
-
         return PerformanceLogger.logTimingFinally("READMISSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
                         .flatMap(initiative -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
@@ -94,6 +94,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                 organizationId,
                                                 initiativeId
                                         )
+                                        .doOnNext(u -> rollbackUser = buildRollbackUser(u))
                                         .flatMap(u -> rewardsSuspendedUserRepository.delete(u)
                                                 .then(Mono.just(u))
                                         )
@@ -111,14 +112,24 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                             .then(Mono.error(e));
                                                 }
                                         )
-                                .switchIfEmpty(Mono.defer(() -> {
-                                    log.info("[REWARD_NOTIFICATION][USER_READMISSION] User having id {} already active on initiative {}",
-                                            userId, initiativeId);
-                                    return Mono.just(rollbackUser);
-                                }))
+                                        .switchIfEmpty(Mono.defer(() -> {
+                                            log.info("[REWARD_NOTIFICATION][USER_READMISSION] User having id {} already active on initiative {}",
+                                                    userId, initiativeId);
+                                            return Mono.just(rollbackUser);
+                                        }))
                         )
 
                 , "Readmitted user %s".formatted(userId));
+    }
+
+    private RewardSuspendedUser buildRollbackUser(RewardSuspendedUser suspendedUser) {
+        return RewardSuspendedUser.builder()
+                .id(suspendedUser.getId())
+                .userId(suspendedUser.getUserId())
+                .initiativeId(suspendedUser.getInitiativeId())
+                .organizationId(suspendedUser.getOrganizationId())
+                .suspensionDate(suspendedUser.getSuspensionDate())
+                .build();
     }
 
     private Mono<RewardsNotification> readmitNotifications(RewardNotificationRule initiative, RewardsNotification notification) {

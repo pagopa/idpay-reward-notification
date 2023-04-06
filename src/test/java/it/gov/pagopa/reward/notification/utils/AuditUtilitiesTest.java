@@ -106,4 +106,38 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logReadmission() {
+        auditUtilities.logReadmission(INITIATIVE_ID,ORGANIZATION_ID,USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User readmitted" +
+                        " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
+                        .formatted(
+                                AuditUtilities.SRCIP,
+                                INITIATIVE_ID,
+                                ORGANIZATION_ID,
+                                USER_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logReadmissionKO() {
+        auditUtilities.logReadmissionKO(INITIATIVE_ID,ORGANIZATION_ID,USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User readmission failed" +
+                        " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
+                        .formatted(
+                                AuditUtilities.SRCIP,
+                                INITIATIVE_ID,
+                                ORGANIZATION_ID,
+                                USER_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
 }

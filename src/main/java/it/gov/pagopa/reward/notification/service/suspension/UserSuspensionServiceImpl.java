@@ -47,7 +47,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
         log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Suspending user having id {} on initiative {}",
                 userId, initiativeId);
 
-        return PerformanceLogger.logTimingFinally("SUSPENSION",
+        return PerformanceLogger.logTimingFinally("USER_SUSPENSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
                         .flatMap(i -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
                                                 userId,
@@ -87,7 +87,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
         log.info("[REWARD_NOTIFICATION][USER_READMISSION] Readmitting suspended user having id {} on initiative {}",
                 userId, initiativeId);
 
-        return PerformanceLogger.logTimingFinally("READMISSION",
+        return PerformanceLogger.logTimingFinally("USER_READMISSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
                         .flatMap(initiative -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
                                                 userId,

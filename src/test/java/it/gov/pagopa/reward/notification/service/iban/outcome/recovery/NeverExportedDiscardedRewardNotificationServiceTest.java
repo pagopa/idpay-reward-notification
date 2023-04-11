@@ -25,7 +25,7 @@ public class NeverExportedDiscardedRewardNotificationServiceTest extends BaseDis
 
     @BeforeEach
     void init(){
-        service = new NeverExportedDiscardedRewardNotificationServiceImpl(rewardsNotificationRepositoryMock, dateHandlerServiceMock);
+        service = new NeverExportedDiscardedRewardNotificationServiceImpl(rewardsNotificationRepositoryMock, buildReschedulerService());
     }
 
     @Override

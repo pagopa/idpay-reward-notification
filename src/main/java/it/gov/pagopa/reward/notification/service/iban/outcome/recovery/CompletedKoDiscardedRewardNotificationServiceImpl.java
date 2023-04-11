@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.RewardsNotificationDateHandlerService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,13 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl implements Comple
     public static final String RECOVERY_ID_SUFFIX = "_recovery-";
     public static final String RECOVERED_ID_PLACEHOLDERS = "%s%s%d";
     private final RewardsNotificationRepository rewardsNotificationRepository;
-    private final RewardsNotificationDateHandlerService dateHandlerService;
+    private final RewardsNotificationDateReschedulerService notificationDateReschedulerService;
 
 
     public CompletedKoDiscardedRewardNotificationServiceImpl(RewardsNotificationRepository rewardsNotificationRepository,
-                                                             RewardsNotificationDateHandlerService dateHandlerService) {
+                                                             RewardsNotificationDateReschedulerService notificationDateReschedulerService) {
         this.rewardsNotificationRepository = rewardsNotificationRepository;
-        this.dateHandlerService = dateHandlerService;
+        this.notificationDateReschedulerService = notificationDateReschedulerService;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl implements Comple
         setRemedialNotificationIds(discarded, remedial);
 
 
-        return dateHandlerService.setHandledNotificationDate(remedial);
+        return notificationDateReschedulerService.setHandledNotificationDate(remedial);
     }
 
     private void setRemedialNotificationIds(RewardsNotification discarded, RewardsNotification remedial) {

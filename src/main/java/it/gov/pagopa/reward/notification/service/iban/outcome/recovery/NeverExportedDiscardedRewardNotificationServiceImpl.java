@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.RewardsNotificationDateHandlerService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +18,12 @@ import java.util.List;
 public class NeverExportedDiscardedRewardNotificationServiceImpl implements NeverExportedDiscardedRewardNotificationService{
 
     private final RewardsNotificationRepository rewardsNotificationRepository;
-    private final RewardsNotificationDateHandlerService dateHandlerService;
+    private final RewardsNotificationDateReschedulerService notificationDateReschedulerService;
 
     public NeverExportedDiscardedRewardNotificationServiceImpl(RewardsNotificationRepository rewardsNotificationRepository,
-                                                               RewardsNotificationDateHandlerService dateHandlerService) {
+                                                               RewardsNotificationDateReschedulerService notificationDateReschedulerService) {
         this.rewardsNotificationRepository = rewardsNotificationRepository;
-        this.dateHandlerService = dateHandlerService;
+        this.notificationDateReschedulerService = notificationDateReschedulerService;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
 
         return Mono.just(notification)
                 .doOnNext(this::resetRewardNotificationStatus)
-                .flatMap(dateHandlerService::setHandledNotificationDate)
+                .flatMap(notificationDateReschedulerService::setHandledNotificationDate)
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",

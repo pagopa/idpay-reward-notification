@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
-import it.gov.pagopa.reward.notification.service.RewardsNotificationDateHandlerService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     private final RewardsSuspendedUserRepository rewardsSuspendedUserRepository;
     private final RewardNotificationRuleRepository notificationRuleRepository;
     private final RewardsNotificationRepository rewardsNotificationRepository;
-    private final RewardsNotificationDateHandlerService rewardsNotificationDateHandlerService;
+    private final RewardsNotificationDateReschedulerService rewardsNotificationDateReschedulerService;
     private final WalletRestClient walletRestClient;
 
     private final AuditUtilities auditUtilities;
@@ -30,12 +30,12 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository,
                                      RewardNotificationRuleRepository notificationRuleRepository,
                                      RewardsNotificationRepository rewardsNotificationRepository,
-                                     RewardsNotificationDateHandlerService rewardsNotificationDateHandlerService,
+                                     RewardsNotificationDateReschedulerService rewardsNotificationDateReschedulerService,
                                      WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
         this.rewardsSuspendedUserRepository = rewardsSuspendedUserRepository;
         this.notificationRuleRepository = notificationRuleRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
-        this.rewardsNotificationDateHandlerService = rewardsNotificationDateHandlerService;
+        this.rewardsNotificationDateReschedulerService = rewardsNotificationDateReschedulerService;
         this.walletRestClient = walletRestClient;
         this.auditUtilities = auditUtilities;
     }
@@ -123,7 +123,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     }
 
     private Mono<RewardsNotification> readmitNotifications(RewardNotificationRule initiative, RewardsNotification notification) {
-        return rewardsNotificationDateHandlerService.setHandledNotificationDate(initiative, notification)
+        return rewardsNotificationDateReschedulerService.setHandledNotificationDate(initiative, notification)
                 .doOnNext(n -> n.setStatus(RewardNotificationStatus.TO_SEND))
                 .flatMap(rewardsNotificationRepository::save);
     }

@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
-import it.gov.pagopa.reward.notification.service.RewardsNotificationDateHandlerService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
@@ -42,7 +42,7 @@ class UserSuspensionServiceImplTest {
     @Mock
     private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock
-    private RewardsNotificationDateHandlerService dateHandlerServiceMock;
+    private RewardsNotificationDateReschedulerService dateHandlerServiceMock;
     @Mock
     private WalletRestClient walletRestClientMock;
     @Mock

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 
 @Service
 @Slf4j
-public class RewardsNotificationDateHandlerServiceImpl implements RewardsNotificationDateHandlerService {
+public class RewardsNotificationDateReschedulerServiceImpl implements RewardsNotificationDateReschedulerService {
 
     private final RewardNotificationRuleService notificationRuleService;
 
@@ -25,10 +25,10 @@ public class RewardsNotificationDateHandlerServiceImpl implements RewardsNotific
     private final RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler;
     private final RewardNotificationThresholdHandlerServiceImpl thresholdHandler;
 
-    public RewardsNotificationDateHandlerServiceImpl(RewardNotificationRuleService notificationRuleService,
-                                                        RewardNotificationTemporalHandlerServiceImpl temporalHandler,
-                                                        RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler,
-                                                        RewardNotificationThresholdHandlerServiceImpl thresholdHandler) {
+    public RewardsNotificationDateReschedulerServiceImpl(RewardNotificationRuleService notificationRuleService,
+                                                         RewardNotificationTemporalHandlerServiceImpl temporalHandler,
+                                                         RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler,
+                                                         RewardNotificationThresholdHandlerServiceImpl thresholdHandler) {
         this.notificationRuleService = notificationRuleService;
         this.temporalHandler = temporalHandler;
         this.budgetExhaustedHandler = budgetExhaustedHandler;
@@ -45,9 +45,8 @@ public class RewardsNotificationDateHandlerServiceImpl implements RewardsNotific
 
         return Mono.justOrEmpty(initiative)
                 .switchIfEmpty(notificationRuleService.findById(notification.getInitiativeId()))
-                .map(this::getNotificationDate)
-                .map(date -> {
-                    notification.setNotificationDate(date);
+                .map(r -> {
+                    notification.setNotificationDate(getNotificationDate(r));
                     return notification;
                 });
     }

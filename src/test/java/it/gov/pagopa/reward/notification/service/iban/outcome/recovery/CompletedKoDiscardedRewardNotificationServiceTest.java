@@ -26,7 +26,7 @@ class CompletedKoDiscardedRewardNotificationServiceTest extends BaseDiscardedRew
 
     @BeforeEach
     void init(){
-        service = new CompletedKoDiscardedRewardNotificationServiceImpl(rewardsNotificationRepositoryMock, notificationRuleServiceMock, temporalHandlerMock, budgetExhaustedHandlerMock, thresholdHandlerMock);
+        service = new CompletedKoDiscardedRewardNotificationServiceImpl(rewardsNotificationRepositoryMock, buildReschedulerService());
     }
 
     @Override

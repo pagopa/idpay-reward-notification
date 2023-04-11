@@ -67,4 +67,18 @@ public class AuditUtilities {
                 "User suspension failed", initiativeId, organizationId, userId
         );
     }
+
+    public void logReadmission(String initiativeId, String organizationId, String userId) {
+        logAuditString(
+                CEF_USER_PATTERN,
+                "User readmitted", initiativeId, organizationId, userId
+        );
+    }
+
+    public void logReadmissionKO(String initiativeId, String organizationId, String userId) {
+        logAuditString(
+                CEF_USER_PATTERN,
+                "User readmission failed", initiativeId, organizationId, userId
+        );
+    }
 }

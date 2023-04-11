@@ -7,6 +7,8 @@ import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationBudgetExhaustedHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationTemporalHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationThresholdHandlerServiceImpl;
@@ -45,6 +47,13 @@ abstract class BaseDiscardedRewardNotificationServiceImplTest {
     @Mock protected RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandlerMock;
     @Mock protected RewardNotificationThresholdHandlerServiceImpl thresholdHandlerMock;
 
+    protected RewardsNotificationDateReschedulerService buildReschedulerService() {
+        return new RewardsNotificationDateReschedulerServiceImpl(
+                notificationRuleServiceMock,
+                temporalHandlerMock,
+                budgetExhaustedHandlerMock,
+                thresholdHandlerMock);
+    }
     @AfterEach
     void verifyNoMoreInvocations(){
         Mockito.verifyNoMoreInteractions(

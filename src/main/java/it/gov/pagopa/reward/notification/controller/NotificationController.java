@@ -108,4 +108,10 @@ public interface NotificationController {
             @PathVariable("organizationId") String organizationId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("userId") String userId);
+
+    @PutMapping(value = "/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/readmit")
+    Mono<ResponseEntity<Void>> readmitUserOnInitiative(
+            @PathVariable("organizationId") String organizationId,
+            @PathVariable("initiativeId") String initiativeId,
+            @PathVariable("userId") String userId);
 }

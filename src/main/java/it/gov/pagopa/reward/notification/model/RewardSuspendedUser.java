@@ -22,14 +22,14 @@ public class RewardSuspendedUser {
     private String userId;
     private String initiativeId;
     private String organizationId;
-    private LocalDateTime suspensionDate;
+    private LocalDateTime updateDate;
 
     public RewardSuspendedUser(String userId, String initiativeId, String organizationId) {
         this.id = buildId(userId, initiativeId);
         this.userId = userId;
         this.initiativeId = initiativeId;
         this.organizationId = organizationId;
-        this.suspensionDate = LocalDateTime.now();
+        this.updateDate = LocalDateTime.now();
     }
 
     public static String buildId(String userId, String initiativeId) {

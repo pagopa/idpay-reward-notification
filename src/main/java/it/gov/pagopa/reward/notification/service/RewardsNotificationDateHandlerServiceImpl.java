@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.service.iban.outcome.recovery;
+package it.gov.pagopa.reward.notification.service;
 
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
@@ -7,15 +7,15 @@ import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardN
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationTemporalHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationThresholdHandlerServiceImpl;
 import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
-import org.springframework.context.annotation.Primary;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 
-@Primary
 @Service
-public class BaseDiscardedRewardNotificationServiceImpl implements DiscardedRewardNotificationService{
+@Slf4j
+public class RewardsNotificationDateHandlerServiceImpl implements RewardsNotificationDateHandlerService {
 
     private final RewardNotificationRuleService notificationRuleService;
 
@@ -25,10 +25,10 @@ public class BaseDiscardedRewardNotificationServiceImpl implements DiscardedRewa
     private final RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler;
     private final RewardNotificationThresholdHandlerServiceImpl thresholdHandler;
 
-    protected BaseDiscardedRewardNotificationServiceImpl(RewardNotificationRuleService notificationRuleService,
-                                                         RewardNotificationTemporalHandlerServiceImpl temporalHandler,
-                                                         RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler,
-                                                         RewardNotificationThresholdHandlerServiceImpl thresholdHandler) {
+    public RewardsNotificationDateHandlerServiceImpl(RewardNotificationRuleService notificationRuleService,
+                                                        RewardNotificationTemporalHandlerServiceImpl temporalHandler,
+                                                        RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler,
+                                                        RewardNotificationThresholdHandlerServiceImpl thresholdHandler) {
         this.notificationRuleService = notificationRuleService;
         this.temporalHandler = temporalHandler;
         this.budgetExhaustedHandler = budgetExhaustedHandler;
@@ -36,28 +36,21 @@ public class BaseDiscardedRewardNotificationServiceImpl implements DiscardedRewa
     }
 
     @Override
-    public Mono<RewardsNotification> setRemedialNotificationDate(RewardsNotification notification) {
-
-        return notificationRuleService.findById(notification.getInitiativeId())
-                .map(this::getNotificationDate)
-                .map(date -> {
-                    notification.setNotificationDate(date);
-                    return notification;
-                });
+    public Mono<RewardsNotification> setHandledNotificationDate(RewardsNotification notification) {
+        return setHandledNotificationDate(null, notification);
     }
 
     @Override
-    public Mono<RewardsNotification> setRemedialNotificationDate(RewardNotificationRule notificationRule, RewardsNotification notification) {
+    public Mono<RewardsNotification> setHandledNotificationDate(RewardNotificationRule initiative, RewardsNotification notification) {
 
-        return Mono.just(notificationRule)
+        return Mono.justOrEmpty(initiative)
+                .switchIfEmpty(notificationRuleService.findById(notification.getInitiativeId()))
                 .map(this::getNotificationDate)
                 .map(date -> {
                     notification.setNotificationDate(date);
                     return notification;
                 });
     }
-
-
 
     private LocalDate getNotificationDate(RewardNotificationRule r) {
         LocalDate today = LocalDate.now();

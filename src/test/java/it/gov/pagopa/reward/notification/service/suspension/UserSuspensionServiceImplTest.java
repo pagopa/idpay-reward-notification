@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
-import it.gov.pagopa.reward.notification.service.iban.outcome.recovery.DiscardedRewardNotificationService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateHandlerService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
@@ -42,7 +42,7 @@ class UserSuspensionServiceImplTest {
     @Mock
     private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock
-    private DiscardedRewardNotificationService recoverNotificationServiceMock;
+    private RewardsNotificationDateHandlerService dateHandlerServiceMock;
     @Mock
     private WalletRestClient walletRestClientMock;
     @Mock
@@ -55,7 +55,7 @@ class UserSuspensionServiceImplTest {
         userSuspensionService = new UserSuspensionServiceImpl(rewardsSuspendedUserRepositoryMock,
                 notificationRuleRepositoryMock,
                 rewardsNotificationRepositoryMock,
-                recoverNotificationServiceMock,
+                dateHandlerServiceMock,
                 walletRestClientMock,
                 auditUtilitiesMock);
     }
@@ -218,7 +218,7 @@ class UserSuspensionServiceImplTest {
                 .thenReturn(Flux.just(notification1));
 
         RewardsNotification notification2 = notification1.toBuilder().notificationDate(now).build();
-        Mockito.when(recoverNotificationServiceMock.setRemedialNotificationDate(notificationRule, notification1))
+        Mockito.when(dateHandlerServiceMock.setHandledNotificationDate(notificationRule, notification1))
                         .thenReturn(Mono.just(notification2));
 
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.any(RewardsNotification.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
@@ -251,13 +251,13 @@ class UserSuspensionServiceImplTest {
 
         Mockito.when(walletRestClientMock.readmit(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR)));
 
-        Mockito.when(rewardsSuspendedUserRepositoryMock.save(expected)).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
         Executable executable = () -> userSuspensionService.readmit(ORGANIZATION_ID, INITIATIVE_ID, USER_ID).block();
 
         Assertions.assertThrows(ClientExceptionNoBody.class, executable);
 
-        Mockito.verify(rewardsSuspendedUserRepositoryMock).save(expected);
+        Mockito.verify(rewardsSuspendedUserRepositoryMock).save(Mockito.any(RewardSuspendedUser.class));
     }
     //endregion
 }

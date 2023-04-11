@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
-import it.gov.pagopa.reward.notification.service.iban.outcome.recovery.DiscardedRewardNotificationService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateHandlerService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -22,22 +22,20 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     private final RewardsSuspendedUserRepository rewardsSuspendedUserRepository;
     private final RewardNotificationRuleRepository notificationRuleRepository;
     private final RewardsNotificationRepository rewardsNotificationRepository;
-    private final DiscardedRewardNotificationService recoverNotificationService;
+    private final RewardsNotificationDateHandlerService rewardsNotificationDateHandlerService;
     private final WalletRestClient walletRestClient;
 
     private final AuditUtilities auditUtilities;
 
-    private RewardSuspendedUser rollbackUser = new RewardSuspendedUser();
-
     public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository,
                                      RewardNotificationRuleRepository notificationRuleRepository,
                                      RewardsNotificationRepository rewardsNotificationRepository,
-                                     DiscardedRewardNotificationService recoverNotificationService,
+                                     RewardsNotificationDateHandlerService rewardsNotificationDateHandlerService,
                                      WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
         this.rewardsSuspendedUserRepository = rewardsSuspendedUserRepository;
         this.notificationRuleRepository = notificationRuleRepository;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
-        this.recoverNotificationService = recoverNotificationService;
+        this.rewardsNotificationDateHandlerService = rewardsNotificationDateHandlerService;
         this.walletRestClient = walletRestClient;
         this.auditUtilities = auditUtilities;
     }
@@ -94,7 +92,6 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                                 organizationId,
                                                 initiativeId
                                         )
-                                        .doOnNext(u -> rollbackUser = buildRollbackUser(u))
                                         .flatMap(u -> rewardsSuspendedUserRepository.delete(u)
                                                 .then(Mono.just(u))
                                         )
@@ -108,32 +105,25 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                         )
                                         .onErrorResume(e -> {
                                                     auditUtilities.logReadmissionKO(initiativeId, organizationId, userId);
-                                                    return rewardsSuspendedUserRepository.save(rollbackUser)
+                                                    return rewardsSuspendedUserRepository.save(new RewardSuspendedUser(
+                                                                    userId,
+                                                                    initiativeId,
+                                                                    organizationId))
                                                             .then(Mono.error(e));
                                                 }
                                         )
                                         .switchIfEmpty(Mono.defer(() -> {
                                             log.info("[REWARD_NOTIFICATION][USER_READMISSION] User having id {} already active on initiative {}",
                                                     userId, initiativeId);
-                                            return Mono.just(rollbackUser);
+                                            return Mono.just(new RewardSuspendedUser());
                                         }))
                         )
 
                 , "Readmitted user %s".formatted(userId));
     }
 
-    private RewardSuspendedUser buildRollbackUser(RewardSuspendedUser suspendedUser) {
-        return RewardSuspendedUser.builder()
-                .id(suspendedUser.getId())
-                .userId(suspendedUser.getUserId())
-                .initiativeId(suspendedUser.getInitiativeId())
-                .organizationId(suspendedUser.getOrganizationId())
-                .suspensionDate(suspendedUser.getSuspensionDate())
-                .build();
-    }
-
     private Mono<RewardsNotification> readmitNotifications(RewardNotificationRule initiative, RewardsNotification notification) {
-        return recoverNotificationService.setRemedialNotificationDate(initiative, notification)
+        return rewardsNotificationDateHandlerService.setHandledNotificationDate(initiative, notification)
                 .doOnNext(n -> n.setStatus(RewardNotificationStatus.TO_SEND))
                 .flatMap(rewardsNotificationRepository::save);
     }

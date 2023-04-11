@@ -24,4 +24,5 @@ public class RewardNotificationRule {
     private TimeParameterDTO timeParameter;
     private String organizationFiscalCode;
     private LocalDateTime updateDate;
+    private String initiativeRewardType;
 }

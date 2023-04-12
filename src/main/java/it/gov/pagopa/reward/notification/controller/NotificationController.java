@@ -24,7 +24,11 @@ public interface NotificationController {
 
     @GetMapping("/reward/notification/exports/start")
     Flux<List<RewardOrganizationExport>> forceExportScheduling(
-            @RequestParam("notificationDateToSearch") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate notificationDateToSearch);
+            @RequestParam(value = "notificationDateToSearch",
+                    required = false,
+                    defaultValue = "#{T(java.time.LocalDate).now()}")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate notificationDateToSearch);
 
     @GetMapping("/reward/notification/expired-initiatives/start")
     Flux<RewardsNotification> forceExpiredInitiativesScheduling();

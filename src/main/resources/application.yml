@@ -244,7 +244,7 @@ app:
     export:
       schedule: ${SCHEDULE_EXPORT_CSV:0 0 1 * * ?} # each day at 01:00AM
       # days before current to search rewardNotification to export
-      day-before: ${EXPORT_CSV_DAY_BEFORE:7}
+      day-before: ${EXPORT_CSV_DAY_BEFORE:30}
       # column separator to use when exporting csv
       separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
       # The maximum number of rows to store in each csv

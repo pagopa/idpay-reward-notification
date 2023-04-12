@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class RewardsNotification2DetailDTOMapper {
 
@@ -18,20 +19,12 @@ public class RewardsNotification2DetailDTOMapper {
                 .startDate(notification.getStartDepositDate())
                 .endDate(notification.getNotificationDate())
                 .status(notification.getStatus())
-                .refundType(getRefundType(notification))
+                .refundType(Utils.getRefundType(notification))
                 .cro(notification.getCro())
                 .transferDate(notification.getExecutionDate())
                 .userNotificationDate(notification.getFeedbackElaborationDate() != null
                         ? notification.getFeedbackElaborationDate().toLocalDate()
                         : null)
                 .build();
-    }
-
-    private RewardNotificationDetailDTO.RefundType getRefundType(RewardsNotification notification) {
-        if (notification.getOrdinaryId() != null) {
-            return RewardNotificationDetailDTO.RefundType.REMEDIAL;
-        } else {
-            return RewardNotificationDetailDTO.RefundType.ORDINARY;
-        }
     }
 }

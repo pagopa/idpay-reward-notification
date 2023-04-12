@@ -14,7 +14,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class WalletRestClientImpl implements WalletRestClient {
 
-    private static final String URI = "/{initiativeId}/{userId}/suspend";
+    private static final String SUSPEND_URI = "/{initiativeId}/{userId}/suspend";
+    private static final String READMIT_URI = "/{initiativeId}/{userId}/readmit";
     private final WebClient webClient;
 
     public WalletRestClientImpl(@Value("${app.wallet.base-url}") String walletUrl,
@@ -29,7 +30,21 @@ public class WalletRestClientImpl implements WalletRestClient {
         log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Sending suspension of user {} to Wallet", userId);
 
         return webClient.method(HttpMethod.PUT)
-                .uri(URI, initiativeId, userId)
+                .uri(SUSPEND_URI, initiativeId, userId)
+                .retrieve()
+                .toBodilessEntity()
+                .map(this::validateWalletResponse)
+                .onErrorResume(WebClientResponseException.class, e -> {
+                    throw new ClientExceptionNoBody(e.getStatusCode());
+                });
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> readmit(String initiativeId, String userId) {
+        log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Sending readmission of user {} to Wallet", userId);
+
+        return webClient.method(HttpMethod.PUT)
+                .uri(READMIT_URI, initiativeId, userId)
                 .retrieve()
                 .toBodilessEntity()
                 .map(this::validateWalletResponse)

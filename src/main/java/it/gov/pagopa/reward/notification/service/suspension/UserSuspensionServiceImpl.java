@@ -1,9 +1,14 @@
 package it.gov.pagopa.reward.notification.service.suspension;
 
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
+import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
+import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -16,23 +21,31 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
 
     private final RewardsSuspendedUserRepository rewardsSuspendedUserRepository;
     private final RewardNotificationRuleRepository notificationRuleRepository;
+    private final RewardsNotificationRepository rewardsNotificationRepository;
+    private final RewardsNotificationDateReschedulerService rewardsNotificationDateReschedulerService;
     private final WalletRestClient walletRestClient;
 
     private final AuditUtilities auditUtilities;
 
-    public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository, RewardNotificationRuleRepository notificationRuleRepository, WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
+    public UserSuspensionServiceImpl(RewardsSuspendedUserRepository rewardsSuspendedUserRepository,
+                                     RewardNotificationRuleRepository notificationRuleRepository,
+                                     RewardsNotificationRepository rewardsNotificationRepository,
+                                     RewardsNotificationDateReschedulerService rewardsNotificationDateReschedulerService,
+                                     WalletRestClient walletRestClient, AuditUtilities auditUtilities) {
         this.rewardsSuspendedUserRepository = rewardsSuspendedUserRepository;
         this.notificationRuleRepository = notificationRuleRepository;
+        this.rewardsNotificationRepository = rewardsNotificationRepository;
+        this.rewardsNotificationDateReschedulerService = rewardsNotificationDateReschedulerService;
         this.walletRestClient = walletRestClient;
         this.auditUtilities = auditUtilities;
     }
 
     @Override
     public Mono<RewardSuspendedUser> suspend(String organizationId, String initiativeId, String userId) {
-        log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Suspending user having id {} from initiative {}",
+        log.info("[REWARD_NOTIFICATION][USER_SUSPENSION] Suspending user having id {} on initiative {}",
                 userId, initiativeId);
 
-        return PerformanceLogger.logTimingFinally("SUSPENSION",
+        return PerformanceLogger.logTimingFinally("USER_SUSPENSION",
                 notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
                         .flatMap(i -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
                                                 userId,
@@ -65,5 +78,53 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
     @Override
     public Mono<Boolean> isNotSuspendedUser(String initiativeId, String userId) {
         return rewardsSuspendedUserRepository.existsById(RewardSuspendedUser.buildId(userId, initiativeId)).map(b -> !b);
+    }
+
+    @Override
+    public Mono<RewardSuspendedUser> readmit(String organizationId, String initiativeId, String userId) {
+        log.info("[REWARD_NOTIFICATION][USER_READMISSION] Readmitting suspended user having id {} on initiative {}",
+                userId, initiativeId);
+
+        return PerformanceLogger.logTimingFinally("USER_READMISSION",
+                notificationRuleRepository.findByInitiativeIdAndOrganizationId(initiativeId, organizationId)
+                        .flatMap(initiative -> rewardsSuspendedUserRepository.findByUserIdAndOrganizationIdAndInitiativeId(
+                                                userId,
+                                                organizationId,
+                                                initiativeId
+                                        )
+                                        .flatMap(u -> rewardsSuspendedUserRepository.delete(u)
+                                                .then(Mono.just(u))
+                                        )
+                                        .flatMap(u -> rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatus(u.getUserId(), u.getInitiativeId(), RewardNotificationStatus.SUSPENDED)
+                                                .flatMap(n -> readmitNotifications(initiative, n))
+                                                .then(Mono.just(u))
+                                        )
+                                        .flatMap(u -> walletRestClient.readmit(u.getInitiativeId(), u.getUserId())
+                                                .doOnNext(r -> auditUtilities.logReadmission(initiativeId, organizationId, userId))
+                                                .map(r -> u)
+                                        )
+                                        .onErrorResume(e -> {
+                                                    auditUtilities.logReadmissionKO(initiativeId, organizationId, userId);
+                                                    return rewardsSuspendedUserRepository.save(new RewardSuspendedUser(
+                                                                    userId,
+                                                                    initiativeId,
+                                                                    organizationId))
+                                                            .then(Mono.error(e));
+                                                }
+                                        )
+                                        .switchIfEmpty(Mono.defer(() -> {
+                                            log.info("[REWARD_NOTIFICATION][USER_READMISSION] User having id {} already active on initiative {}",
+                                                    userId, initiativeId);
+                                            return Mono.just(new RewardSuspendedUser());
+                                        }))
+                        )
+
+                , "Readmitted user %s".formatted(userId));
+    }
+
+    private Mono<RewardsNotification> readmitNotifications(RewardNotificationRule initiative, RewardsNotification notification) {
+        return rewardsNotificationDateReschedulerService.setHandledNotificationDate(initiative, notification)
+                .doOnNext(n -> n.setStatus(RewardNotificationStatus.TO_SEND))
+                .flatMap(rewardsNotificationRepository::save);
     }
 }

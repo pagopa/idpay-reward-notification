@@ -13,7 +13,7 @@ import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificatio
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
-import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionServiceImpl;
+import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,7 +42,7 @@ public class NotificationControllerImpl implements NotificationController {
     // region imports
     private final OrganizationImportsServiceImpl organizationImportsService;
     // endregion
-    private final UserSuspensionServiceImpl suspensionService;
+    private final UserSuspensionService suspensionService;
     private final AuditUtilities auditUtilities;
 
     public NotificationControllerImpl(
@@ -51,7 +51,7 @@ public class NotificationControllerImpl implements NotificationController {
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
             ExportDetailService exportDetailService,
             OrganizationImportsServiceImpl organizationImportsService,
-            UserSuspensionServiceImpl suspensionService, AuditUtilities auditUtilities) {
+            UserSuspensionService suspensionService, AuditUtilities auditUtilities) {
         this.organizationExportsService = organizationExportsService;
         this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
@@ -153,6 +153,13 @@ public class NotificationControllerImpl implements NotificationController {
         return suspensionService.suspend(organizationId, initiativeId, userId)
                 .map(u -> new ResponseEntity<Void>(HttpStatus.OK))
                 .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find initiative having id " + initiativeId)));
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> readmitUserOnInitiative(String organizationId, String initiativeId, String userId) {
+        return suspensionService.readmit(organizationId, initiativeId, userId)
+                .map(u -> new ResponseEntity<Void>(HttpStatus.OK))
+                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
     }
 
     private String buildImportId(String organizationId, String initiativeId, String fileName) {

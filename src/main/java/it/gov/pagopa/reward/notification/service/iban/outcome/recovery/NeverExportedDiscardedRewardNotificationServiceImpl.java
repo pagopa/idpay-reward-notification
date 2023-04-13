@@ -4,10 +4,7 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationBudgetExhaustedHandlerServiceImpl;
-import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationTemporalHandlerServiceImpl;
-import it.gov.pagopa.reward.notification.service.rewards.evaluate.notify.RewardNotificationThresholdHandlerServiceImpl;
-import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
+import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -18,17 +15,15 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDiscardedRewardNotificationServiceImpl implements NeverExportedDiscardedRewardNotificationService{
+public class NeverExportedDiscardedRewardNotificationServiceImpl implements NeverExportedDiscardedRewardNotificationService{
 
     private final RewardsNotificationRepository rewardsNotificationRepository;
+    private final RewardsNotificationDateReschedulerService notificationDateReschedulerService;
 
     public NeverExportedDiscardedRewardNotificationServiceImpl(RewardsNotificationRepository rewardsNotificationRepository,
-                                                               RewardNotificationRuleService notificationRuleService,
-                                                               RewardNotificationTemporalHandlerServiceImpl temporalHandler,
-                                                               RewardNotificationBudgetExhaustedHandlerServiceImpl budgetExhaustedHandler,
-                                                               RewardNotificationThresholdHandlerServiceImpl thresholdHandler) {
-        super(notificationRuleService, temporalHandler, budgetExhaustedHandler, thresholdHandler);
+                                                               RewardsNotificationDateReschedulerService notificationDateReschedulerService) {
         this.rewardsNotificationRepository = rewardsNotificationRepository;
+        this.notificationDateReschedulerService = notificationDateReschedulerService;
     }
 
     @Override
@@ -57,7 +52,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl extends BaseDis
 
         return Mono.just(notification)
                 .doOnNext(this::resetRewardNotificationStatus)
-                .flatMap(n -> setRemedialNotificationDate(n.getInitiativeId(), n))
+                .flatMap(notificationDateReschedulerService::setHandledNotificationDate)
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",

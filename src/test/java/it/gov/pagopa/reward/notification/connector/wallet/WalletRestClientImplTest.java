@@ -20,7 +20,7 @@ class WalletRestClientImplTest extends BaseIntegrationTest {
     private WalletRestClient walletRestClient;
 
     @Test
-    void testOk() {
+    void testSuspendOk() {
         String userId = "USERID_OK_1";
 
         ResponseEntity<Void> result = walletRestClient.suspend("INITIATIVEID", userId).block();
@@ -31,10 +31,30 @@ class WalletRestClientImplTest extends BaseIntegrationTest {
 
 
     @Test
-    void testKo() {
+    void testSuspendKo() {
         String userId = "USERID_KO_1";
 
         Executable executable = () -> walletRestClient.suspend("INITIATIVEID", userId).block();
+
+        Assertions.assertThrows(ClientExceptionNoBody.class, executable);
+    }
+
+    @Test
+    void testReadmitOk() {
+        String userId = "USERID_OK_1";
+
+        ResponseEntity<Void> result = walletRestClient.readmit("INITIATIVEID", userId).block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(HttpStatus.OK, result.getStatusCode());
+    }
+
+
+    @Test
+    void testReadmitKo() {
+        String userId = "USERID_KO_1";
+
+        Executable executable = () -> walletRestClient.readmit("INITIATIVEID", userId).block();
 
         Assertions.assertThrows(ClientExceptionNoBody.class, executable);
     }

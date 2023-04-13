@@ -6,4 +6,5 @@ import reactor.core.publisher.Mono;
 public interface WalletRestClient {
 
     Mono<ResponseEntity<Void>> suspend(String initiativeId, String userId);
+    Mono<ResponseEntity<Void>> readmit(String initiativeId, String userId);
 }

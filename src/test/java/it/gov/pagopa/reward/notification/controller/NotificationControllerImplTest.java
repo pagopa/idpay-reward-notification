@@ -9,7 +9,6 @@ import it.gov.pagopa.reward.notification.dto.controller.detail.*;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
 import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
@@ -460,5 +459,34 @@ class NotificationControllerImplTest {
                 .expectStatus().isNotFound();
 
         Mockito.verify(userSuspensionServiceMock).suspend("orgId", "initiativeId", "userId");
+    }
+
+    @Test
+    void testReadmitOk() {
+        RewardSuspendedUser expected = new RewardSuspendedUser("userId", "initiativeId", "orgId");
+        Mockito.when(userSuspensionServiceMock.readmit("orgId", "initiativeId", "userId"))
+                .thenReturn(Mono.just(expected));
+
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/readmit")
+                        .build("orgId", "initiativeId", "userId"))
+                .exchange()
+                .expectStatus().isOk();
+
+        Mockito.verify(userSuspensionServiceMock).readmit("orgId", "initiativeId", "userId");
+    }
+
+    @Test
+    void testReadmitKo() {
+        Mockito.when(userSuspensionServiceMock.readmit("orgId", "initiativeId", "userId"))
+                .thenReturn(Mono.empty());
+
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/user/{userId}/readmit")
+                        .build("orgId", "initiativeId", "userId"))
+                .exchange()
+                .expectStatus().isNotFound();
+
+        Mockito.verify(userSuspensionServiceMock).readmit("orgId", "initiativeId", "userId");
     }
 }

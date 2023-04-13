@@ -1,9 +1,13 @@
 package it.gov.pagopa.reward.notification.test.utils;
 
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,7 +19,7 @@ import java.util.stream.IntStream;
 class UtilsTest {
 
     @Test
-    void readUserperformanceTest(){
+    void readUserperformanceTest() {
         List<String> trxs = new ArrayList<>(IntStream.range(0, 1000)
                 .mapToObj(RewardTransactionDTOFaker::mockInstance)
                 .map(TestUtils::jsonSerializer)
@@ -37,8 +41,8 @@ class UtilsTest {
                 """
                         regexp time %d
                         indexOf time %d
-                        %n""", regexpEndTime-regexpStartTime,
-                indexOfEndTime-indexOfStartTime
+                        %n""", regexpEndTime - regexpStartTime,
+                indexOfEndTime - indexOfStartTime
         );
 
         Assertions.assertEquals(regexpResult, indexOfResult);
@@ -46,15 +50,32 @@ class UtilsTest {
 
 
     private final Pattern userIdPatternMatch = Pattern.compile("\"userId\"\s*:\s*\"([^\"]*)\"");
+
     private String readUserIdUsingRegexp(String payload) {
         final Matcher matcher = userIdPatternMatch.matcher(payload);
         return matcher.find() ? matcher.group(1) : "";
     }
 
     @Test
-    void testEuro2Cents(){
+    void testEuro2Cents() {
         Assertions.assertNull(Utils.euro2Cents(null));
         Assertions.assertEquals(100L, Utils.euro2Cents(BigDecimal.ONE));
         Assertions.assertEquals(-100L, Utils.euro2Cents(BigDecimal.ONE.negate()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void testGetRefundType(boolean isRemedial) {
+        RewardsNotification notification = RewardsNotificationFaker.mockInstanceBuilder(1)
+                .ordinaryId(isRemedial ? "ORDINARY_ID" : null)
+                .build();
+
+        Utils.RefundType result = Utils.getRefundType(notification);
+
+        if (isRemedial) {
+            Assertions.assertEquals(Utils.RefundType.REMEDIAL, result);
+        } else {
+            Assertions.assertEquals(Utils.RefundType.ORDINARY, result);
+        }
     }
 }

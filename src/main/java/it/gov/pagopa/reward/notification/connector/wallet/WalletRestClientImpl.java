@@ -32,17 +32,17 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .uri(URI, initiativeId, userId)
                 .retrieve()
                 .toBodilessEntity()
-                .map(this::validateWalletResponse)
+                .map(r -> validateWalletResponse(r, initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new ClientExceptionNoBody(e.getStatusCode());
+                    throw new ClientExceptionNoBody(e.getStatusCode(), "Something gone wrong while invoking wallet to suspend user %s on initiative %s".formatted(userId, initiativeId), true, e);
                 });
     }
 
-    private ResponseEntity<Void> validateWalletResponse(ResponseEntity<Void> r) {
+    private ResponseEntity<Void> validateWalletResponse(ResponseEntity<Void> r, String initiativeId, String userId) {
         if (r.getStatusCode().is2xxSuccessful()) {
             return r;
         } else {
-            throw new ClientExceptionNoBody(r.getStatusCode());
+            throw new ClientExceptionNoBody(r.getStatusCode(), "Something gone wrong while invoking wallet to suspend user %s on initiative %s".formatted(userId, initiativeId));
         }
     }
 }

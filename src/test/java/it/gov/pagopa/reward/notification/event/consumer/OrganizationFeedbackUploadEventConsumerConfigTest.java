@@ -654,16 +654,19 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                                                     .feedbackProgressive(1)
                                                     .status(wasOk ? RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED : RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_REJECTED)
                                                     .rejectionCode(wasOk ? null : previous.getResult().value)
+                                                    .rewardStatus(wasOk? RewardNotificationStatus.COMPLETED_OK : RewardNotificationStatus.COMPLETED_KO)
                                                     .feedbackDate(r.getFeedbackDate().truncatedTo(ChronoUnit.HOURS))
                                                     .rejectionReason(previous.getRejectionReason())
                                                     .rewardCents(!wasOk ? 0L : r.getEffectiveRewardCents())
                                                     .cro(wasOk? croIfOk : null)
                                                     .executionDate(wasOk? LocalDate.of(2022,11,18) : null)
+                                                    .transferDate(wasOk? LocalDate.of(2022,11,18) : null)
                                                     .build(),
                                             r.toBuilder()
                                                     .rewardCents(wasOk == isOk ? 0L : isOk ? r.getEffectiveRewardCents() : -r.getEffectiveRewardCents())
                                                     .cro(isOk? "rewardNotificationId8".equals(r.getRewardNotificationId()) ? "qwertyuiopa8-2" : croIfOk : null)
                                                     .executionDate(isOk? LocalDate.of(2022,11,19) : null)
+                                                    .transferDate(isOk? LocalDate.of(2022,11,19) : null)
                                                     .build());
                                 }
                         ).orElse(Stream.of(r))

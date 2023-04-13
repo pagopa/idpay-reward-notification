@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.messaging.Message;
 
 import java.math.BigDecimal;
@@ -99,5 +100,18 @@ public final class Utils {
 
     public static String filePath2FileName(String filePath) {
         return Path.of(filePath).getFileName().toString();
+    }
+
+    public static RefundType getRefundType(RewardsNotification notification) {
+        if (notification.getOrdinaryId() != null) {
+            return RefundType.REMEDIAL;
+        } else {
+            return RefundType.ORDINARY;
+        }
+    }
+
+    public enum RefundType {
+        ORDINARY,
+        REMEDIAL
     }
 }

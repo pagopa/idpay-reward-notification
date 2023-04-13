@@ -53,7 +53,7 @@ public class RewardNotificationDetailDTOFaker {
         out.startDate(LocalDate.now().minusDays(1));
         out.endDate(LocalDate.now());
         out.status(RewardNotificationStatus.EXPORTED);
-        out.refundType(RewardNotificationDetailDTO.RefundType.ORDINARY);
+        out.refundType(Utils.RefundType.ORDINARY);
         out.cro("CRO%s".formatted(fakeValuesService.bothify("?????")));
         out.transferDate(LocalDate.now());
         out.userNotificationDate(LocalDate.now());
@@ -76,7 +76,7 @@ public class RewardNotificationDetailDTOFaker {
         out.startDate(date.minusDays(1));
         out.endDate(date);
         out.status(RewardNotificationStatus.EXPORTED);
-        out.refundType(RewardNotificationDetailDTO.RefundType.ORDINARY);
+        out.refundType(Utils.RefundType.ORDINARY);
         out.cro("CRO%s".formatted(fakeValuesService.bothify("?????")));
         out.transferDate(date);
         out.userNotificationDate(date);

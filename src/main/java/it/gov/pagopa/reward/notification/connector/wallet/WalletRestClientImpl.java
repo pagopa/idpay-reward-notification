@@ -33,9 +33,9 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .uri(SUSPEND_URI, initiativeId, userId)
                 .retrieve()
                 .toBodilessEntity()
-                .map(this::validateWalletResponse)
+                .map(r -> validateWalletResponse(r, "suspend", initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new ClientExceptionNoBody(e.getStatusCode());
+                    throw new ClientExceptionNoBody(e.getStatusCode(), "Something gone wrong while invoking wallet to suspend user %s on initiative %s".formatted(userId, initiativeId), true, e);
                 });
     }
 
@@ -47,17 +47,17 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .uri(READMIT_URI, initiativeId, userId)
                 .retrieve()
                 .toBodilessEntity()
-                .map(this::validateWalletResponse)
+                .map(r -> validateWalletResponse(r, "readmit", initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new ClientExceptionNoBody(e.getStatusCode());
+                    throw new ClientExceptionNoBody(e.getStatusCode(), "Something gone wrong while invoking wallet to readmit user %s on initiative %s".formatted(userId, initiativeId), true, e);
                 });
     }
 
-    private ResponseEntity<Void> validateWalletResponse(ResponseEntity<Void> r) {
+    private ResponseEntity<Void> validateWalletResponse(ResponseEntity<Void> r, String op, String initiativeId, String userId) {
         if (r.getStatusCode().is2xxSuccessful()) {
             return r;
         } else {
-            throw new ClientExceptionNoBody(r.getStatusCode());
+            throw new ClientExceptionNoBody(r.getStatusCode(), "Something gone wrong while invoking wallet to %s user %s on initiative %s".formatted(op, userId, initiativeId));
         }
     }
 }

@@ -159,7 +159,7 @@ public class NotificationControllerImpl implements NotificationController {
     public Mono<ResponseEntity<Void>> readmitUserOnInitiative(String organizationId, String initiativeId, String userId) {
         return suspensionService.readmit(organizationId, initiativeId, userId)
                 .map(u -> new ResponseEntity<Void>(HttpStatus.OK))
-                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND)));
+                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find initiative having id " + initiativeId)));
     }
 
     private String buildImportId(String organizationId, String initiativeId, String fileName) {

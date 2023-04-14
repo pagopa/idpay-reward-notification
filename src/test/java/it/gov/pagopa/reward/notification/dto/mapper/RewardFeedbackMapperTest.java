@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,8 @@ class RewardFeedbackMapperTest {
         RewardsNotification notification = RewardsNotificationFaker.mockInstance(1);
         notification.setStatus(RewardNotificationStatus.COMPLETED_OK);
         notification.setFeedbackDate(LocalDateTime.now());
+        notification.setIban("IBAN");
+        notification.setFeedbackElaborationDate(LocalDateTime.now());
         notification.setExecutionDate(LocalDate.now().plusDays(2));
         notification.setCro("CRO");
 
@@ -41,6 +44,7 @@ class RewardFeedbackMapperTest {
 
     @Test
     void testStatusKO() {
+
         testKo(RewardNotificationStatus.COMPLETED_KO);
     }
 
@@ -55,6 +59,9 @@ class RewardFeedbackMapperTest {
         notification.setStatus(errorStatus);
         notification.setResultCode("ERROR_CODE");
         notification.setRejectionReason("ERROR_REASON");
+        notification.setIban("IBAN");
+        notification.setExecutionDate(LocalDate.now());
+        notification.setFeedbackElaborationDate(LocalDateTime.now());
         notification.setFeedbackHistory(List.of(new RewardsNotification.RewardNotificationHistory()));
 
         long deltaRewardCents = 0L;
@@ -113,5 +120,12 @@ class RewardFeedbackMapperTest {
         Assertions.assertEquals(notification.getFeedbackHistory().size(), result.getFeedbackProgressive());
         Assertions.assertEquals(notification.getExecutionDate(), result.getExecutionDate());
         Assertions.assertEquals(notification.getCro(), result.getCro());
+        Assertions.assertEquals(notification.getIban(), result.getIban());
+        Assertions.assertEquals(notification.getStatus(), result.getRewardStatus());
+        Assertions.assertEquals(Utils.RefundType.ORDINARY, result.getRefundType());
+        Assertions.assertEquals(notification.getStartDepositDate(), result.getStartDate());
+        Assertions.assertEquals(notification.getNotificationDate(), result.getEndDate());
+        Assertions.assertEquals(notification.getExecutionDate(), result.getTransferDate());
+        Assertions.assertEquals(notification.getFeedbackElaborationDate().toLocalDate(), result.getUserNotificationDate());
     }
 }

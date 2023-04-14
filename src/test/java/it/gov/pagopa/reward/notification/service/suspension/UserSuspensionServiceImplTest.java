@@ -133,7 +133,7 @@ class UserSuspensionServiceImplTest {
         RewardSuspendedUser expected = new RewardSuspendedUser(USER_ID, INITIATIVE_ID, ORGANIZATION_ID);
         Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class))).thenReturn(Mono.just(expected));
 
-        Mockito.when(walletRestClientMock.suspend(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR)));
+        Mockito.when(walletRestClientMock.suspend(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR")));
 
         Mockito.when(rewardsSuspendedUserRepositoryMock.deleteById(RewardSuspendedUser.buildId(USER_ID, INITIATIVE_ID))).thenReturn(Mono.empty());
 
@@ -249,7 +249,7 @@ class UserSuspensionServiceImplTest {
         Mockito.when(rewardsNotificationRepositoryMock.findByUserIdAndInitiativeIdAndStatus(USER_ID, INITIATIVE_ID, RewardNotificationStatus.SUSPENDED))
                 .thenReturn(Flux.fromIterable(Collections.emptyList()));
 
-        Mockito.when(walletRestClientMock.readmit(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR)));
+        Mockito.when(walletRestClientMock.readmit(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR")));
 
         Mockito.when(rewardsSuspendedUserRepositoryMock.save(Mockito.any(RewardSuspendedUser.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
 

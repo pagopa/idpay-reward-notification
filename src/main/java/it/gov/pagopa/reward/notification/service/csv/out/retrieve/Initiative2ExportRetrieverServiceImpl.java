@@ -1,12 +1,15 @@
 package it.gov.pagopa.reward.notification.service.csv.out.retrieve;
 
 import com.mongodb.DuplicateKeyException;
+import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.utils.ExportConstants;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +41,13 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
 
-        if(StringUtils.isEmpty(exportBasePath)){
-            this.exportBasePath="";
+        if (StringUtils.isEmpty(exportBasePath)) {
+            this.exportBasePath = "";
         } else {
-            if(exportBasePath.endsWith("/")){
-                this.exportBasePath=exportBasePath;
+            if (exportBasePath.endsWith("/")) {
+                this.exportBasePath = exportBasePath;
             } else {
-                this.exportBasePath= "%s/".formatted(exportBasePath);
+                this.exportBasePath = "%s/".formatted(exportBasePath);
             }
         }
     }
@@ -66,14 +69,24 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] searching for rewards to notify");
 
         return rewardOrganizationExportsRepository.findPendingOrTodayExports()
+
+                // For functional tests purposes, clean the exportDate of one exported today
+                .flatMap(x -> cleanTodayExport(x, notificationDateToSearch))
+
                 .map(RewardOrganizationExport::getInitiativeId)
                 .collect(Collectors.toSet())
-                .transformDeferredContextual((ids, ctx) -> ids.map(initiativeIds ->{
+                .transformDeferredContextual((ids, ctx) -> ids.map(initiativeIds -> {
                     Set<String> initiativeIds2exclude = new HashSet<>(initiativeIds);
                     initiativeIds2exclude.addAll(ctx.<Set<String>>getOrEmpty(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS).orElse(Collections.emptySet()));
                     return initiativeIds2exclude;
                 }))
                 .doOnNext(excludes -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] excluding exports on initiatives because pending or performed today: {}", excludes))
+
+                // For functional tests purposes, clean the notifications exported today
+                .flatMap(excludes -> rewardsNotificationRepository.findNotificationsToReset(excludes, notificationDateToSearch)
+                        .flatMap(n -> cleanAlreadyExportedNotifications(n, notificationDateToSearch))
+                        .then(Mono.just(excludes)))
+
                 .flatMapMany(excludes -> rewardsNotificationRepository.findInitiatives2Notify(excludes, notificationDateToSearch))
                 .flatMap(this::configureExport)
                 .collectList()
@@ -153,7 +166,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     public RewardOrganizationExport buildNextOrganizationExportSplit(RewardOrganizationExport baseExport, int splitNumber) {
         log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] trying to configure export on next split based on {} of inititiative {} and splitNumber {}", baseExport.getId(), baseExport.getInitiativeId(), splitNumber);
 
-        long progressive = baseExport.getProgressive()+splitNumber;
+        long progressive = baseExport.getProgressive() + splitNumber;
         return baseExport.toBuilder()
                 .id(baseExport.getId().replaceFirst("\\.%d$".formatted(baseExport.getProgressive()), ".%d".formatted(progressive)))
                 .filePath(baseExport.getFilePath().replaceFirst("\\.%d.zip$".formatted(baseExport.getProgressive()), ".%d.zip".formatted(progressive)))
@@ -173,4 +186,50 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
 
                 .build();
     }
+
+    //region functional tests
+    /**
+     * For functional tests purposes, clean the exportDate of one exported today. If the export has been modified
+     * returns Mono.empty() in order to include that initiative in the export stream, else returns the {@link RewardOrganizationExport}
+     * as it is.
+     */
+    private Mono<RewardOrganizationExport> cleanTodayExport(RewardOrganizationExport x, LocalDate notificationDateToSearch) {
+        LocalDate now = LocalDate.now();
+
+        if (now.isEqual(x.getExportDate())
+                && isForcedFutureExport(notificationDateToSearch)
+            //TODO check status
+        ) {
+            log.info("[REWARD_ORGANIZATION_EXPORT][TEST] Cleaning export having id {}", x.getId());
+
+            x.setExportDate(now.minusDays(2));
+            return rewardOrganizationExportsRepository.save(x)
+                    .then(Mono.empty());
+        }
+
+        return Mono.just(x);
+    }
+
+    /**
+     * For functional tests purposes, clean the {@link RewardsNotification}s exported today.
+     */
+    private Mono<RewardsNotification> cleanAlreadyExportedNotifications(RewardsNotification n, LocalDate notificationDateToSearch) {
+        if (isForcedFutureExport(notificationDateToSearch)
+            && n.getExportDate() != null) {
+            log.info("[REWARD_ORGANIZATION_EXPORT][TEST] Resetting notification having id {} and notificationDate {}",
+                    n.getId(), n.getNotificationDate());
+
+            n.setExportId(null);
+            n.setStatus(RewardNotificationStatus.TO_SEND);
+
+            return rewardsNotificationRepository.save(n);
+        }
+
+        return Mono.just(n);
+    }
+
+    private boolean isForcedFutureExport(LocalDate notificationDateToSearch) {
+        return notificationDateToSearch.isAfter(LocalDate.now());
+    }
+    //endregion
 }

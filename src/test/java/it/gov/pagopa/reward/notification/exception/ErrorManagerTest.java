@@ -23,7 +23,7 @@ class ErrorManagerTest extends BaseIntegrationTest {
     @Test
     void handleExceptionClientExceptionNoBody() {
         Mockito.when(controller.getExports("ClientExceptionNoBody", "INITIATIVE_ID", PageRequest.of(0,10), new ExportFilter()))
-                .thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND));
+                .thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "NOTFOUND"));
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/idpay/organization/{organizationId}/initiative/{initiativeId}/reward/notification/exports")

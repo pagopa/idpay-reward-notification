@@ -23,6 +23,7 @@ public class Initiative2RewardNotificationRuleMapper implements Function<Initiat
                 .accumulatedAmount(initiativeRefund2StoreDTO.getRefundRule().getAccumulatedAmount())
                 .timeParameter(initiativeRefund2StoreDTO.getRefundRule().getTimeParameter())
                 .updateDate(LocalDateTime.now())
+                .initiativeRewardType(initiativeRefund2StoreDTO.getInitiativeRewardType())
                 .build();
         if (out.getAccumulatedAmount() != null && out.getAccumulatedAmount().getRefundThreshold() != null) {
             out.getAccumulatedAmount().setRefundThresholdCents(Utils.euro2Cents(out.getAccumulatedAmount().getRefundThreshold()));

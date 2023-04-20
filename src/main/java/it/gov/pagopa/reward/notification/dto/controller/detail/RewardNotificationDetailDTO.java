@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.notification.dto.controller.detail;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,16 +33,11 @@ public class RewardNotificationDetailDTO {
     @JsonProperty(value = "status")
     private RewardNotificationStatus status;
     @JsonProperty(value = "refundType")
-    private RefundType refundType;
+    private Utils.RefundType refundType;
     @JsonProperty(value = "cro")
     private String cro;
     @JsonProperty(value = "transferDate")
     private LocalDate transferDate;
     @JsonProperty(value = "userNotificationDate")
     private LocalDate userNotificationDate;
-
-    public enum RefundType {
-        ORDINARY,
-        REMEDIAL
-    }
 }

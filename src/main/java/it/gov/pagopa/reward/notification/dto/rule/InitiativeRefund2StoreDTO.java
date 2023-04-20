@@ -26,4 +26,6 @@ public class InitiativeRefund2StoreDTO {
 
     @JsonProperty("refundRule")
     private InitiativeRefundRuleDTO refundRule;
+    @JsonProperty("initiativeRewardType")
+    private String initiativeRewardType;
 }

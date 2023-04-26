@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
-import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
+import it.gov.pagopa.reward.notification.service.exports.ForceOrganizationExportService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
@@ -35,7 +35,7 @@ public class NotificationControllerImpl implements NotificationController {
 
     // region exports
     private final OrganizationExportsServiceImpl organizationExportsService;
-    private final ExportRewardNotificationCsvService exportRewardNotificationCsvService;
+    private final ForceOrganizationExportService forceOrganizationExportService;
     private final RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService;
     private final ExportDetailService exportDetailService;
     // endregion
@@ -48,13 +48,13 @@ public class NotificationControllerImpl implements NotificationController {
 
     public NotificationControllerImpl(
             OrganizationExportsServiceImpl organizationExportsService,
-            ExportRewardNotificationCsvService exportRewardNotificationCsvService,
+            ForceOrganizationExportService forceOrganizationExportService,
             RewardsNotificationExpiredInitiativeHandlerService expiredInitiativeHandlerService,
             ExportDetailService exportDetailService,
             OrganizationImportsServiceImpl organizationImportsService,
             UserSuspensionService suspensionService, AuditUtilities auditUtilities) {
         this.organizationExportsService = organizationExportsService;
-        this.exportRewardNotificationCsvService = exportRewardNotificationCsvService;
+        this.forceOrganizationExportService = forceOrganizationExportService;
         this.expiredInitiativeHandlerService = expiredInitiativeHandlerService;
         this.exportDetailService = exportDetailService;
         this.organizationImportsService = organizationImportsService;
@@ -65,7 +65,7 @@ public class NotificationControllerImpl implements NotificationController {
     @Override
     public Flux<List<RewardOrganizationExport>> forceExportScheduling(LocalDate notificationDateToSearch) {
         log.info("Forcing rewardNotification csv export with notificationDateToSearch {}", notificationDateToSearch);
-        return exportRewardNotificationCsvService.execute(notificationDateToSearch);
+        return forceOrganizationExportService.execute(notificationDateToSearch);
     }
 
     @Override

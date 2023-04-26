@@ -60,21 +60,6 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Flux<RewardsNotification> findNotificationsToReset(Collection<String> initiativeIds2Exclude, LocalDate notificationDateToSearch) {
-        return mongoTemplate.find(
-                Query.query(Criteria
-                        .where(FIELD_INITIATIVE_ID).nin(initiativeIds2Exclude)
-                        .and(FIELD_EXPORT_ID).ne(null)
-                        .andOperator(
-                                Criteria.where(FIELD_NOTIFICATION_DATE).gte(notificationDateToSearch.minusDays(dayBeforeToSearch)),
-                                Criteria.where(FIELD_NOTIFICATION_DATE).lte(notificationDateToSearch)
-                        )
-                ),
-                RewardsNotification.class
-        );
-    }
-
-    @Override
     public Flux<RewardsNotification> findRewards2Notify(String initiativeId, LocalDate notificationDate) {
         return mongoTemplate.find(
                 Query.query(Criteria

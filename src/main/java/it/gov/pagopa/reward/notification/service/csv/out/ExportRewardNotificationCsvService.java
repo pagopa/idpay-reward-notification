@@ -17,7 +17,7 @@ public interface ExportRewardNotificationCsvService {
      * Each day will be search:
      * <ol>
      *     <li>Stuck {@link  RewardOrganizationExport} (see {@link Initiative2ExportRetrieverService#retrieveStuckExecution()})</li>
-     *     <li>New {@link RewardOrganizationExport} (see ${@link Initiative2ExportRetrieverService#retrieve()})</li>
+     *     <li>New {@link RewardOrganizationExport} (see ${@link Initiative2ExportRetrieverService#retrieve})</li>
      * </ol>
      * @see ExportInitiativeRewardsService
      * */

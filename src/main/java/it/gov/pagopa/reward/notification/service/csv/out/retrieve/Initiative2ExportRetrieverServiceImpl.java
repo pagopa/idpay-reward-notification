@@ -60,7 +60,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     @Override
     public Mono<RewardOrganizationExport> retrieve(LocalDate notificationDateToSearch) {
         return rewardOrganizationExportsRepository.reserveExport()
-                .switchIfEmpty(retrieveNewExports(notificationDateToSearch))
+                .switchIfEmpty(Mono.defer(() -> retrieveNewExports(notificationDateToSearch)))
                 .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
     }
 

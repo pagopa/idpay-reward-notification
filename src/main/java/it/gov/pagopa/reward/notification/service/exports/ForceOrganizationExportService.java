@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface ForceOrganizationExportService {
 
-    Flux<List<RewardOrganizationExport>> execute(LocalDate notificationDateToSearch);
+    Flux<List<RewardOrganizationExport>> forceExecute(LocalDate notificationDateToSearch);
 }

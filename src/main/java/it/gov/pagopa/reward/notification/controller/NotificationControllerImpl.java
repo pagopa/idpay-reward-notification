@@ -65,7 +65,7 @@ public class NotificationControllerImpl implements NotificationController {
     @Override
     public Flux<List<RewardOrganizationExport>> forceExportScheduling(LocalDate notificationDateToSearch) {
         log.info("Forcing rewardNotification csv export with notificationDateToSearch {}", notificationDateToSearch);
-        return forceOrganizationExportService.execute(notificationDateToSearch);
+        return forceOrganizationExportService.forceExecute(notificationDateToSearch);
     }
 
     @Override

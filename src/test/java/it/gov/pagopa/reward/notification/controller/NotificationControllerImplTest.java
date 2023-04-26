@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
-import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
+import it.gov.pagopa.reward.notification.service.exports.ForceOrganizationExportService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
@@ -29,7 +29,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ContentDisposition;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -46,7 +45,7 @@ class NotificationControllerImplTest {
     @MockBean
     private OrganizationExportsServiceImpl organizationExportsServiceMock;
     @MockBean
-    private ExportRewardNotificationCsvService exportRewardNotificationCsvServiceMock;
+    private ForceOrganizationExportService forceOrganizationExportServiceMock;
     @MockBean
     private OrganizationImportsServiceImpl organizationImportsServiceMock;
     @MockBean
@@ -64,7 +63,7 @@ class NotificationControllerImplTest {
 
     @Test
     void testforceExportScheduling() {
-        Mockito.when(exportRewardNotificationCsvServiceMock.execute(NOW))
+        Mockito.when(forceOrganizationExportServiceMock.forceExecute(NOW))
                 .thenReturn(Flux.empty());
 
         webClient.get()
@@ -75,7 +74,7 @@ class NotificationControllerImplTest {
                 .expectStatus().isOk()
                 .expectBodyList(RewardOrganizationExport.class).isEqualTo(Collections.emptyList());
 
-        Mockito.verify(exportRewardNotificationCsvServiceMock).execute(NOW);
+        Mockito.verify(forceOrganizationExportServiceMock).forceExecute(NOW);
     }
 
     @Test

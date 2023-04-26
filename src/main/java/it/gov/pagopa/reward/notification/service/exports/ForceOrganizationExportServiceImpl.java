@@ -25,18 +25,17 @@ public class ForceOrganizationExportServiceImpl implements ForceOrganizationExpo
     }
 
     @Override
-    public Flux<List<RewardOrganizationExport>> execute(LocalDate notificationDateToSearch) {
-        LocalDate now = LocalDate.now();
+    public Flux<List<RewardOrganizationExport>> forceExecute(LocalDate notificationDateToSearch) {
 
-        return rewardOrganizationExportsRepository.findByExportDate(now)
+        return rewardOrganizationExportsRepository.findByExportDate(LocalDate.now())
                 .flatMap(this::cleanTodayExport)
                 .thenMany(exportRewardNotificationCsvService.execute(notificationDateToSearch));
     }
 
-    private Mono<RewardOrganizationExport> cleanTodayExport(RewardOrganizationExport x) {
-        log.info("[REWARD_ORGANIZATION_EXPORT][FORCED] Setting exportDate of file having id {} to yesterday", x.getId());
+    private Mono<RewardOrganizationExport> cleanTodayExport(RewardOrganizationExport export) {
+        log.info("[REWARD_ORGANIZATION_EXPORT][FORCED] Setting exportDate of file having id {} to yesterday", export.getId());
 
-        x.setExportDate(x.getExportDate().minusDays(1));
-        return rewardOrganizationExportsRepository.save(x);
+        export.setExportDate(export.getExportDate().minusDays(1));
+        return rewardOrganizationExportsRepository.save(export);
     }
 }

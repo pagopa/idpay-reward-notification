@@ -43,18 +43,25 @@ class ForceOrganizationExportServiceImplTest {
                 .exportDate(now)
                 .build();
 
-        Mockito.when(repositoryMock.findByExportDate(now)).thenReturn(Flux.just(export1, export2));
+        List<RewardOrganizationExport> exports = List.of(export1, export2);
+
+        Mockito.when(repositoryMock.findByExportDate(now)).thenReturn(Flux.fromIterable(exports));
         Mockito.when(repositoryMock.save(Mockito.any(RewardOrganizationExport.class)))
                 .thenAnswer(i -> Mono.just(i.getArgument(0, RewardOrganizationExport.class)));
 
-        Mockito.when(csvServiceMock.execute(Mockito.any(LocalDate.class))).thenReturn(Flux.just(List.of(export1)));
+        Mockito.when(csvServiceMock.execute(Mockito.any(LocalDate.class))).thenReturn(Flux.just(exports));
 
         List<RewardOrganizationExport> result = service.forceExecute(now).blockLast();
 
         Assertions.assertNotNull(result);
         Assertions.assertFalse(result.isEmpty());
-        for (RewardOrganizationExport x : result) {
-            Assertions.assertEquals(x, export1);
+
+        for (int i = 0; i < result.size(); i++) {
+            RewardOrganizationExport exportFromFaker = exports.get(i);
+            RewardOrganizationExport exportFromResult = result.get(i);
+
+            Assertions.assertEquals(LocalDate.now().minusDays(1), exportFromFaker.getExportDate());
+            Assertions.assertEquals(exportFromFaker, exportFromResult);
         }
 
         Mockito.verify(csvServiceMock).execute(Mockito.any(LocalDate.class));

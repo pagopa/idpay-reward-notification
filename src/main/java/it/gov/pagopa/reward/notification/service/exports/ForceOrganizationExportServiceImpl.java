@@ -29,6 +29,7 @@ public class ForceOrganizationExportServiceImpl implements ForceOrganizationExpo
 
         return rewardOrganizationExportsRepository.findByExportDate(LocalDate.now())
                 .flatMap(this::cleanTodayExport)
+                .collectList()
                 .thenMany(exportRewardNotificationCsvService.execute(notificationDateToSearch));
     }
 

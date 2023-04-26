@@ -79,7 +79,6 @@ class Initiative2ExportRetrieverServiceTest {
     void testWhenReservationAlreadyExists() {
         RewardOrganizationExport expectedResult = new RewardOrganizationExport();
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.just(expectedResult));
-        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.just(expectedResult));
 
         RewardOrganizationExport result = service.retrieve(now).block();
         Assertions.assertSame(expectedResult, result);

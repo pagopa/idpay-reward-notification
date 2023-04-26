@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 class ExportDetailServiceImplTest {
 
     private static final int NOTIFICATION_LIST_SIZE = 3;
-    private static final LocalDate DATE = LocalDate.of(2001, 2, 4);
+    private static final LocalDate DATE = LocalDate.of(2023, 2, 4);
     public static final ExportDetailFilter EMPTY_FILTERS = new ExportDetailFilter();
     public static final PageRequest DEFAULT_PAGEABLE = PageRequest.of(0, 10);
 

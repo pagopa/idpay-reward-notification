@@ -15,10 +15,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 class ErrorManagerTest extends BaseIntegrationTest {
 
     @SpyBean
-    NotificationController controller;
+    private NotificationController controller;
 
     @Autowired
-    WebTestClient webTestClient;
+    private WebTestClient webTestClient;
 
     @Test
     void handleExceptionClientExceptionNoBody() {

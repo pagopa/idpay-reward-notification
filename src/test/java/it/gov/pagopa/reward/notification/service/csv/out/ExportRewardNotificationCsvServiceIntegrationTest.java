@@ -219,8 +219,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
         // When
         //Calling twice in order to test parallel execution
-        CompletableFuture<List<List<RewardOrganizationExport>>> execute1 = exportRewardNotificationCsvService.execute().collectList().toFuture();
-        CompletableFuture<List<List<RewardOrganizationExport>>> execute2 = exportRewardNotificationCsvService.execute().collectList().toFuture();
+        CompletableFuture<List<List<RewardOrganizationExport>>> execute1 = exportRewardNotificationCsvService.execute(TODAY).collectList().toFuture();
+        CompletableFuture<List<List<RewardOrganizationExport>>> execute2 = exportRewardNotificationCsvService.execute(TODAY).collectList().toFuture();
 
         List<RewardOrganizationExport> result = Stream.concat(execute1.get().stream().flatMap(List::stream), execute2.get().stream().flatMap(List::stream))
                 .sorted(Comparator.comparing(RewardOrganizationExport::getId))
@@ -265,7 +265,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 result.stream().filter(e -> RewardOrganizationExportStatus.SKIPPED.equals(e.getStatus())).map(RewardOrganizationExport::getId).collect(Collectors.toSet()),
                 "Unexpected result size: %s".formatted(result));
 
-        Assertions.assertEquals(Collections.emptyList(), rewardsRepository.findInitiatives2Notify(Collections.emptyList()).collectList().block(), "There are still initiative to be notified!");
+        Assertions.assertEquals(Collections.emptyList(), rewardsRepository.findInitiatives2Notify(Collections.emptyList(), TODAY).collectList().block(), "There are still initiative to be notified!");
 
         List<RewardOrganizationExport> exports = exportsRepository.findAll()
                 .sort(Comparator.comparing(RewardOrganizationExport::getId))

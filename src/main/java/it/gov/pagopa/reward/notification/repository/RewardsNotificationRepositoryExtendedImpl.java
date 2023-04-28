@@ -42,15 +42,15 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     }
 
     @Override
-    public Flux<String> findInitiatives2Notify(Collection<String> initiativeIds2Exclude) {
+    public Flux<String> findInitiatives2Notify(Collection<String> initiativeIds2Exclude, LocalDate notificationDateToSearch) {
         return mongoTemplate.findDistinct(
                 Query.query(Criteria
                         .where(FIELD_STATUS).is(RewardNotificationStatus.TO_SEND)
                         .and(FIELD_INITIATIVE_ID).nin(initiativeIds2Exclude)
                         .and(FIELD_EXPORT_ID).isNull()
                         .andOperator(
-                                Criteria.where(FIELD_NOTIFICATION_DATE).gte(LocalDate.now().minusDays(dayBeforeToSearch)),
-                                Criteria.where(FIELD_NOTIFICATION_DATE).lte(LocalDate.now())
+                                Criteria.where(FIELD_NOTIFICATION_DATE).gte(notificationDateToSearch.minusDays(dayBeforeToSearch)),
+                                Criteria.where(FIELD_NOTIFICATION_DATE).lte(notificationDateToSearch)
                         )
                 ),
                 FIELD_INITIATIVE_ID,

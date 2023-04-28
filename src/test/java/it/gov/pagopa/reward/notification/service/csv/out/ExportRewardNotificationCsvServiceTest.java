@@ -22,6 +22,8 @@ import java.util.stream.Stream;
 @ExtendWith(MockitoExtension.class)
 class ExportRewardNotificationCsvServiceTest {
 
+    private static final LocalDate NOW = LocalDate.now();
+
     @Mock private Initiative2ExportRetrieverService initiative2ExportRetrieverServiceMock;
     @Mock private ExportInitiativeRewardsService exportInitiativeRewardsServiceMock;
 
@@ -34,11 +36,11 @@ class ExportRewardNotificationCsvServiceTest {
 
     @Test
     void scheduleTest() {
-        Mockito.doReturn(Flux.empty()).when(service).execute();
+        Mockito.doReturn(Flux.empty()).when(service).execute(NOW);
 
         service.schedule();
 
-        Mockito.verify(service).execute();
+        Mockito.verify(service).execute(NOW);
     }
 
     @Test
@@ -77,14 +79,14 @@ class ExportRewardNotificationCsvServiceTest {
                                     .build())
                                     : Mono.empty();
                         }))
-                .when(initiative2ExportRetrieverServiceMock).retrieve();
+                .when(initiative2ExportRetrieverServiceMock).retrieve(NOW);
 
         Mockito.doAnswer(i->Flux.just(i.getArgument(0,RewardOrganizationExport.class)))
                 .when(exportInitiativeRewardsServiceMock)
                 .performExport(Mockito.any(), Mockito.anyBoolean());
 
         // When
-        List<RewardOrganizationExport> result = Objects.requireNonNull(service.execute().collectList().block()).stream().flatMap(List::stream).toList();
+        List<RewardOrganizationExport> result = Objects.requireNonNull(service.execute(NOW).collectList().block()).stream().flatMap(List::stream).toList();
         Assertions.assertNotNull(result);
 
         Assertions.assertEquals(

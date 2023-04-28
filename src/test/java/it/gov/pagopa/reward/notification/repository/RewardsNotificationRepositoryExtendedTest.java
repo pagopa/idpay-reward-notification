@@ -124,7 +124,7 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
     void findInitiatives2NotifyTest(){
         Assertions.assertEquals(
                 List.of("INITIATIVEID3", "INITIATIVEIDNOTIFIEDTWICE"),
-                repository.findInitiatives2Notify(List.of("INITIATIVEEXCLUDED")).sort().collectList().block()
+                repository.findInitiatives2Notify(List.of("INITIATIVEEXCLUDED"), NOTIFICATION_DATE).sort().collectList().block()
         );
     }
 

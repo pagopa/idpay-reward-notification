@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
-import it.gov.pagopa.reward.notification.service.csv.out.ExportRewardNotificationCsvService;
+import it.gov.pagopa.reward.notification.service.exports.ForceOrganizationExportService;
 import it.gov.pagopa.reward.notification.service.exports.OrganizationExportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailService;
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
@@ -32,6 +32,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,10 +40,12 @@ import java.util.List;
 @Import(JsonConfig.class)
 class NotificationControllerImplTest {
 
+    private static final LocalDate NOW = LocalDate.now();
+
     @MockBean
     private OrganizationExportsServiceImpl organizationExportsServiceMock;
     @MockBean
-    private ExportRewardNotificationCsvService exportRewardNotificationCsvServiceMock;
+    private ForceOrganizationExportService forceOrganizationExportServiceMock;
     @MockBean
     private OrganizationImportsServiceImpl organizationImportsServiceMock;
     @MockBean
@@ -60,16 +63,18 @@ class NotificationControllerImplTest {
 
     @Test
     void testforceExportScheduling() {
-        Mockito.when(exportRewardNotificationCsvServiceMock.execute())
+        Mockito.when(forceOrganizationExportServiceMock.forceExecute(NOW))
                 .thenReturn(Flux.empty());
 
         webClient.get()
-                .uri("/idpay/reward/notification/exports/start")
+                .uri(uriBuilder -> uriBuilder.path("/idpay/reward/notification/exports/start")
+                        .queryParam("notificationDateToSearch", NOW)
+                        .build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(RewardOrganizationExport.class).isEqualTo(Collections.emptyList());
 
-        Mockito.verify(exportRewardNotificationCsvServiceMock).execute();
+        Mockito.verify(forceOrganizationExportServiceMock).forceExecute(NOW);
     }
 
     @Test

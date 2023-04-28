@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,13 +40,13 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
 
-        if(StringUtils.isEmpty(exportBasePath)){
-            this.exportBasePath="";
+        if (StringUtils.isEmpty(exportBasePath)) {
+            this.exportBasePath = "";
         } else {
-            if(exportBasePath.endsWith("/")){
-                this.exportBasePath=exportBasePath;
+            if (exportBasePath.endsWith("/")) {
+                this.exportBasePath = exportBasePath;
             } else {
-                this.exportBasePath= "%s/".formatted(exportBasePath);
+                this.exportBasePath = "%s/".formatted(exportBasePath);
             }
         }
     }
@@ -56,34 +58,33 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     }
 
     @Override
-    public Mono<RewardOrganizationExport> retrieve() {
+    public Mono<RewardOrganizationExport> retrieve(LocalDate notificationDateToSearch) {
         return rewardOrganizationExportsRepository.reserveExport()
-                .switchIfEmpty(Mono.defer(this::retrieveNewExports))
+                .switchIfEmpty(Mono.defer(() -> retrieveNewExports(notificationDateToSearch)))
                 .doOnNext(reservation -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] reserved export on initiative into file: {} {} {}", reservation.getId(), reservation.getInitiativeId(), reservation.getFilePath()));
     }
 
-    private Mono<RewardOrganizationExport> retrieveNewExports() {
+    private Mono<RewardOrganizationExport> retrieveNewExports(LocalDate notificationDateToSearch) {
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] searching for rewards to notify");
 
         return rewardOrganizationExportsRepository.findPendingOrTodayExports()
                 .map(RewardOrganizationExport::getInitiativeId)
                 .collect(Collectors.toSet())
-                .transformDeferredContextual((ids, ctx) -> ids.map(initiativeIds ->{
+                .transformDeferredContextual((ids, ctx) -> ids.map(initiativeIds -> {
                     Set<String> initiativeIds2exclude = new HashSet<>(initiativeIds);
                     initiativeIds2exclude.addAll(ctx.<Set<String>>getOrEmpty(ExportCsvConstants.CTX_KEY_EXPORTED_INITIATIVE_IDS).orElse(Collections.emptySet()));
                     return initiativeIds2exclude;
                 }))
                 .doOnNext(excludes -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] excluding exports on initiatives because pending or performed today: {}", excludes))
-                .flatMapMany(rewardsNotificationRepository::findInitiatives2Notify)
-                .flatMap(this::configureExport)
+                .flatMapMany(excludes -> rewardsNotificationRepository.findInitiatives2Notify(excludes, notificationDateToSearch))
+                .flatMap(i -> configureExport(i, notificationDateToSearch))
                 .collectList()
                 .doOnNext(newExports -> log.info("[REWARD_NOTIFICATION_EXPORT_CSV] new exports configured on initiatives: {}", newExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
                 .flatMap(x -> rewardOrganizationExportsRepository.reserveExport());
     }
 
-    private Mono<RewardOrganizationExport> configureExport(String initiativeId) {
+    private Mono<RewardOrganizationExport> configureExport(String initiativeId, LocalDate notificationDateToSearch) {
         log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] trying to configure export on initiative: {}", initiativeId);
-        LocalDate now = LocalDate.now();
 
         return rewardNotificationRuleRepository.findById(initiativeId)
                 .switchIfEmpty(Mono.defer(() -> {
@@ -92,10 +93,10 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
                 }))
                 .flatMap(rule -> rewardOrganizationExportsRepository.count(Example.of(RewardOrganizationExport.builder()
                                 .initiativeId(initiativeId)
-                                .notificationDate(now)
+                                .notificationDate(notificationDateToSearch)
                                 .build()))
                         .defaultIfEmpty(0L)
-                        .map(progressive -> buildNewRewardOrganizationExportEntity(rule, now, progressive + 1)))
+                        .map(progressive -> buildNewRewardOrganizationExportEntity(rule, notificationDateToSearch, progressive + 1)))
                 .flatMap(e ->
                         rewardOrganizationExportsRepository.configureNewExport(e)
                                 .onErrorResume(DuplicateKeyException.class, ex -> Mono.empty())
@@ -153,7 +154,7 @@ public class Initiative2ExportRetrieverServiceImpl implements Initiative2ExportR
     public RewardOrganizationExport buildNextOrganizationExportSplit(RewardOrganizationExport baseExport, int splitNumber) {
         log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] trying to configure export on next split based on {} of inititiative {} and splitNumber {}", baseExport.getId(), baseExport.getInitiativeId(), splitNumber);
 
-        long progressive = baseExport.getProgressive()+splitNumber;
+        long progressive = baseExport.getProgressive() + splitNumber;
         return baseExport.toBuilder()
                 .id(baseExport.getId().replaceFirst("\\.%d$".formatted(baseExport.getProgressive()), ".%d".formatted(progressive)))
                 .filePath(baseExport.getFilePath().replaceFirst("\\.%d.zip$".formatted(baseExport.getProgressive()), ".%d.zip".formatted(progressive)))

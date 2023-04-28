@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class RewardOrganizationExportsFaker {
-    public static final LocalDate CHOSEN_DATE = LocalDate.of(2001,2,4);
+    public static final LocalDate CHOSEN_DATE = LocalDate.of(2023,2,4);
     /** It will return an example of {@link RewardOrganizationExport}. Providing a bias, it will return a pseudo-casual object */
     public static RewardOrganizationExport mockInstance(Integer bias){
         return mockInstanceBuilder(bias).build();

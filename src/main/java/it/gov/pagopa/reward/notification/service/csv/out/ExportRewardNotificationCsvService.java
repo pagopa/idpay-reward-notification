@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverService;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ExportRewardNotificationCsvService {
@@ -16,9 +17,9 @@ public interface ExportRewardNotificationCsvService {
      * Each day will be search:
      * <ol>
      *     <li>Stuck {@link  RewardOrganizationExport} (see {@link Initiative2ExportRetrieverService#retrieveStuckExecution()})</li>
-     *     <li>New {@link RewardOrganizationExport} (see ${@link Initiative2ExportRetrieverService#retrieve()})</li>
+     *     <li>New {@link RewardOrganizationExport} (see ${@link Initiative2ExportRetrieverService#retrieve})</li>
      * </ol>
      * @see ExportInitiativeRewardsService
      * */
-    Flux<List<RewardOrganizationExport>> execute();
+    Flux<List<RewardOrganizationExport>> execute(LocalDate notificationDateToSearch);
 }

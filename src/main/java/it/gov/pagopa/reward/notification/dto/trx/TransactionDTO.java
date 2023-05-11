@@ -17,7 +17,7 @@ import java.util.List;
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
 @FieldNameConstants
 public class TransactionDTO {
     private String idTrxAcquirer;

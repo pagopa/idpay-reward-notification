@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -52,9 +53,14 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         publishRewardRules();
 
         RewardTransactionDTO trxAlreadyProcessed = storeTrxAlreadyProcessed();
+		
         RewardTransactionDTO trxNotRewarded = RewardTransactionDTOFaker.mockInstance(0);
         trxNotRewarded.setRewards(Collections.emptyMap());
         trxNotRewarded.setId("NOTREWARDEDTRX");
+		
+        RewardTransactionDTO trxAuthorized = RewardTransactionDTOFaker.mockInstance(1);
+        trxAuthorized.setStatus(TrxConstants.TRX_STATUS_AUTHORIZED);
+        trxAuthorized.setId("AUTHORIZEDTRX");
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
@@ -62,6 +68,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
 
         trxs.add(TestUtils.jsonSerializer(trxNotRewarded));
         trxs.add(TestUtils.jsonSerializer(trxAlreadyProcessed));
+        trxs.add(TestUtils.jsonSerializer(trxAuthorized));
         int alreadyProcessed = 1;
 
         long totalSendMessages = trxs.size() + duplicateTrx;

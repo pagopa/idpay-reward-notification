@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsu
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
+import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -86,6 +87,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
     @Override
     protected Mono<List<Rewards>> execute(RewardTransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
+				.filter(t -> !TrxConstants.TRX_STATUS_AUTHORIZED.equals(t.getStatus()))
                 .flatMapMany(this::readRewards)
                 .flatMap(this::checkDuplicateReward)
                 .flatMap(r -> retrieveInitiativeAndEvaluate(r, message))

@@ -44,7 +44,7 @@ public class RewardNotificationRuleFaker {
                 .build();
         out.timeParameter(timeParameter);
         out.organizationFiscalCode("ORGANIZATION_FISCAL_CODE_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
-        out.initiativeRewardType(InitiativeRewardType.REFUND.name());
+        out.initiativeRewardType(InitiativeRewardType.REFUND.toString());
 
         TestUtils.checkNotNullFields(out);
         TestUtils.checkNotNullFields(accumulatedAmount);

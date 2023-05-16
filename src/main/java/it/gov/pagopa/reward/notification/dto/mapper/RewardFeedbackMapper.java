@@ -18,7 +18,7 @@ public class RewardFeedbackMapper {
                 .externalId(notification.getExternalId())
                 .rewardNotificationId(notification.getId())
                 .initiativeId(notification.getInitiativeId())
-                .userId(notification.getUserId())
+                .userId(notification.getBeneficiaryId())
                 .organizationId(notification.getOrganizationId())
                 .iban(notification.getIban())
                 .status(transcodeStatus(notification))

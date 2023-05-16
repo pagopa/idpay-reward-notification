@@ -31,7 +31,7 @@ class CompletedKoDiscardedRewardNotificationServiceTest extends BaseDiscardedRew
 
     @Override
     protected OngoingStubbing<Flux<RewardsNotification>> getRewardNotificationRepoFindDiscardedMockWhen(RewardIban rewardIban) {
-        return Mockito.when(rewardsNotificationRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndRemedialIdNull(rewardIban.getUserId(),
+        return Mockito.when(rewardsNotificationRepositoryMock.findByBeneficiaryIdAndInitiativeIdAndStatusAndRemedialIdNull(rewardIban.getUserId(),
                         rewardIban.getInitiativeId(),
                         RewardNotificationStatus.COMPLETED_KO));
     }
@@ -123,7 +123,7 @@ class CompletedKoDiscardedRewardNotificationServiceTest extends BaseDiscardedRew
     private static RewardsNotification mockCompletedKoNotification(int bias, RewardIban rewardIban) {
         RewardsNotification out = RewardsNotificationFaker.mockInstanceBuilder(bias)
                 .initiativeId(rewardIban.getInitiativeId())
-                .userId(rewardIban.getUserId())
+                .beneficiaryId(rewardIban.getUserId())
                 .status(RewardNotificationStatus.COMPLETED_KO)
                 .exportDate(YESTERDAY.atStartOfDay())
                 .resultCode("RESULTCODE")

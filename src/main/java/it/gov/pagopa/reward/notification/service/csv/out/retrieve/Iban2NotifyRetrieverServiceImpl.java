@@ -31,7 +31,7 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
     public Mono<RewardsNotification> retrieveIban(RewardsNotification reward) {
         return ibanRepository.findById(IbanOutcomeDTO2RewardIbanMapper.buildId(reward))
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find iban related to user {} and initiative {}", reward.getUserId(), reward.getInitiativeId());
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find iban related to user {} and initiative {}", reward.getBeneficiaryId(), reward.getInitiativeId());
                     reward.setStatus(RewardNotificationStatus.ERROR);
                     reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
@@ -44,7 +44,7 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
                             .then(Mono.empty());
                 }))
                 .doOnNext(iban -> {
-                    log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Iban retrieved for user {} and initiative {}", reward.getUserId(), reward.getInitiativeId());
+                    log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Iban retrieved for user {} and initiative {}", reward.getBeneficiaryId(), reward.getInitiativeId());
 
                     reward.setIban(iban.getIban());
                     reward.setCheckIbanResult(iban.getCheckIbanOutcome());

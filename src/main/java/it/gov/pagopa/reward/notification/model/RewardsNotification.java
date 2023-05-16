@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.model;
 
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
@@ -37,7 +38,8 @@ public class RewardsNotification {
     private String initiativeName;
     private String organizationId;
     private String organizationFiscalCode;
-    private String userId;
+    private String beneficiaryId;
+    private BeneficiaryType beneficiaryType;
     private Long progressive;
     private Long rewardCents;
     @Builder.Default

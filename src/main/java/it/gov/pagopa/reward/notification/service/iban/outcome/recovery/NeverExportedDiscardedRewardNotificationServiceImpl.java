@@ -33,7 +33,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
 
         // case 1 - Notification never exported
         return PerformanceLogger.logTimingOnNext("IBAN_OUTCOME_RECOVER_ERROR_IBAN",
-                rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
+                rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
                         rewardIban.getUserId(),
                         rewardIban.getInitiativeId(),
                         RewardNotificationStatus.ERROR,
@@ -48,7 +48,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
 
     private Mono<RewardsNotification> recoverNeverExportedDiscardedRewardNotification(RewardsNotification notification) {
         log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Found discarded never exported rewardNotification having id {} on userId {} and initiativeId {}",
-                notification.getId(), notification.getUserId(), notification.getInitiativeId());
+                notification.getId(), notification.getBeneficiaryId(), notification.getInitiativeId());
 
         return Mono.just(notification)
                 .doOnNext(this::resetRewardNotificationStatus)
@@ -56,7 +56,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",
-                            notification.getId(), notification.getUserId(), notification.getInitiativeId(), e);
+                            notification.getId(), notification.getBeneficiaryId(), notification.getInitiativeId(), e);
                     return Mono.empty();
                 });
     }

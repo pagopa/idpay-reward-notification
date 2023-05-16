@@ -13,7 +13,7 @@ public class RewardsNotification2DetailDTOMapper {
         return RewardNotificationDetailDTO.builder()
                 .id(notification.getId())
                 .externalId(notification.getExternalId())
-                .userId(notification.getUserId())
+                .userId(notification.getBeneficiaryId())
                 .iban(notification.getIban())
                 .amount(Utils.cents2EurBigDecimal(notification.getRewardCents()))
                 .startDate(notification.getStartDepositDate())

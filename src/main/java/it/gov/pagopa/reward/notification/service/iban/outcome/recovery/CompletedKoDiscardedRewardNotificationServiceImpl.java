@@ -36,7 +36,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl implements Comple
 
         // case 2 - Exported notification having KO result
         return PerformanceLogger.logTimingOnNext("IBAN_OUTCOME_RECOVER_COMPLETED_KO",
-                rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatusAndRemedialIdNull(
+                rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndStatusAndRemedialIdNull(
                                 rewardIban.getUserId(),
                                 rewardIban.getInitiativeId(),
                                 RewardNotificationStatus.COMPLETED_KO)
@@ -50,7 +50,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl implements Comple
 
     private Mono<RewardsNotification> createRemedialNotification(RewardsNotification discarded) {
         log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_COMPLETED_KO] Found discarded COMPLETED_KO rewardNotification having id {} on userId {} and initiativeId {}",
-                discarded.getId(), discarded.getUserId(), discarded.getInitiativeId());
+                discarded.getId(), discarded.getBeneficiaryId(), discarded.getInitiativeId());
 
         return Mono.just(discarded)
                 .flatMap(this::buildRemedialNotification)
@@ -58,7 +58,7 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl implements Comple
 
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_COMPLETED_KO] Something went wrong while recovering COMPLETED_KO rewardNotification having id {} related to userId {} and initiativeId {}",
-                            discarded.getId(), discarded.getUserId(), discarded.getInitiativeId(), e);
+                            discarded.getId(), discarded.getBeneficiaryId(), discarded.getInitiativeId(), e);
                     return Mono.empty();
                 });
     }

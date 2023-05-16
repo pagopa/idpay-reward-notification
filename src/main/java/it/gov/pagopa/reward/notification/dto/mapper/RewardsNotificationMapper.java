@@ -21,7 +21,9 @@ public class RewardsNotificationMapper {
                 .initiativeName(rule.getInitiativeName())
                 .organizationId(rule.getOrganizationId())
                 .organizationFiscalCode(rule.getOrganizationFiscalCode())
-                .userId(trx.getUserId())
+                // TODO handle missing merchantId
+                .beneficiaryId(Utils.getBeneficiaryId(rule.getInitiativeRewardType(), trx))
+                .beneficiaryType(Utils.getBeneficiaryType(rule.getInitiativeRewardType()))
                 .progressive(progressive)
                 .startDepositDate(LocalDate.now())
                 .notificationDate(notificationDate)
@@ -29,5 +31,4 @@ public class RewardsNotificationMapper {
                 .status(RewardNotificationStatus.TO_SEND)
                 .build();
     }
-
 }

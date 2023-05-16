@@ -55,7 +55,7 @@ public class RewardNotification2ExportCsvServiceImpl implements RewardNotificati
 
     private Mono<RewardsNotification> checkRewardAmount(RewardsNotification notification) {
         if(notification.getRewardCents() == 0L){
-            log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Skipping export of notification because has reward 0 {}; userId {} initiativeId {}", notification.getId(), notification.getUserId(), notification.getInitiativeId());
+            log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Skipping export of notification because has reward 0 {}; userId {} initiativeId {}", notification.getId(), notification.getBeneficiaryId(), notification.getInitiativeId());
             notification.setStatus(RewardNotificationStatus.SKIPPED);
             notification.setExportDate(LocalDateTime.now());
             return rewardsNotificationRepository.save(notification)

@@ -126,7 +126,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         storeRewardsUseCases(5, rule4.getInitiativeId(), YESTERDAY, null, true, true);
 
         List<RewardsNotification> suspendedUserNotification = storeRewardsUseCases(1, rule5.getInitiativeId(), YESTERDAY, null, true, true);
-        suspendedUserNotification.forEach(n -> suspendedUserRepository.save(new RewardSuspendedUser(n.getUserId(), n.getInitiativeId(), n.getOrganizationId())).block());
+        suspendedUserNotification.forEach(n -> suspendedUserRepository.save(new RewardSuspendedUser(n.getBeneficiaryId(), n.getInitiativeId(), n.getOrganizationId())).block());
 
         Assertions.assertEquals(testCases.get(), rewardsRepository.count().block());
 
@@ -176,7 +176,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         long baseR = ObjectUtils.firstNonNull(baseReward, baseId - 1);
         return rewardsRepository.saveAll(LongStream.range(baseId, baseId + number).mapToObj(bias -> {
                     RewardsNotification reward = RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
-                            .userId((hasCf ? "USERID_OK_%d" : "USERID_NOTFOUND_%d").formatted(bias))
+                            .beneficiaryId((hasCf ? "USERID_OK_%d" : "USERID_NOTFOUND_%d").formatted(bias))
                             .initiativeId(initiativeId)
                             .rewardCents(bias - baseR)
                             .notificationDate(notificationDate)
@@ -191,10 +191,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                     if (hasIban) {
                         ibanRepository.save(RewardIban.builder()
                                 .id(IbanOutcomeDTO2RewardIbanMapper.buildId(reward))
-                                .userId(reward.getUserId())
+                                .userId(reward.getBeneficiaryId())
                                 .initiativeId(initiativeId)
-                                .iban("IBAN_%s".formatted(reward.getUserId()))
-                                .checkIbanOutcome("CHECKIBAN_OUTCOME_%s".formatted(reward.getUserId()))
+                                .iban("IBAN_%s".formatted(reward.getBeneficiaryId()))
+                                .checkIbanOutcome("CHECKIBAN_OUTCOME_%s".formatted(reward.getBeneficiaryId()))
                                 .build()).block();
                     }
 
@@ -332,8 +332,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertNotNull(rewards);
         Assertions.assertEquals(expectedExportSize, rewards.size());
         rewards.forEach(r -> {
-            Assertions.assertEquals("IBAN_%s".formatted(r.getUserId()), r.getIban());
-            Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getUserId()), r.getCheckIbanResult());
+            Assertions.assertEquals("IBAN_%s".formatted(r.getBeneficiaryId()), r.getIban());
+            Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getBeneficiaryId()), r.getCheckIbanResult());
             Assertions.assertEquals(RewardNotificationStatus.EXPORTED, r.getStatus());
             Assertions.assertEquals(LocalDate.now(), r.getExportDate().toLocalDate());
         });
@@ -403,8 +403,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertNotNull(expectedCfKo);
         Assertions.assertEquals(1, expectedCfKo.size());
         expectedCfKo.forEach(r -> {
-            Assertions.assertEquals("IBAN_%s".formatted(r.getUserId()), r.getIban());
-            Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getUserId()), r.getCheckIbanResult());
+            Assertions.assertEquals("IBAN_%s".formatted(r.getBeneficiaryId()), r.getIban());
+            Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getBeneficiaryId()), r.getCheckIbanResult());
             Assertions.assertEquals(rule4.getInitiativeId(), r.getInitiativeId());
             Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());

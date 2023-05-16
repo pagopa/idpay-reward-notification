@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -46,6 +47,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setInitiativeId("INITIATIVEID");
         rule.setTimeParameter(new TimeParameterDTO());
         rule.getTimeParameter().setTimeType(type);
+        rule.setInitiativeRewardType(InitiativeRewardType.REFUND.name());
         return rule;
     }
 
@@ -180,7 +182,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
                 .when(mapperSpy)
                 .apply(Mockito.any(), Mockito.any(), Mockito.anyLong(), Mockito.any(), Mockito.any());
 
-        Mockito.when(repositoryMock.countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive - 1));
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive - 1));
 
         service = Mockito.spy(service);
 
@@ -200,7 +202,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
         Mockito.verify(service).calculateNotificationDate(Mockito.eq(LocalDate.now()), Mockito.same(rule));
-        Mockito.verify(repositoryMock).countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId());
+        Mockito.verify(repositoryMock).countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId());
         Mockito.verify(mapperSpy).apply(Mockito.eq(expectedNotificationId), Mockito.eq(expectedNotificationDate), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
@@ -223,7 +225,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         expectedResult.getTrxIds().add("TRXID");
 
         Mockito.when(repositoryMock.findById(expectedResult.getId())).thenReturn(Mono.just(expectedResult));
-        Mockito.when(repositoryMock.countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);
 
@@ -273,8 +275,8 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         expectedNewNotify.setDepositType(DepositType.FINAL);
         expectedNewNotify.getTrxIds().add(trx.getId());
 
-        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
-        Mockito.when(repositoryMock.countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive-1));
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive-1));
 
         service = Mockito.spy(service);
 
@@ -313,8 +315,8 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         expectedResult.setRewardCents(100L);
         expectedResult.getTrxIds().add("TRXID");
 
-        Mockito.when(repositoryMock.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
-        Mockito.when(repositoryMock.countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);
 

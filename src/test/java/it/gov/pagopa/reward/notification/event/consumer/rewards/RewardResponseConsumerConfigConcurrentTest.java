@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.event.consumer.rewards;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
@@ -146,7 +147,8 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                             .initiativeName("INITIATIVE_NAME_" + n.getInitiativeId())
                             .organizationId("ORGANIZATION_ID_" + n.getInitiativeId())
                             .organizationFiscalCode("ORGANIZATION_VAT_" + n.getInitiativeId())
-                            .userId("USERID")
+                            .beneficiaryId("USERID")
+                            .beneficiaryType(BeneficiaryType.CITIZEN)
                             .progressive(1L)
                             .trxIds(trxs.stream().map(TransactionDTO::getId).toList())
                             .depositType(DepositType.PARTIAL)

@@ -63,7 +63,7 @@ class RewardsNotificationMapperTest {
         Assertions.assertEquals(rule.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(rule.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(rule.getOrganizationFiscalCode(), result.getOrganizationFiscalCode());
-        Assertions.assertEquals(trx.getUserId(), result.getUserId());
+        Assertions.assertEquals(trx.getUserId(), result.getBeneficiaryId());
         Assertions.assertEquals(progressive, result.getProgressive());
         Assertions.assertEquals(LocalDate.now(), result.getStartDepositDate());
         Assertions.assertEquals(notificationDate, result.getNotificationDate());

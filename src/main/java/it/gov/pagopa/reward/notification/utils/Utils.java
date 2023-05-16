@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import org.springframework.messaging.Message;
 
@@ -108,6 +110,24 @@ public final class Utils {
         } else {
             return RefundType.ORDINARY;
         }
+    }
+
+    public static BeneficiaryType getBeneficiaryType(String initiativeRewardType) {
+        InitiativeRewardType irt = InitiativeRewardType.valueOf(initiativeRewardType);
+
+        return switch (irt) {
+            case REFUND -> BeneficiaryType.CITIZEN;
+            case DISCOUNT -> BeneficiaryType.MERCHANT;
+        };
+    }
+
+    public static String getBeneficiaryId(String initiativeRewardType, TransactionDTO trx) {
+        InitiativeRewardType irt = InitiativeRewardType.valueOf(initiativeRewardType);
+
+        return switch (irt) {
+            case REFUND -> trx.getUserId();
+            case DISCOUNT -> trx.getMerchantId();
+        };
     }
 
     public enum RefundType {

@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.rule.*;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.event.consumer.RefundRuleConsumerConfigTest;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.Rewards;
@@ -98,7 +99,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
 
     protected List<RewardsNotification> prepare2Compare(Collection<RewardsNotification> values) {
         return values.stream()
-                .sorted(Comparator.comparing(RewardsNotification::getUserId).thenComparing(RewardsNotification::getId))
+                .sorted(Comparator.comparing(RewardsNotification::getBeneficiaryId).thenComparing(RewardsNotification::getId))
                 .peek(r -> {
                     Assertions.assertFalse(StringUtils.isEmpty(r.getExternalId()), "Invalid null externalId on reward notification:" + r);
                     r.setExternalId("");
@@ -128,6 +129,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_DAILY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_DAILY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_DAILY)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -146,6 +148,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_WEEKLY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_WEEKLY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_WEEKLY)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -160,6 +163,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_MONTHLY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_MONTHLY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_MONTHLY)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -174,6 +178,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -188,6 +193,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_CLOSED)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_CLOSED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_CLOSED)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -202,6 +208,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(TODAY.minusDays(1))
                                 .build())
@@ -217,6 +224,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -232,6 +240,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
                         .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
                         .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
+                        .initiativeRewardType(InitiativeRewardType.REFUND.name())
                         .general(InitiativeGeneralDTO.builder()
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
@@ -297,6 +306,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                     .initiativeName("INITIATIVE_NAME_" + initiativeId)
                     .organizationId("ORGANIZATION_ID_" + initiativeId)
                     .organizationFiscalCode("ORGANIZATION_VAT_" + initiativeId)
+                    .initiativeRewardType(InitiativeRewardType.REFUND.name())
                     .build();
             n = notificationMapper.apply(notificationId, notificationDate, progressive, trx, rule);
         }

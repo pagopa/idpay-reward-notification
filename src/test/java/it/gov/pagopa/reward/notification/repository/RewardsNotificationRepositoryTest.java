@@ -49,7 +49,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
     }
 
     private void deleteByUserId(String userId) {
-        rewardsNotificationRepository.findAll(Example.of(RewardsNotification.builder().userId(userId).build()))
+        rewardsNotificationRepository.findAll(Example.of(RewardsNotification.builder().beneficiaryId(userId).build()))
                 .flatMap(rewardsNotificationRepository::delete)
                 .collectList()
                 .block();
@@ -60,7 +60,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 // use case past notification already exported
                 RewardsNotification.builder()
                         .id("%s_%s_%s".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)))
-                        .userId(userId)
+                        .beneficiaryId(userId)
                         .initiativeId(initiativeId)
                         .notificationDate(TODAY)
                         .status(RewardNotificationStatus.EXPORTED)
@@ -69,7 +69,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 // use case past notification
                 RewardsNotification.builder()
                         .id("%s_%s_%s_1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)))
-                        .userId(userId)
+                        .beneficiaryId(userId)
                         .initiativeId(initiativeId)
                         .notificationDate(TODAY)
                         .status(RewardNotificationStatus.TO_SEND)
@@ -78,7 +78,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 // use case future notification already exported
                 RewardsNotification.builder()
                         .id("%s_%s_%s".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TOMORROW)))
-                        .userId(userId)
+                        .beneficiaryId(userId)
                         .initiativeId(initiativeId)
                         .notificationDate(TOMORROW)
                         .status(RewardNotificationStatus.COMPLETED_OK)
@@ -87,7 +87,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 // use case future notification
                 RewardsNotification.builder()
                         .id("%s_%s_%s_1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TOMORROW)))
-                        .userId(userId)
+                        .beneficiaryId(userId)
                         .initiativeId(initiativeId)
                         .notificationDate(TOMORROW)
                         .status(RewardNotificationStatus.TO_SEND)
@@ -96,7 +96,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 // use case not configured
                 RewardsNotification.builder()
                         .id("%s_%s".formatted(userId, initiativeId))
-                        .userId(userId)
+                        .beneficiaryId(userId)
                         .initiativeId(initiativeId)
                         .status(RewardNotificationStatus.TO_SEND)
                         .build(),
@@ -105,7 +105,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                 RewardsNotification.builder()
                         .id("%s_%s_%s-recovery-1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)))
                         .ordinaryId("%s_%s_%s".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)))
-                        .userId(userId)
+                        .beneficiaryId(userId)
                         .initiativeId(initiativeId)
                         .notificationDate(TODAY)
                         .status(RewardNotificationStatus.TO_SEND)
@@ -118,11 +118,11 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
         String userId = TEST_USERID;
         String initiativeId = TEST_INITIATIVEID;
 
-        List<RewardsNotification> result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(userId, initiativeId, null ,RewardNotificationStatus.TO_SEND).collectList().block();
+        List<RewardsNotification> result = rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(userId, initiativeId, null ,RewardNotificationStatus.TO_SEND).collectList().block();
 
         checkResult(result, "%s_%s".formatted(userId, initiativeId));
 
-        result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
+        result = rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
 
         checkResult(result, "%s_%s_%s_1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)));
     }
@@ -132,7 +132,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
         String userId = TEST_USERID;
         String initiativeId = TEST_INITIATIVEID;
 
-        List<RewardsNotification> result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
+        List<RewardsNotification> result = rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
 
         checkResult(result, "%s_%s_%s_1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TOMORROW)));
     }

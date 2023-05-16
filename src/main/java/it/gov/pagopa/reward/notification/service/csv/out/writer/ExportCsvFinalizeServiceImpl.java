@@ -10,6 +10,8 @@ import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
+import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +37,21 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     private final RewardOrganizationExportsRepository rewardOrganizationExportsRepository;
     private final HeaderColumnNameStrategy<RewardNotificationExportCsvDto> mappingStrategy;
     private final RewardsNotificationBlobClient azureBlobClient;
+    private final EmailNotificationService emailNotificationService;
+    private final AuditUtilities auditUtilities;
 
     public ExportCsvFinalizeServiceImpl(
             @Value("${app.csv.tmp-dir}") String csvTmpDir,
             @Value("${app.csv.export.separator}") char csvSeparator,
-            RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationBlobClient azureBlobClient) {
+            RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationBlobClient azureBlobClient,
+            EmailNotificationService emailNotificationService, AuditUtilities auditUtilities) {
         this.csvTmpDir = csvTmpDir;
         this.csvSeparator = csvSeparator;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
         this.azureBlobClient = azureBlobClient;
-
+        this.emailNotificationService = emailNotificationService;
+        this.auditUtilities = auditUtilities;
         mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationExportCsvDto.class);
     }
 
@@ -59,6 +65,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         export.setStatus(RewardOrganizationExportStatus.EXPORTED);
 
         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Sending to Azure Storage export of initiative {} having id {} on path {}", export.getInitiativeId(), export.getId(), export.getFilePath());
+        auditUtilities.logUploadFile(export.getInitiativeId(), export.getOrganizationId(), zipFilePath.toFile().getName());
 
         return azureBlobClient.uploadFile(zipFilePath.toFile(), export.getFilePath(), "application/zip")
                 .filter(r-> {
@@ -89,6 +96,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                         return Mono.empty();
                     }
                 })
+                .flatMap(emailNotificationService::send)
 
                 .onErrorResume(e -> {
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Something gone wrong while writing export {}", export.getId(), e);

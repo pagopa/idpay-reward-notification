@@ -12,7 +12,7 @@ import java.util.*;
 @EqualsAndHashCode
 @ToString
 public class ImportElaborationCounters {
-    private Set<String> exportIds;
+    private Map<String, RewardNotificationFeedbackExportDelta> exportDeltas;
 
     private long rewardsResulted;
     private long rewardsResultedError;
@@ -22,14 +22,20 @@ public class ImportElaborationCounters {
     private List<RewardOrganizationImport.RewardOrganizationImportError> errors = new ArrayList<>();
 
     public static ImportElaborationCounters add(ImportElaborationCounters c1, ImportElaborationCounters c2) {
-        HashSet<String> exportIds = new HashSet<>(c1.getExportIds());
-        exportIds.addAll(c2.getExportIds());
+        Map<String, RewardNotificationFeedbackExportDelta> exportDeltas = new HashMap<>(c1.getExportDeltas());
+        c2.getExportDeltas().forEach((exportId, delta2) -> exportDeltas.compute(exportId, (id, delta1) -> {
+            if(delta1!=null){
+                return RewardNotificationFeedbackExportDelta.add(delta1, delta2);
+            } else {
+                return delta2;
+            }
+        }));
 
         ArrayList<RewardOrganizationImport.RewardOrganizationImportError> errors = new ArrayList<>(c1.getErrors());
         errors.addAll(c2.getErrors());
 
         return new ImportElaborationCounters(
-                exportIds,
+                exportDeltas,
 
                 c1.getRewardsResulted() + c2.getRewardsResulted(),
                 c1.getRewardsResultedError() + c2.getRewardsResultedError(),
@@ -44,7 +50,7 @@ public class ImportElaborationCounters {
         boolean isError = outcome.getError() != null;
 
         ImportElaborationCounters out = new ImportElaborationCounters();
-        out.exportIds=outcome.getExportId()!=null? Set.of(outcome.getExportId()) : Collections.emptySet();
+        out.exportDeltas =outcome.getExportDelta()!=null? Map.of(outcome.getExportDelta().getExport().getId(), outcome.getExportDelta()) : Collections.emptyMap();
         out.rewardsResulted = 1;
         out.rewardsResultedError = isError ? 1 : 0;
         out.rewardsResultedOk = isOkOutcome ? 1 : 0;

@@ -35,14 +35,13 @@ public class RewardNotificationExport2CsvMapper {
         out.setOrganizationFiscalCode(reward.getOrganizationFiscalCode());
         out.setCheckIban(reward.getCheckIbanResult());
         out.setTypologyReward((reward.getDepositType() == null? DepositType.FINAL : reward.getDepositType()).getLabel());
-        out.setRelatedPaymentID(null);
+        out.setRelatedPaymentID(reward.getRecoveredExternalId());
 
         return out;
     }
 
     private String buildPaymentReason(RewardsNotification reward, String depositStartDateStr, String depositEndDateStr) {
-        return "%s, %s, %s, %s".formatted(
-                reward.getId(),
+        return "Rimborso %s %s %s".formatted(
                 reward.getInitiativeName(),
                 depositStartDateStr,
                 depositEndDateStr

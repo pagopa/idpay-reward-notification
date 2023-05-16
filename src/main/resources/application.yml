@@ -5,13 +5,6 @@ reactor:
   bufferSize:
     small: ${REACTOR_BUFFER_SIZE:256}
 
-info:
-  build:
-    artifact: "@project.artifactId@"
-    name: "@project.artifactId@"
-    description: "@project.description@"
-    version: "@project.version@"
-
 spring:
   application:
     name: "@project.artifactId@"
@@ -23,7 +16,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback
+        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback;errors
       bindings:
         refundRuleConsumer-in-0:
           destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}
@@ -106,7 +99,7 @@ spring:
             security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
             connections.max.idle.ms: ${KAFKA_CONFIG_CONNECTION_MAX_IDLE_TIME:180000}
             metadata.max.idle.ms: ${KAFKA_CONFIG_METADATA_MAX_IDLE_MS:180000}
-            metadata.max.age.ms: ${KAFKA_CONFIG_METADATA_MAX_AGE_INTERVAL:180000}
+            metadata.max.age.ms: ${KAFKA_CONFIG_METADATA_MAX_AGE_INTERVAL:179000}
             max.request.size: ${KAFKA_CONFIG_METADATA_MAX_REQUEST_SIZE:1000000}
         bindings:
           refundRuleConsumer-in-0:
@@ -114,7 +107,7 @@ spring:
               startOffset: ${KAFKA_REFUND_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REFUND_RULE_REQUEST_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_REFUND_RULE_REQUEST_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REFUND_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -129,7 +122,7 @@ spring:
               startOffset: ${KAFKA_REWARD_RESPONSE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_RESPONSE_REQUEST_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_REWARD_RESPONSE_REQUEST_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REWARD_RESPONSE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -144,7 +137,7 @@ spring:
               startOffset: ${KAFKA_CHECKIBAN_OUTCOME_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_CHECKIBAN_OUTCOME_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_CHECKIBAN_OUTCOME_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_CHECKIBAN_OUTCOME_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -167,7 +160,7 @@ spring:
               startOffset: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REWARD_NOTIFICATION_UPLOAD_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -199,6 +192,10 @@ spring:
           maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
+
+management.endpoints:
+  web:
+    exposure.include: info, health
 
 logging:
   level:
@@ -247,27 +244,39 @@ app:
     export:
       schedule: ${SCHEDULE_EXPORT_CSV:0 0 1 * * ?} # each day at 01:00AM
       # days before current to search rewardNotification to export
-      day-before: ${EXPORT_CSV_DAY_BEFORE:7}
+      day-before: ${EXPORT_CSV_DAY_BEFORE:30}
       # column separator to use when exporting csv
       separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
       # The maximum number of rows to store in each csv
-      split-size: ${EXPORT_CSV_SPLIT_SIZE:50000}
+      split-size: ${EXPORT_CSV_SPLIT_SIZE:500000}
     import:
       # column separator to use when importing csv
       separator: ${IMPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
-      # The parallelism level to use when reading the csv
-      parallelism: ${IMPORT_CSV_PARALLELISM:7}
   pdv:
     base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:
       x-api-key: ${PDV_DECRYPT_API_KEY:x_api_key}
     retry:
-      delay-millis: ${PDV_RETRY_DELAY_MILLIS:10000}
+      delay-millis: ${PDV_RETRY_DELAY_MILLIS:2000}
       max-attempts: ${PDV_RETRY_MAX_ATTEMPTS:${RETRY_MAX_ATTEMPTS:10}}
   web-client:
     connect.timeout.millis: ${CONNECT_TIMEOUT_MILLIS:10000}
     response.timeout: ${RESPONSE_TIMEOUT:60000}
     read.handler.timeout: ${READ_TIMEOUT_HANDLER:60000}
     write.handler.timeout: ${WRITE_TIMEOUT_HANDLER:60000}
-
-
+  email-notification:
+    delimiter: ${$EMAIL_NOTIFICATION_DELIMITER:,}
+    base-url: ${EMAIL_NOTIFICATION_MS_HOST:}/idpay/email-notification
+    imports:
+      subject: ${IMPORT_ELABORATION_EMAIL_SUBJECT:File esiti elaborato}
+      template-name: ${IMPORT_ELABORATION_EMAIL_TEMPLATE_NAME:Email_EsitiFile}
+    exports:
+      subject: ${EXPORT_UPLOAD_EMAIL_SUBJECT:Nuovo rimborso - azione richiesta}
+      template-name: ${EXPOR_UPLOAD_EMAIL_TEMPLATE_NAME:Email_RimborsiFile}
+  selc:
+    base-url: ${SELC_BASE_URL:}/external/v1
+    headers:
+      subscription-key: ${SELC_EXTERNAL_API_KEY:}
+      uid: ${SELC_UID:idpay}
+  wallet:
+    base-url: ${WALLET_MS_HOST:}/idpay/wallet

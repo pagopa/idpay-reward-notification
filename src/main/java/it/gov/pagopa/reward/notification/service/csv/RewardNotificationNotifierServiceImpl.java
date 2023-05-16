@@ -5,11 +5,16 @@ import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -21,6 +26,15 @@ public class RewardNotificationNotifierServiceImpl implements RewardNotification
     public RewardNotificationNotifierServiceImpl(RewardFeedbackMapper mapper, StreamBridge streamBridge) {
         this.mapper = mapper;
         this.streamBridge = streamBridge;
+    }
+
+    /** Declared just to let know Spring to connect the producer at startup */
+    @Configuration
+    static class RewardNotificationNotifierProducerConfig {
+        @Bean
+        public Supplier<Flux<Message<RewardFeedbackDTO>>> rewardNotificationFeedback() {
+            return Flux::empty;
+        }
     }
 
     @Override

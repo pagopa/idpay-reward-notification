@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ExtendWith(MockitoExtension.class)
 class Initiative2ExportRetrieverServiceTest {
@@ -54,7 +55,7 @@ class Initiative2ExportRetrieverServiceTest {
         Mockito.verifyNoMoreInteractions(rewardOrganizationExportRepositoryMock, rewardsNotificationRepositoryMock, rewardNotificationRuleRepositoryMock);
     }
 
-//region retrieveStuckExecution
+    //region retrieveStuckExecution
     @Test
     void testWhenNotStuckReservation() {
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveStuckExport()).thenReturn(Mono.empty());
@@ -73,14 +74,13 @@ class Initiative2ExportRetrieverServiceTest {
     }
 //endregion
 
-//region reserveExport
+    //region reserveExport
     @Test
     void testWhenReservationAlreadyExists() {
         RewardOrganizationExport expectedResult = new RewardOrganizationExport();
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.just(expectedResult));
-        Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.empty());
 
-        RewardOrganizationExport result = service.retrieve().block();
+        RewardOrganizationExport result = service.retrieve(now).block();
         Assertions.assertSame(expectedResult, result);
     }
 
@@ -96,26 +96,29 @@ class Initiative2ExportRetrieverServiceTest {
                 RewardOrganizationExport.builder().initiativeId("INITIATIVE_PENDING_2").build()
         ));
     }
+
     void testWhenReservationNotExistsAndPendingExportsAndNotRewards2Notify(List<RewardOrganizationExport> expectedPendingExports) {
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.empty());
         Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(
-                expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
+                        expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).collect(Collectors.toSet()),
+                        now))
                 .thenReturn(Flux.empty());
 
-        RewardOrganizationExport result = service.retrieve().block();
+        RewardOrganizationExport result = service.retrieve(now).block();
         Assertions.assertNull(result);
     }
 
     @Test
     void testWhenReservationNotExistsAndInitiativeNotExists() {
+
         Mockito.when(rewardOrganizationExportRepositoryMock.reserveExport()).thenReturn(Mono.empty());
         Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.empty());
-        Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(Collections.emptyList())).thenReturn(Flux.just("INITIATIVEID1"));
+        Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(Collections.emptySet(), now)).thenReturn(Flux.just("INITIATIVEID1"));
 
         Mockito.when(rewardNotificationRuleRepositoryMock.findById("INITIATIVEID1")).thenReturn(Mono.empty());
 
-        RewardOrganizationExport result = service.retrieve().block();
+        RewardOrganizationExport result = service.retrieve(now).block();
         Assertions.assertNull(result);
     }
 
@@ -123,6 +126,7 @@ class Initiative2ExportRetrieverServiceTest {
     void testWhenReservationNotExistsAndNotPendingExports() {
         testWhenReservationNotExistsAndPendingExports(Collections.emptyList());
     }
+
     @Test
     void testWhenReservationNotExists() {
         testWhenReservationNotExistsAndPendingExports(List.of(
@@ -130,10 +134,12 @@ class Initiative2ExportRetrieverServiceTest {
                 RewardOrganizationExport.builder().initiativeId("INITIATIVE_PENDING_2").build()
         ));
     }
+
     void testWhenReservationNotExistsAndPendingExports(List<RewardOrganizationExport> expectedPendingExports) {
         Mockito.when(rewardOrganizationExportRepositoryMock.findPendingOrTodayExports()).thenReturn(Flux.fromIterable(expectedPendingExports));
         Mockito.when(rewardsNotificationRepositoryMock.findInitiatives2Notify(
-                expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).toList()))
+                        expectedPendingExports.stream().map(RewardOrganizationExport::getInitiativeId).collect(Collectors.toSet()),
+                        now))
                 .thenReturn(Flux.just("INITIATIVEID1", "INITIATIVEID2", "INITIATIVE_ALREADY_RESERVED", "INITIATIVE_EXPORT_JUST_STORED"));
 
         RewardNotificationRule rule1 = RewardNotificationRuleFaker.mockInstance(1);
@@ -191,8 +197,13 @@ class Initiative2ExportRetrieverServiceTest {
                 }).
                 when(rewardOrganizationExportRepositoryMock).reserveExport();
 
-        RewardOrganizationExport result = service.retrieve().block();
+        RewardOrganizationExport result = service.retrieve(now).block();
         Assertions.assertSame(expectedNewRewardNotification1, result);
+
+        Mockito.verify(rewardOrganizationExportRepositoryMock, Mockito.never()).count(Mockito.argThat(i -> {
+            TestUtils.checkNullFields(i.getProbe(), "initiativeId", "notificationDate");
+            return false;
+        }));
     }
 
     private RewardOrganizationExport buildNewExpectedRewardNotification(RewardNotificationRule rule, long progressive) {
@@ -226,7 +237,7 @@ class Initiative2ExportRetrieverServiceTest {
 //endregion
 
     @Test
-    void testReserveNextSplitExport(){
+    void testReserveNextSplitExport() {
         // Given
         RewardOrganizationExport baseExport = buildNewExpectedRewardNotification(RewardNotificationRuleFaker.mockInstance(0), 5);
         baseExport.setExportDate(LocalDate.now());
@@ -240,7 +251,7 @@ class Initiative2ExportRetrieverServiceTest {
         baseExport.setPercentageResults(10L);
         baseExport.setStatus(RewardOrganizationExportStatus.EXPORTED);
 
-        Mockito.when(rewardOrganizationExportRepositoryMock.save(Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(0)));
+        Mockito.when(rewardOrganizationExportRepositoryMock.save(Mockito.any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
         // When
         RewardOrganizationExport result = service.reserveNextSplitExport(baseExport, 7).block();
@@ -248,7 +259,7 @@ class Initiative2ExportRetrieverServiceTest {
         // Then
         Assertions.assertNotNull(result);
 
-        String todayStr=Utils.FORMATTER_DATE.format(LocalDate.now());
+        String todayStr = Utils.FORMATTER_DATE.format(LocalDate.now());
         Assertions.assertEquals("ID_0_ssx_%s.12".formatted(todayStr), result.getId());
         Assertions.assertEquals("ORGANIZATION_ID_0_hpd/ID_0_ssx/export/NAME_0_vnj_%s.12.zip".formatted(todayStr), result.getFilePath());
         Assertions.assertEquals(baseExport.getInitiativeId(), result.getInitiativeId());

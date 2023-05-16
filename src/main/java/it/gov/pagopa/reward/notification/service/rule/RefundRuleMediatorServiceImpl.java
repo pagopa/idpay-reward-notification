@@ -59,7 +59,7 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     @Override
     protected void subscribeAfterCommits(Flux<List<RewardNotificationRule>> afterCommits2subscribe) {
         afterCommits2subscribe
-                .subscribe(r -> log.debug("[REWARD_NOTIFICATION_RULE] Processed offsets committed successfully"));
+                .subscribe(r -> log.info("[REWARD_NOTIFICATION_RULE] Processed offsets committed successfully"));
     }
 
     @Override

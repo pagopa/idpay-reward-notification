@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
+import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Initiative2ExportRetrieverServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import org.junit.jupiter.api.AfterEach;
@@ -125,7 +126,9 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
     void findPendingOrTodayExportsTest(){
         Assertions.assertEquals(
                 List.of("ID1","ID2","ID3"),
-                repository.findPendingOrTodayExports().map(RewardOrganizationExport::getId).sort().collectList().block()
+                repository.findPendingOrTodayExports()
+                        .filter(e->e.getId().startsWith("ID"))
+                        .map(RewardOrganizationExport::getId).sort().collectList().block()
         );
     }
 
@@ -171,7 +174,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         export.setRewardsExportedCents(10_00L);
 
         // When
-        UpdateResult result = repository.updateCounters(1L, 1L, 1L, export).block();
+        UpdateResult result = repository.updateCounters(new RewardNotificationFeedbackExportDelta(export, 1L, 1L, 1L)).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -187,7 +190,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport export = testData.get(2);
 
         // When
-        UpdateResult result = repository.updateCounters(inc, incReward, incOk, export).block();
+        UpdateResult result = repository.updateCounters(new RewardNotificationFeedbackExportDelta(export, inc, incOk, incReward)).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -221,7 +224,7 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
         RewardOrganizationExport export = testData.get(2);
 
         // When
-        UpdateResult result = repository.updateCounters(inc, rewardCents, incOk, export).block();
+        UpdateResult result = repository.updateCounters(new RewardNotificationFeedbackExportDelta(export, inc, incOk, rewardCents)).block();
 
         // Then
         checkUpdateCounters(rewardCents, inc, incOk, expectedPercentageRewardsCents, expectedPercentageResulted, expectedPercentageResultedOk, export, result);
@@ -243,103 +246,6 @@ class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTes
 
                         .build(),
                 repository.findById(export.getId()).block());
-    }
-//endregion
-
-//region test updateCountersOnRewardFeedback
-    @Test
-    void testUpdateCountersOnRewardFeedback_NoExists(){
-        // Given
-        RewardOrganizationExport export = new RewardOrganizationExport();
-        export.setId("NEVERSEENID");
-        export.setRewardNotified(10L);
-        export.setRewardsExportedCents(10_00L);
-
-        // When
-        UpdateResult result = repository.updateCountersOnRewardFeedback(true, 10L, export).block();
-
-        // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(UpdateResult.acknowledged(0, 0L, null), result);
-    }
-
-    @Test
-    void testUpdateCountersOnRewardFeedback_firstFeedbackOk(){
-        // Given
-        boolean firstFeedback = true;
-        long deltaRewardCents = 9_37L;
-        RewardOrganizationExport export = testData.get(2);
-
-        // When
-        UpdateResult result = repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export).block();
-
-        // Then
-        checkUpdateCounters(deltaRewardCents, 1, 1
-                , 12_37L, 11_00L, 6_00L
-                , export, result);
-    }
-
-    @Test
-    void testUpdateCountersOnRewardFeedback_firstFeedbackKO(){
-        // Given
-        boolean firstFeedback = true;
-        long deltaRewardCents = 0;
-        RewardOrganizationExport export = testData.get(2);
-
-        // When
-        UpdateResult result = repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export).block();
-
-        // Then
-        checkUpdateCounters(deltaRewardCents, 1, 0
-                , 3_00L, 11_00L, 5_00L
-                , export, result);
-    }
-
-    @Test
-    void testUpdateCountersOnRewardFeedback_noStatusChange(){
-        // Given
-        boolean firstFeedback = false;
-        long deltaRewardCents = 0L;
-        RewardOrganizationExport export = testData.get(2);
-
-        // When
-        UpdateResult result = repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export).block();
-
-        // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(UpdateResult.acknowledged(0, null, null), result);
-    }
-
-    @Test
-    void testUpdateCountersOnRewardFeedback_Ok2Ko(){
-        // Given
-        boolean firstFeedback = false;
-        long deltaRewardCents = -1_37L;
-        RewardOrganizationExport export = testData.get(2);
-
-        // When
-        UpdateResult result = repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export).block();
-
-        // Then
-        checkUpdateCounters(deltaRewardCents, 0, -1
-                , 1_63L, 10_00L, 4_00L
-                , export, result);
-    }
-
-    @Test
-    void testUpdateCountersOnRewardFeedback_Ko2Ok(){
-        // Given
-        boolean firstFeedback = false;
-        long deltaRewardCents = 1_37L;
-        RewardOrganizationExport export = testData.get(2);
-
-        // When
-        UpdateResult result = repository.updateCountersOnRewardFeedback(firstFeedback, deltaRewardCents, export).block();
-
-        // Then
-        checkUpdateCounters(deltaRewardCents, 0, 1
-                , 4_37L, 10_00L, 6_00L
-                , export, result);
     }
 //endregion
 

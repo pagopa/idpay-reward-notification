@@ -40,7 +40,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN"
+        "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
 })
 class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationTest {
 
@@ -189,7 +190,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         .initiativeId("initiativeId")
                         .initiativeName("initiativeName")
                         .filePath("orgId/initiativeId/export/dispositive-rewards-0.zip")
-                        .progressive(0)
+                        .progressive(0L)
 
                         .rewardNotified(6L)
                         .rewardsExportedCents(10_00L + (3 + 6 + 9 + 12 + 15) * 100L) // simulating already 1 notification of 10 retrieved
@@ -212,7 +213,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         .initiativeId("initiativeId")
                         .initiativeName("initiativeName")
                         .filePath("orgId/initiativeId/export/dispositive-rewards-1.zip")
-                        .progressive(1)
+                        .progressive(1L)
 
                         .rewardNotified(7L)
                         .rewardsExportedCents((1 + 4 + 7 + 10 + 13 + 16) * 100L)
@@ -235,7 +236,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         .initiativeId("initiativeId")
                         .initiativeName("initiativeName")
                         .filePath("orgId/initiativeId/export/dispositive-rewards-2.zip")
-                        .progressive(2)
+                        .progressive(2L)
 
                         .rewardNotified(6L)
                         .rewardsExportedCents((2 + 5 + 8 + 11 + 14 + 17) * 100L)
@@ -458,7 +459,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .filePath("orgId/initiativeId/export/dispositive-rewards-0.zip")
                             .notificationDate(LocalDate.now())
                             .exportDate(LocalDate.now())
-                            .progressive(0)
+                            .progressive(0L)
 
                             .rewardNotified(6L)
                             .rewardsExportedCents(55_00L)
@@ -495,7 +496,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .filePath("orgId/initiativeId/export/dispositive-rewards-1.zip")
                             .notificationDate(LocalDate.now())
                             .exportDate(LocalDate.now())
-                            .progressive(1)
+                            .progressive(1L)
 
                             .rewardNotified(7L)
                             .rewardsExportedCents(51_00L)
@@ -532,7 +533,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .filePath("orgId/initiativeId/export/dispositive-rewards-2.zip")
                             .notificationDate(LocalDate.now())
                             .exportDate(LocalDate.now())
-                            .progressive(2)
+                            .progressive(2L)
 
                             .rewardNotified(6L)
                             .rewardsExportedCents(57_00L)
@@ -653,16 +654,19 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                                                     .feedbackProgressive(1)
                                                     .status(wasOk ? RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED : RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_REJECTED)
                                                     .rejectionCode(wasOk ? null : previous.getResult().value)
+                                                    .rewardStatus(wasOk? RewardNotificationStatus.COMPLETED_OK : RewardNotificationStatus.COMPLETED_KO)
                                                     .feedbackDate(r.getFeedbackDate().truncatedTo(ChronoUnit.HOURS))
                                                     .rejectionReason(previous.getRejectionReason())
                                                     .rewardCents(!wasOk ? 0L : r.getEffectiveRewardCents())
                                                     .cro(wasOk? croIfOk : null)
                                                     .executionDate(wasOk? LocalDate.of(2022,11,18) : null)
+                                                    .transferDate(wasOk? LocalDate.of(2022,11,18) : null)
                                                     .build(),
                                             r.toBuilder()
                                                     .rewardCents(wasOk == isOk ? 0L : isOk ? r.getEffectiveRewardCents() : -r.getEffectiveRewardCents())
                                                     .cro(isOk? "rewardNotificationId8".equals(r.getRewardNotificationId()) ? "qwertyuiopa8-2" : croIfOk : null)
                                                     .executionDate(isOk? LocalDate.of(2022,11,19) : null)
+                                                    .transferDate(isOk? LocalDate.of(2022,11,19) : null)
                                                     .build());
                                 }
                         ).orElse(Stream.of(r))

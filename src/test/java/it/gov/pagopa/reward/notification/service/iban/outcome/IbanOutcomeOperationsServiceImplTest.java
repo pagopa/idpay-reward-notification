@@ -4,8 +4,9 @@ import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.service.iban.RewardIbanService;
-import it.gov.pagopa.reward.notification.utils.IbanConstants;
+import it.gov.pagopa.reward.notification.service.iban.outcome.recovery.RecoverIbanKoService;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
+import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,11 +25,13 @@ class IbanOutcomeOperationsServiceImplTest {
     private RewardIbanService rewardIbanServiceMock;
     @Mock
     private IbanOutcomeDTO2RewardIbanMapper ibanOutcomeDTO2RewardIbanMapperMock;
+    @Mock
+    private RecoverIbanKoService recoverIbanKoServiceMock;
     private IbanOutcomeOperationsService ibanOutcomeOperationsService;
 
     @BeforeEach
     void setUp() {
-        ibanOutcomeOperationsService = new IbanOutcomeOperationsServiceImpl(rewardIbanServiceMock, ibanOutcomeDTO2RewardIbanMapperMock);
+        ibanOutcomeOperationsService = new IbanOutcomeOperationsServiceImpl(rewardIbanServiceMock, ibanOutcomeDTO2RewardIbanMapperMock, recoverIbanKoServiceMock);
     }
 
     @Test
@@ -63,6 +66,7 @@ class IbanOutcomeOperationsServiceImplTest {
                 .checkIbanOutcome(ibanOutcomeUnknownDTO.getStatus())
                 .timestamp(LocalDateTime.now()).build();
         Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeUnknownDTO)).thenReturn(rewardIbanUnknown);
+        Mockito.when(recoverIbanKoServiceMock.recover(rewardIbanUnknown)).thenReturn(Mono.just(rewardIbanUnknown));
 
         IbanOutcomeDTO ibanOutcomeOkDTO = IbanOutcomeDTOFaker.mockInstance(1);
         ibanOutcomeOkDTO.setStatus(IbanConstants.STATUS_OK);
@@ -74,6 +78,7 @@ class IbanOutcomeOperationsServiceImplTest {
                 .checkIbanOutcome(ibanOutcomeOkDTO.getStatus())
                 .timestamp(LocalDateTime.now()).build();
         Mockito.when(ibanOutcomeDTO2RewardIbanMapperMock.apply(ibanOutcomeOkDTO)).thenReturn(rewardIbanOk);
+        Mockito.when(recoverIbanKoServiceMock.recover(rewardIbanOk)).thenReturn(Mono.just(rewardIbanOk));
 
         Mockito.when(rewardIbanServiceMock.save(Mockito.any(RewardIban.class))).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 

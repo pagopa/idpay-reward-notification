@@ -12,7 +12,9 @@ import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsu
 import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.LockService;
 import it.gov.pagopa.reward.notification.service.csv.in.ImportRewardNotificationFeedbackCsvService;
+import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRetrieverService;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,12 +33,12 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBlockingPartitionConsumer<List<StorageEventDto>, List<RewardOrganizationImport>> implements RewardNotificationFeedbackMediatorService {
-
     private final StorageEvent2OrganizationImportMapper mapper;
     private final RewardOrganizationImportsRepository importsRepository;
     private final FeedbackCsvRetrieverService csvRetrieverService;
     private final ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService;
     private final ErrorNotifierService errorNotifierService;
+    private final EmailNotificationService emailNotificationService;
 
     private final Duration commitDelay;
 
@@ -49,7 +51,12 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
             StorageEvent2OrganizationImportMapper mapper,
 
-            LockService lockService, RewardOrganizationImportsRepository importsRepository, FeedbackCsvRetrieverService csvRetrieverService, ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+            LockService lockService,
+            RewardOrganizationImportsRepository importsRepository,
+            FeedbackCsvRetrieverService csvRetrieverService,
+            ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService,
+            ErrorNotifierService errorNotifierService, EmailNotificationService emailNotificationService,
+            ObjectMapper objectMapper) {
         super(applicationName, lockService);
         this.mapper = mapper;
         this.importsRepository = importsRepository;
@@ -58,6 +65,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
+        this.emailNotificationService = emailNotificationService;
 
         this.objectReader = objectMapper.readerFor(new TypeReference<List<StorageEventDto>>() {
         });
@@ -70,7 +78,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     @Override
     protected void subscribeAfterCommits(Flux<List<List<RewardOrganizationImport>>> afterCommits2subscribe) {
-        afterCommits2subscribe.subscribe(p -> log.debug("[REWARD_NOTIFICATION_FEEDBACK] Processed offsets committed successfully"));
+        afterCommits2subscribe.subscribe(p -> log.info("[REWARD_NOTIFICATION_FEEDBACK] Processed offsets committed successfully"));
     }
 
     @Override
@@ -98,7 +106,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
         return Flux.fromIterable(payload)
                 // consider just organization feedback upload events
                 .filter(this::isOrganizationFeedbackUploadEvent)
-                .doOnNext(i->log.info("[REWARD_NOTIFICATION_FEEDBACK] Processing import request: {}", i.getSubject()))
+                .doOnNext(i -> log.info("[REWARD_NOTIFICATION_FEEDBACK] Processing import request: {}", i.getSubject()))
                 .map(mapper)
                 // trace import request
                 .flatMap(importsRepository::createIfNotExistsOrReturnEmpty)
@@ -106,11 +114,17 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
                 .flatMap(this::retrieveAndElaborateCsv)
                 // finalize import request state and store it
                 .flatMap(this::finalizeImportRequest)
-                .doOnNext(i->log.info("[REWARD_NOTIFICATION_FEEDBACK] Import request processing results stored: {}", i.getFilePath()))
+                .flatMap(this::sendEmail)
+                .doOnNext(i -> log.info("[REWARD_NOTIFICATION_FEEDBACK] Import request processing results stored: {}", i.getFilePath()))
                 .collectList();
     }
 
+    private Mono<RewardOrganizationImport> sendEmail(RewardOrganizationImport i) {
+        return emailNotificationService.send(i);
+    }
+
     private static final Pattern rewardOrganizationInputFilePathPattern = Pattern.compile("^%s[^/]+/[^/]+/import/[^/]*.zip$".formatted(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX));
+
     private boolean isOrganizationFeedbackUploadEvent(StorageEventDto storageEventDto) {
         return
                 // is upload event
@@ -121,9 +135,13 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     private Mono<RewardOrganizationImport> retrieveAndElaborateCsv(RewardOrganizationImport importRequest) {
         log.info("[REWARD_NOTIFICATION_FEEDBACK] New request recognized, retrieving and processing it: {}", importRequest.getFilePath());
-        return csvRetrieverService.retrieveCsv(importRequest)
-                .flatMap(p->importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
-                .switchIfEmpty(Mono.fromSupplier(()->{
+        return PerformanceLogger.logTimingOnNext(
+                        "REWARD_NOTIFICATION_FEEDBACK_DOWNLOAD",
+                        csvRetrieverService.retrieveCsv(importRequest),
+                        i -> "downloaded feedback file %s on initiative %s".formatted(importRequest.getFilePath(), importRequest.getInitiativeId())
+                )
+                .flatMap(p -> importRewardNotificationFeedbackCsvService.evaluate(p, importRequest))
+                .switchIfEmpty(Mono.fromSupplier(() -> {
                     log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot retrieve csv from filePath: {}", importRequest.getFilePath());
                     return importRequest;
                 }))
@@ -146,7 +164,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
                 importRequest.getFilePath(), importRequest.getStatus(), importRequest.getRewardsResulted(), importRequest.getRewardsResultedError(), importRequest.getErrorsSize());
 
         // errors potentially could be a big list, printing only when DEBUG
-        if(importRequest.getErrorsSize()>0){
+        if (importRequest.getErrorsSize() > 0) {
             log.debug("[REWARD_NOTIFICATION_FEEDBACK] Import request completed with errors {}: {}", importRequest.getFilePath(), importRequest.getErrors());
         }
         return importsRepository.save(importRequest);
@@ -154,18 +172,18 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     private static RewardOrganizationImportStatus transcodeStatus(RewardOrganizationImport importRequest) {
         RewardOrganizationImportStatus status;
-        if(importRequest.getRewardsResulted() == 0){
-            if(importRequest.getErrors().isEmpty()) {
+        if (importRequest.getRewardsResulted() == 0) {
+            if (importRequest.getErrors().isEmpty()) {
                 importRequest.getErrors().add(
                         new RewardOrganizationImport.RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors.NO_ROWS));
             }
-            status=RewardOrganizationImportStatus.ERROR;
-        } else if(!RewardOrganizationImportStatus.IN_PROGRESS.equals(importRequest.getStatus())) {
+            status = RewardOrganizationImportStatus.ERROR;
+        } else if (!RewardOrganizationImportStatus.IN_PROGRESS.equals(importRequest.getStatus())) {
             status = importRequest.getStatus();
-        } else if(importRequest.getRewardsResultedError() > 0) {
+        } else if (importRequest.getRewardsResultedError() > 0) {
             status = RewardOrganizationImportStatus.WARN;
         } else {
-            status =RewardOrganizationImportStatus.COMPLETE;
+            status = RewardOrganizationImportStatus.COMPLETE;
         }
 
         return status;

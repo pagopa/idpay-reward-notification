@@ -99,6 +99,16 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
                         .userId(userId)
                         .initiativeId(initiativeId)
                         .status(RewardNotificationStatus.TO_SEND)
+                        .build(),
+
+                // use case recovery notification
+                RewardsNotification.builder()
+                        .id("%s_%s_%s-recovery-1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)))
+                        .ordinaryId("%s_%s_%s".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)))
+                        .userId(userId)
+                        .initiativeId(initiativeId)
+                        .notificationDate(TODAY)
+                        .status(RewardNotificationStatus.TO_SEND)
                         .build()
         );
     }
@@ -108,11 +118,11 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
         String userId = TEST_USERID;
         String initiativeId = TEST_INITIATIVEID;
 
-        List<RewardsNotification> result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(userId, initiativeId, null ,RewardNotificationStatus.TO_SEND).collectList().block();
+        List<RewardsNotification> result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(userId, initiativeId, null ,RewardNotificationStatus.TO_SEND).collectList().block();
 
         checkResult(result, "%s_%s".formatted(userId, initiativeId));
 
-        result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatus(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
+        result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
 
         checkResult(result, "%s_%s_%s_1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TODAY)));
     }
@@ -122,7 +132,7 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
         String userId = TEST_USERID;
         String initiativeId = TEST_INITIATIVEID;
 
-        List<RewardsNotification> result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatus(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
+        List<RewardsNotification> result = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(userId, initiativeId, TODAY,RewardNotificationStatus.TO_SEND).collectList().block();
 
         checkResult(result, "%s_%s_%s_1".formatted(userId, initiativeId, Utils.FORMATTER_DATE.format(TOMORROW)));
     }

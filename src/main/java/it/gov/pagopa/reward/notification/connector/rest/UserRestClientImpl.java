@@ -1,8 +1,10 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
+import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -37,15 +39,20 @@ public class UserRestClientImpl implements UserRestClient {
 
     @Override
     public Mono<UserInfoPDV> retrieveUserInfo(String userId) {
-        return webClient
-                .method(HttpMethod.GET)
-                .uri(URI, Map.of("token", userId))
-                .retrieve()
-                .bodyToMono(UserInfoPDV.class)
+        return PerformanceLogger.logTimingOnNext(
+                        "PDV_INTEGRATION",
+                        webClient
+                                .method(HttpMethod.GET)
+                                .uri(URI, Map.of("token", userId))
+                                .retrieve()
+                                .toEntity(UserInfoPDV.class),
+                        x -> "httpStatus %s".formatted(x.getStatusCodeValue())
+                )
+                .map(HttpEntity::getBody)
                 .retryWhen(Retry.fixedDelay(pdvMaxAttempts, Duration.ofMillis(pdvRetryDelay))
                         .filter(ex -> {
                             boolean retry = (ex instanceof WebClientResponseException.TooManyRequests) || ex.getMessage().startsWith("Connection refused");
-                            if(retry){
+                            if (retry) {
                                 log.info("[PDV_INTEGRATION] Retrying invocation due to exception: {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
                             }
                             return retry;

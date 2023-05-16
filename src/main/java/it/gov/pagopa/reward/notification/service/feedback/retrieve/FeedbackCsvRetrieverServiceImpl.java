@@ -4,6 +4,7 @@ import com.opencsv.bean.CsvBindByName;
 import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotificationBlobClient;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,6 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -33,13 +33,17 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
     private final RewardsNotificationBlobClient blobClient;
 
     private final List<Pattern> mandatoryHeadersPattern;
+    private final AuditUtilities auditUtilities;
+
 
     public FeedbackCsvRetrieverServiceImpl(
             @Value("${app.csv.tmp-dir}") String csvTmpDir,
             @Value("${app.csv.import.separator}") String csvColumnSeparator,
-            RewardsNotificationBlobClient blobClient) {
+            RewardsNotificationBlobClient blobClient,
+            AuditUtilities auditUtilities) {
         this.csvTmpDir = csvTmpDir;
         this.blobClient = blobClient;
+        this.auditUtilities = auditUtilities;
 
         mandatoryHeadersPattern = Stream.of(
                         RewardNotificationImportCsvDto.Fields.uniqueID,
@@ -54,6 +58,7 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
     @Override
     public Mono<Path> retrieveCsv(RewardOrganizationImport importRequest) {
         Path zipLocalPath = Path.of(csvTmpDir, importRequest.getFilePath());
+        auditUtilities.logDownloadFile(importRequest.getInitiativeId(), importRequest.getOrganizationId());
         return blobClient.downloadFile(importRequest.getFilePath(), zipLocalPath)
                 .mapNotNull(x -> validateZipContentAndUnzip(zipLocalPath, importRequest));
     }
@@ -101,21 +106,24 @@ public class FeedbackCsvRetrieverServiceImpl implements FeedbackCsvRetrieverServ
     }
 
     private ZipEntry validateZipContent(ZipFile zipFile, String csvFileName, RewardOrganizationImport importRequest) {
-        int nEntries = zipFile.size();
-        if(nEntries ==0){
+
+        @SuppressWarnings("squid:S5042") // ignoring zip resource consumption alert: we are already checking that there will be just 1 entry, when unzipping it, we are checking also its size
+        List<? extends ZipEntry> zipEntries = zipFile
+                .stream()
+                .filter(f->!f.getName().startsWith("__MACOSX"))
+                .toList();
+
+        if(zipEntries.isEmpty()){
             log.info("[REWARD_NOTIFICATION_FEEDBACK] user uploaded an empty zip file: {}", importRequest.getFilePath());
             addError(importRequest, RewardFeedbackConstants.ImportFileErrors.EMPTY_ZIP);
             return null;
-        } else if(nEntries >1) {
+        } else if(zipEntries.size() >1) {
             log.info("[REWARD_NOTIFICATION_FEEDBACK] user uploaded a zip having more than one entry: entries:[{}], zipFile={}", zipFile.stream().map(ZipEntry::getName).collect(Collectors.joining(",")), importRequest.getFilePath());
             addError(importRequest, RewardFeedbackConstants.ImportFileErrors.INVALID_CONTENT);
             return null;
         }
 
-        @SuppressWarnings("squid:S5042") // ignoring zip resource consumption alert: we are already checking that there will be just 1 entry, when unzipping it, we are checking also its size
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-
-        ZipEntry zipEntry = entries.nextElement();
+        ZipEntry zipEntry = zipEntries.get(0);
 
         if (!zipEntry.getName().equals(csvFileName)) {
             log.info("[REWARD_NOTIFICATION_FEEDBACK] zipped file has not the expected name: entryName={}, expected={}", zipEntry.getName(), csvFileName);

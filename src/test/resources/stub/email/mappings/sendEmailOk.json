@@ -1,0 +1,29 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/notify",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "templateName": "TEST_EMAIL",
+          "templateValues": {
+            "initiativeName": "TEST_EMAIL_INITIATIVENAME",
+            "fileName": "testEmail.zip",
+            "elabDate": "15-03-2023"
+          },
+          "content": null,
+          "senderEmail": null,
+          "subject": "TEST_EMAIL",
+          "recipientEmail": "test.email1@orgId.it,test.email2@orgId.it"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

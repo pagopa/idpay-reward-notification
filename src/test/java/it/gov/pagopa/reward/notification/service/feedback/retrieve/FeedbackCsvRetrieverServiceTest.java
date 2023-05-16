@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.connector.azure.storage.RewardsNotifica
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationImportFaker;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
+import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,7 +29,8 @@ class FeedbackCsvRetrieverServiceTest {
 
     @Mock
     private RewardsNotificationBlobClient blobClientMock;
-
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
     private FeedbackCsvRetrieverService service;
 
     private final RewardOrganizationImport importRequest = RewardOrganizationImportFaker.mockInstance(0);
@@ -59,7 +61,7 @@ class FeedbackCsvRetrieverServiceTest {
 
     @BeforeEach
     void init() {
-        service = new FeedbackCsvRetrieverServiceImpl(csvTmpDir, ";", blobClientMock);
+        service = new FeedbackCsvRetrieverServiceImpl(csvTmpDir, ";", blobClientMock, auditUtilitiesMock);
 
         //noinspection unchecked
         Mockito.when(blobClientMock.downloadFile(Mockito.anyString(), Mockito.any())).thenReturn(Mono.just(Mockito.mock(Response.class)));
@@ -168,6 +170,20 @@ class FeedbackCsvRetrieverServiceTest {
     void testSuccessful() {
         // Given
         importRequest.setFilePath("valid/validUseCase.zip");
+        Path expectedCsvPath = buildExpectedCsvLocalPath();
+
+        // When
+        Path result = service.retrieveCsv(importRequest).block();
+
+        // Then
+        Assertions.assertNotNull(result, "retrieveCsv resulted into error: %s".formatted(importRequest.getErrors()));
+        Assertions.assertEquals(expectedCsvPath, result);
+    }
+
+    @Test
+    void testSuccessfulWithMacGeneratedZip() {
+        // Given
+        importRequest.setFilePath("valid/macOs/validUseCaseFromMAC.zip");
         Path expectedCsvPath = buildExpectedCsvLocalPath();
 
         // When

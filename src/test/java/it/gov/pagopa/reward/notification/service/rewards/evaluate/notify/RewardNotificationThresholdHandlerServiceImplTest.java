@@ -22,7 +22,7 @@ class RewardNotificationThresholdHandlerServiceImplTest extends BaseRewardNotifi
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());
         rule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED);
         rule.getAccumulatedAmount().setRefundThresholdCents(500L);
-        rule.setInitiativeRewardType(InitiativeRewardType.REFUND.name());
+        rule.setInitiativeRewardType(InitiativeRewardType.REFUND);
         return rule;
     }
 

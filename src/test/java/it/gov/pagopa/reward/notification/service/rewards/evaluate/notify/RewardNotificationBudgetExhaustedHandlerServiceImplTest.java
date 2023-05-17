@@ -22,7 +22,7 @@ class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends BaseReward
         rule.setInitiativeId("INITIATIVEID");
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());
         rule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED);
-        rule.setInitiativeRewardType(InitiativeRewardType.REFUND.name());
+        rule.setInitiativeRewardType(InitiativeRewardType.REFUND);
         return rule;
     }
 

@@ -47,7 +47,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setInitiativeId("INITIATIVEID");
         rule.setTimeParameter(new TimeParameterDTO());
         rule.getTimeParameter().setTimeType(type);
-        rule.setInitiativeRewardType(InitiativeRewardType.REFUND.name());
+        rule.setInitiativeRewardType(InitiativeRewardType.REFUND);
         return rule;
     }
 

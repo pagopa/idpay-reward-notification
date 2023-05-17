@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -9,6 +11,7 @@ import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.time.LocalDate;
 
@@ -57,6 +60,24 @@ class RewardsNotificationMapperTest {
                 "cro");
     }
 
+    @Test
+    void testMerchantIdAbsentInDiscountInitiative() {
+        // Given
+        String notificationId = "NOTIFICATIONID";
+        LocalDate notificationDate = LocalDate.now();
+        int progressive = 57;
+        RewardNotificationRule rule = RewardNotificationRuleFaker.mockInstance(0);
+        rule.setInitiativeRewardType(InitiativeRewardType.DISCOUNT);
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+        trx.setMerchantId(null);
+
+        // When
+        Executable executable = () -> mapper.apply(notificationId, notificationDate, progressive, trx, rule);
+
+        // Then
+        Assertions.assertThrows(IllegalArgumentException.class, executable);
+    }
+
     private void checkFields(String notificationId, LocalDate notificationDate, int progressive, RewardTransactionDTO trx, RewardNotificationRule rule, RewardsNotification result) {
         Assertions.assertEquals(notificationId, result.getId());
         Assertions.assertEquals(rule.getInitiativeId(), result.getInitiativeId());
@@ -64,6 +85,10 @@ class RewardsNotificationMapperTest {
         Assertions.assertEquals(rule.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(rule.getOrganizationFiscalCode(), result.getOrganizationFiscalCode());
         Assertions.assertEquals(trx.getUserId(), result.getBeneficiaryId());
+        Assertions.assertEquals(InitiativeRewardType.DISCOUNT.equals(rule.getInitiativeRewardType())
+                ? BeneficiaryType.MERCHANT
+                : BeneficiaryType.CITIZEN
+                , result.getBeneficiaryType());
         Assertions.assertEquals(progressive, result.getProgressive());
         Assertions.assertEquals(LocalDate.now(), result.getStartDepositDate());
         Assertions.assertEquals(notificationDate, result.getNotificationDate());

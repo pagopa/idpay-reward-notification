@@ -24,14 +24,14 @@ public class RewardsNotificationMapper {
                 .initiativeName(rule.getInitiativeName())
                 .organizationId(rule.getOrganizationId())
                 .organizationFiscalCode(rule.getOrganizationFiscalCode())
-                .beneficiaryId(getBeneficiaryId(rule.getInitiativeRewardType(), trx))
-                .beneficiaryType(getBeneficiaryType(rule.getInitiativeRewardType()))
                 .progressive(progressive)
                 .startDepositDate(LocalDate.now())
                 .notificationDate(notificationDate)
                 .rewardCents(0L)
                 .status(RewardNotificationStatus.TO_SEND)
                 .build();
+
+        setBeneficiary(out, rule.getInitiativeRewardType(), trx);
 
         if (out.getBeneficiaryId() == null) {
             throw new IllegalArgumentException("[REWARD_NOTIFICATION] beneficiaryId of notification having id %s is missing!"
@@ -41,17 +41,14 @@ public class RewardsNotificationMapper {
         return out;
     }
 
-    private String getBeneficiaryId(InitiativeRewardType initiativeRewardType, TransactionDTO trx) {
-        return switch (initiativeRewardType) {
-            case REFUND -> trx.getUserId();
-            case DISCOUNT -> trx.getMerchantId();
-        };
+    private void setBeneficiary(RewardsNotification notification, InitiativeRewardType initiativeRewardType, TransactionDTO trx) {
+        if (initiativeRewardType == InitiativeRewardType.REFUND) {
+            notification.setBeneficiaryId(trx.getUserId());
+            notification.setBeneficiaryType(BeneficiaryType.CITIZEN);
+        } else if (initiativeRewardType == InitiativeRewardType.DISCOUNT) {
+            notification.setBeneficiaryId(trx.getMerchantId());
+            notification.setBeneficiaryType(BeneficiaryType.MERCHANT);
+        }
     }
 
-    public static BeneficiaryType getBeneficiaryType(InitiativeRewardType initiativeRewardType) {
-        return switch (initiativeRewardType) {
-            case REFUND -> BeneficiaryType.CITIZEN;
-            case DISCOUNT -> BeneficiaryType.MERCHANT;
-        };
-    }
 }

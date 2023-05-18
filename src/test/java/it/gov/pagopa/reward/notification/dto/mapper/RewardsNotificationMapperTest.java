@@ -20,12 +20,54 @@ class RewardsNotificationMapperTest {
     private final RewardsNotificationMapper mapper = new RewardsNotificationMapper();
 
     @Test
-    void test() {
+    void testRefund() {
         // Given
         String notificationId = "NOTIFICATIONID";
         LocalDate notificationDate = LocalDate.now();
         int progressive = 57;
         RewardNotificationRule rule = RewardNotificationRuleFaker.mockInstance(0);
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+
+        // When
+        RewardsNotification result = mapper.apply(notificationId, notificationDate, progressive, trx, rule);
+
+        // Then
+        Assertions.assertNotNull(result);
+
+        checkFields(notificationId, notificationDate, progressive, trx, rule, result);
+
+        TestUtils.checkNotNullFields(result,
+                "exportDate",
+                "remedialId",
+                "ordinaryId",
+                "ordinaryExternalId",
+                "recoveredId",
+                "recoveredExternalId",
+                "depositType",
+                "endDepositDate",
+                "sendDate",
+                "exportId",
+                "iban",
+                "checkIbanResult",
+                "resultCode",
+                "rejectionReason",
+                "feedbackDate",
+                "feedbackElaborationDate",
+                "feedbackHistory",
+                "orderDate",
+                "executionDate",
+                "trn",
+                "cro");
+    }
+
+    @Test
+    void testDiscount() {
+        // Given
+        String notificationId = "NOTIFICATIONID";
+        LocalDate notificationDate = LocalDate.now();
+        int progressive = 57;
+        RewardNotificationRule rule = RewardNotificationRuleFaker.mockInstance(0);
+        rule.setInitiativeRewardType(InitiativeRewardType.DISCOUNT);
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
 
         // When
@@ -84,7 +126,10 @@ class RewardsNotificationMapperTest {
         Assertions.assertEquals(rule.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(rule.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(rule.getOrganizationFiscalCode(), result.getOrganizationFiscalCode());
-        Assertions.assertEquals(trx.getUserId(), result.getBeneficiaryId());
+        Assertions.assertEquals(InitiativeRewardType.DISCOUNT.equals(rule.getInitiativeRewardType())
+                ? trx.getMerchantId()
+                : trx.getUserId()
+                , result.getBeneficiaryId());
         Assertions.assertEquals(InitiativeRewardType.DISCOUNT.equals(rule.getInitiativeRewardType())
                 ? BeneficiaryType.MERCHANT
                 : BeneficiaryType.CITIZEN

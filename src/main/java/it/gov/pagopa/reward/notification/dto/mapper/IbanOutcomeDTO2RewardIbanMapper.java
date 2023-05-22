@@ -28,7 +28,7 @@ public class IbanOutcomeDTO2RewardIbanMapper implements Function<IbanOutcomeDTO,
     }
 
     public static String buildId(RewardsNotification rewardsNotification) {
-        return rewardsNotification.getUserId()
+        return rewardsNotification.getBeneficiaryId()
                 .concat(rewardsNotification.getInitiativeId());
     }
 }

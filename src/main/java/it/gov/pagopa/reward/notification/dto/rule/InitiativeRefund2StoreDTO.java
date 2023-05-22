@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.dto.rule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import lombok.*;
 
 @Data
@@ -27,5 +28,5 @@ public class InitiativeRefund2StoreDTO {
     @JsonProperty("refundRule")
     private InitiativeRefundRuleDTO refundRule;
     @JsonProperty("initiativeRewardType")
-    private String initiativeRewardType;
+    private InitiativeRewardType initiativeRewardType;
 }

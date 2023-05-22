@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardCounters;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends BaseReward
         rule.setInitiativeId("INITIATIVEID");
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());
         rule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED);
+        rule.setInitiativeRewardType(InitiativeRewardType.REFUND);
         return rule;
     }
 

@@ -9,24 +9,24 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 
 public interface RewardsNotificationRepository extends ReactiveMongoRepository<RewardsNotification, String>, RewardsNotificationRepositoryExtended {
-    Mono<Long> countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(String userId, String initiativeId);
-    Flux<RewardsNotification> findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(String userId, String initiativeId, LocalDate notificationDate, RewardNotificationStatus status);
+    Mono<Long> countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(String beneficiaryId, String initiativeId);
+    Flux<RewardsNotification> findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(String beneficiaryId, String initiativeId, LocalDate notificationDate, RewardNotificationStatus status);
 
-    Flux<RewardsNotification> findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(String userId, String initiativeId, LocalDate notificationDate, RewardNotificationStatus status);
+    Flux<RewardsNotification> findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(String beneficiaryId, String initiativeId, LocalDate notificationDate, RewardNotificationStatus status);
 
     Mono<RewardsNotification> findByExternalId(String externalId);
 
     Flux<RewardsNotification> findByInitiativeIdAndNotificationDate(String initiativeId, LocalDate notificationDate);
     Mono<RewardsNotification> findByExternalIdAndOrganizationIdAndInitiativeId(String externalId, String organizationId, String initiativeId);
 
-    Flux<RewardsNotification> findByUserIdAndInitiativeIdAndStatusAndRemedialIdNull(String userId, String initiativeId, RewardNotificationStatus status);
+    Flux<RewardsNotification> findByBeneficiaryIdAndInitiativeIdAndStatusAndRemedialIdNull(String beneficiaryId, String initiativeId, RewardNotificationStatus status);
 
-    Flux<RewardsNotification> findByUserIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
-            String userId,
+    Flux<RewardsNotification> findByBeneficiaryIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
+            String beneficiaryId,
             String initiativeId,
             RewardNotificationStatus status,
             String rejectionReason
     );
 
-    Flux<RewardsNotification> findByUserIdAndInitiativeIdAndStatus(String userId, String initiativeId, RewardNotificationStatus status);
+    Flux<RewardsNotification> findByBeneficiaryIdAndInitiativeIdAndStatus(String beneficiaryId, String initiativeId, RewardNotificationStatus status);
 }

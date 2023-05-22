@@ -95,7 +95,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
                                         .flatMap(u -> rewardsSuspendedUserRepository.delete(u)
                                                 .then(Mono.just(u))
                                         )
-                                        .flatMap(u -> rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatus(u.getUserId(), u.getInitiativeId(), RewardNotificationStatus.SUSPENDED)
+                                        .flatMap(u -> rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndStatus(u.getUserId(), u.getInitiativeId(), RewardNotificationStatus.SUSPENDED)
                                                 .flatMap(n -> readmitNotifications(initiative, n))
                                                 .then(Mono.just(u))
                                         )

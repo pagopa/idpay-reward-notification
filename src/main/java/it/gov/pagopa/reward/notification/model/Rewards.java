@@ -24,6 +24,7 @@ public class Rewards {
     private String id;
     private String trxId;
     private String userId;
+    private String merchantId;
     private String initiativeId;
     private String organizationId;
     private OperationType operationType;

@@ -15,6 +15,7 @@ public class RewardMapper {
                 .id(buildRewardId(trx, initiativeId))
                 .trxId(trx.getId())
                 .userId(trx.getUserId())
+                .merchantId(trx.getMerchantId())
                 .initiativeId(initiativeId)
                 .operationType(trx.getOperationTypeTranscoded())
                 .notificationId(notificationId)

@@ -34,7 +34,7 @@ class Iban2NotifyRetrieverServiceTest {
     void noIbanTest(){
         // Given
         RewardsNotification reward = new RewardsNotification();
-        reward.setUserId("USERID");
+        reward.setBeneficiaryId("USERID");
         reward.setInitiativeId("INITIATIATIVEID");
         reward.setStatus(RewardNotificationStatus.TO_SEND);
 
@@ -60,7 +60,7 @@ class Iban2NotifyRetrieverServiceTest {
     void successfulTest(){
         // Given
         RewardsNotification reward = new RewardsNotification();
-        reward.setUserId("USERID");
+        reward.setBeneficiaryId("USERID");
         reward.setInitiativeId("INITIATIATIVEID");
         reward.setStatus(RewardNotificationStatus.TO_SEND);
 
@@ -84,7 +84,7 @@ class Iban2NotifyRetrieverServiceTest {
     void testWhenException(){
         // Given
         RewardsNotification reward = new RewardsNotification();
-        reward.setUserId("USERID");
+        reward.setBeneficiaryId("USERID");
         reward.setInitiativeId("INITIATIATIVEID");
         reward.setStatus(RewardNotificationStatus.TO_SEND);
 

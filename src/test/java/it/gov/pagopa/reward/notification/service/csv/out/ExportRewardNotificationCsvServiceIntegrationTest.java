@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
 import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.*;
@@ -175,8 +176,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         long baseId = testCases.getAndAdd(number);
         long baseR = ObjectUtils.firstNonNull(baseReward, baseId - 1);
         return rewardsRepository.saveAll(LongStream.range(baseId, baseId + number).mapToObj(bias -> {
+                    // TODO set some notifications with beneficiaryType=MERCHANT
                     RewardsNotification reward = RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
                             .beneficiaryId((hasCf ? "USERID_OK_%d" : "USERID_NOTFOUND_%d").formatted(bias))
+                            .beneficiaryType(BeneficiaryType.CITIZEN)
                             .initiativeId(initiativeId)
                             .rewardCents(bias - baseR)
                             .notificationDate(notificationDate)

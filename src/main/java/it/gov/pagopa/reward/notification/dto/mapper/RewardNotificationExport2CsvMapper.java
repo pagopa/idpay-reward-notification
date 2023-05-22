@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
+import it.gov.pagopa.reward.notification.dto.merchant.MerchantDetailDTO;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -22,9 +23,36 @@ public class RewardNotificationExport2CsvMapper {
         out.setProgressiveCode(reward.getProgressive());
         out.setUniqueID(reward.getExternalId());
         out.setFiscalCode(user.getFiscalCode());
-        out.setAccountHolderName(user.getName());
-        out.setAccountHolderSurname(user.getSurname());
+        out.setBeneficiaryName("%s %s".formatted(user.getName(), user.getSurname()));
         out.setIban(reward.getIban());
+        out.setAmount(reward.getRewardCents());
+        out.setPaymentReason(buildPaymentReason(reward, depositStartDateStr, depositEndDateStr));
+        out.setInitiativeName(reward.getInitiativeName());
+        out.setInitiativeID(reward.getInitiativeId());
+        out.setStartDatePeriod(depositStartDateStr);
+        out.setEndDatePeriod(depositEndDateStr);
+        out.setOrganizationId(reward.getOrganizationId());
+        out.setOrganizationFiscalCode(reward.getOrganizationFiscalCode());
+        out.setCheckIban(reward.getCheckIbanResult());
+        out.setTypologyReward((reward.getDepositType() == null? DepositType.FINAL : reward.getDepositType()).getLabel());
+        out.setRelatedPaymentID(reward.getRecoveredExternalId());
+
+        return out;
+    }
+
+    public RewardNotificationExportCsvDto apply(RewardsNotification reward, MerchantDetailDTO merchant) {
+        RewardNotificationExportCsvDto out = new RewardNotificationExportCsvDto();
+
+        String depositStartDateStr = DateTimeFormatter.ISO_DATE.format(reward.getStartDepositDate());
+        String depositEndDateStr = DateTimeFormatter.ISO_DATE.format(reward.getNotificationDate());
+
+        out.setId(reward.getId());
+
+        out.setProgressiveCode(reward.getProgressive());
+        out.setUniqueID(reward.getExternalId());
+        out.setFiscalCode(merchant.getFiscalCode());
+        out.setBeneficiaryName(merchant.getBusinessName());
+        out.setIban(merchant.getIban());
         out.setAmount(reward.getRewardCents());
         out.setPaymentReason(buildPaymentReason(reward, depositStartDateStr, depositEndDateStr));
         out.setInitiativeName(reward.getInitiativeName());

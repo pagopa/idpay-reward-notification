@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/INITIATIVEID/(MERCHANTID_OK_[0-9]+)/detail"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "initiativeId": "INITIATIVEID",
+      "businessName": "MERCHANT",
+      "legalOfficeAddress": "LOA",
+      "legalOfficeMunicipality": "LOM",
+      "legalOfficeProvince": "LOP",
+      "legalOfficeZipCode": "LOZ",
+      "certifiedEmail": "certified@email.com",
+      "fiscalCode": "CF",
+      "vatNumber": "VAT",
+      "status": "STATUS",
+      "iban": "IBAN",
+      "creationDate": "1970-01-01T00:00:00",
+      "updateDate": "1970-01-01T00:00:00"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

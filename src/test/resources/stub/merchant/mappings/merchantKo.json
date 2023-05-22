@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/INITIATIVEID/(MERCHANTID_KO_[0-9]+)/detail"
+  },
+  "response": {
+    "status": "500",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

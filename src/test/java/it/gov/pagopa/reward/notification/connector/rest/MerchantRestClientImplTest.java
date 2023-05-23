@@ -1,11 +1,9 @@
-package it.gov.pagopa.reward.notification.connector.merchant;
+package it.gov.pagopa.reward.notification.connector.rest;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
-import it.gov.pagopa.reward.notification.dto.merchant.MerchantDetailDTO;
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
+import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
@@ -23,7 +21,7 @@ class MerchantRestClientImplTest extends BaseIntegrationTest {
     void testOk() {
         String merchantId = "MERCHANTID_OK_1";
 
-        MerchantDetailDTO result = merchantRestClient.getMerchant("INITIATIVEID", merchantId).block();
+        MerchantDetailDTO result = merchantRestClient.getMerchant(merchantId, "ORGANIZATIONID", "INITIATIVEID").block();
 
         Assertions.assertNotNull(result);
 
@@ -48,10 +46,10 @@ class MerchantRestClientImplTest extends BaseIntegrationTest {
 
     @Test
     void testSuspendKo() {
-        String merchantId = "MERCHANTID_KO_1";
+        String merchantId = "MERCHANTID_NOTFOUND_1";
 
-        Executable executable = () -> merchantRestClient.getMerchant("INITIATIVEID", merchantId).block();
+        MerchantDetailDTO result = merchantRestClient.getMerchant(merchantId, "ORGANIZATIONID", "INITIATIVEID").block();
 
-        Assertions.assertThrows(ClientExceptionNoBody.class, executable);
+        Assertions.assertNull(result);
     }
 }

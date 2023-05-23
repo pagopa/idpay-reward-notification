@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out.retrieve;
 
-import it.gov.pagopa.reward.notification.connector.merchant.MerchantRestClient;
-import it.gov.pagopa.reward.notification.dto.merchant.MerchantDetailDTO;
+import it.gov.pagopa.reward.notification.connector.rest.MerchantRestClient;
+import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -23,6 +23,7 @@ class Merchant2NotifyRetrieverServiceTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
     public static final String MERCHANTID = "MERCHANTID";
+    public static final String ORGANIZATIONID = "ORGANIZATIONID";
     @Mock private MerchantRestClient merchantRestClientMock;
     @Mock private RewardsNotificationRepository rewardsNotificationRepositoryMock;
     @Mock private RewardNotificationNotifierService errorNotifierServiceMock;
@@ -39,7 +40,7 @@ class Merchant2NotifyRetrieverServiceTest {
         // Given
         RewardsNotification reward = buildRewardsNotification();
 
-        Mockito.when(merchantRestClientMock.getMerchant(INITIATIVEID, MERCHANTID)).thenReturn(Mono.empty());
+        Mockito.when(merchantRestClientMock.getMerchant(MERCHANTID, ORGANIZATIONID, INITIATIVEID)).thenReturn(Mono.empty());
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.same(reward))).thenReturn(Mono.just(reward));
         Mockito.when(errorNotifierServiceMock.notify(Mockito.same(reward), Mockito.eq(0L))).thenReturn(Mono.just(reward));
 
@@ -67,7 +68,7 @@ class Merchant2NotifyRetrieverServiceTest {
                 .iban("IBAN")
                 .businessName("MERCHANT")
                 .build();
-        Mockito.when(merchantRestClientMock.getMerchant(INITIATIVEID, MERCHANTID)).thenReturn(Mono.just(expectedMerchantDetail));
+        Mockito.when(merchantRestClientMock.getMerchant(MERCHANTID, ORGANIZATIONID, INITIATIVEID)).thenReturn(Mono.just(expectedMerchantDetail));
 
         // When
         Pair<RewardsNotification, MerchantDetailDTO> result = service.retrieve(reward).block();
@@ -89,7 +90,7 @@ class Merchant2NotifyRetrieverServiceTest {
         // Given
         RewardsNotification reward = buildRewardsNotification();
 
-        Mockito.when(merchantRestClientMock.getMerchant(INITIATIVEID, MERCHANTID)).thenReturn(Mono.error(new RuntimeException("DUMMY")));
+        Mockito.when(merchantRestClientMock.getMerchant(MERCHANTID, ORGANIZATIONID, INITIATIVEID)).thenReturn(Mono.error(new RuntimeException("DUMMY")));
 
         // When
         Pair<RewardsNotification, MerchantDetailDTO> result = service.retrieve(reward).block();
@@ -105,6 +106,7 @@ class Merchant2NotifyRetrieverServiceTest {
 
     private static RewardsNotification buildRewardsNotification() {
         RewardsNotification reward = new RewardsNotification();
+        reward.setOrganizationId(ORGANIZATIONID);
         reward.setInitiativeId(INITIATIVEID);
         reward.setBeneficiaryId(MERCHANTID);
         reward.setBeneficiaryType(BeneficiaryType.MERCHANT);

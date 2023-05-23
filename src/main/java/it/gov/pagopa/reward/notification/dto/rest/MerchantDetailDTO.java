@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.dto.merchant;
+package it.gov.pagopa.reward.notification.dto.rest;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

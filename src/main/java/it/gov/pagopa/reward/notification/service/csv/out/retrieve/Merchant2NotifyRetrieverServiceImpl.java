@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out.retrieve;
 
-import it.gov.pagopa.reward.notification.connector.merchant.MerchantRestClient;
-import it.gov.pagopa.reward.notification.dto.merchant.MerchantDetailDTO;
+import it.gov.pagopa.reward.notification.connector.rest.MerchantRestClient;
+import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -30,14 +30,14 @@ public class Merchant2NotifyRetrieverServiceImpl implements Merchant2NotifyRetri
 
     @Override
     public Mono<Pair<RewardsNotification, MerchantDetailDTO>> retrieve(RewardsNotification reward) {
-        return merchantRestClient.getMerchant(reward.getInitiativeId(), reward.getBeneficiaryId())
+        return merchantRestClient.getMerchant(reward.getBeneficiaryId(), reward.getOrganizationId(),reward.getInitiativeId())
                 .switchIfEmpty(Mono.defer(() -> {
                     log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find merchant having id {} related to initiative {}",
                             reward.getBeneficiaryId(), reward.getInitiativeId());
 
                     reward.setStatus(RewardNotificationStatus.ERROR);
-                    reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
-                    reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
+                    reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND);
+                    reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
                             .flatMap(rn -> {
@@ -49,7 +49,7 @@ public class Merchant2NotifyRetrieverServiceImpl implements Merchant2NotifyRetri
                 .map(merchant -> {
                     log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] fiscalCode related to merchant {} retrieved", reward.getBeneficiaryId());
 
-                    return org.apache.commons.lang3.tuple.Pair.of(reward, merchant);
+                    return Pair.of(reward, merchant);
                 })
 
                 .onErrorResume(e -> {

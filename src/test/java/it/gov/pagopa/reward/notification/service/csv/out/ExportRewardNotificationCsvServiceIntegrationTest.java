@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMap
 import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
 import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
 import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.*;
@@ -67,6 +68,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
     private RewardNotificationRule rule3;
     private RewardNotificationRule rule4;
     private RewardNotificationRule rule5;
+    private RewardNotificationRule rule6;
 
     @Autowired
     private RewardNotificationRuleRepository ruleRepository;
@@ -96,13 +98,15 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         rule3 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(3).initiativeId("INITIATIVEID3").build()).block();
         rule4 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(4).initiativeId("INITIATIVEID4").build()).block();
         rule5 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(5).initiativeId("INITIATIVEID5").build()).block();
+        rule6 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(6).initiativeId("INITIATIVEID6")
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT).build()).block();
 
         // useCase rewards to be notified, but without reward amount, initiative without other rewards
-        storeRewardsUseCases(1, rule0.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
-        storeRewardsUseCases(1, rule00.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
+        storeRewardsUseCases(1, rule0.getInitiativeId(), YESTERDAY, null, true, true, false, 0L);
+        storeRewardsUseCases(1, rule00.getInitiativeId(), YESTERDAY, null, true, true, false, 0L);
 
         // useCase rewards to be notified, but without reward amount
-        storeRewardsUseCases(3, rule1.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
+        storeRewardsUseCases(3, rule1.getInitiativeId(), YESTERDAY, null, true, true, false, 0L);
 
         // useCase rewards not to be notified
         storeRewardsUseCases(N, rule1.getInitiativeId(), null, null, true, true);
@@ -116,7 +120,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         // useCase rewards partially related to a stuck export
         long baseStuckReward = testCases.get() - 1;
         storeRewardsUseCases(N / 4, rule2.getInitiativeId(), stuckNotificationDate, "STUCKEXPORTID.5", true, true);
-        storeRewardsUseCases(N * 3 / 4, rule2.getInitiativeId(), stuckNotificationDate, null, true, true, baseStuckReward);
+        storeRewardsUseCases(N * 3 / 4, rule2.getInitiativeId(), stuckNotificationDate, null, true, true, false, baseStuckReward);
 
         // useCase rewards to be notified, but without iban
         storeRewardsUseCases(3, rule3.getInitiativeId(), YESTERDAY, null, false, true);
@@ -128,6 +132,11 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
         List<RewardsNotification> suspendedUserNotification = storeRewardsUseCases(1, rule5.getInitiativeId(), YESTERDAY, null, true, true);
         suspendedUserNotification.forEach(n -> suspendedUserRepository.save(new RewardSuspendedUser(n.getBeneficiaryId(), n.getInitiativeId(), n.getOrganizationId())).block());
+
+        // useCase discount initiative (merchant to be refunded) - OK
+        storeRewardsUseCases(1, rule6.getInitiativeId(), YESTERDAY, null, false, true, true);
+        // useCase discount initiative (merchant to be refunded) - KO
+        storeRewardsUseCases(1, rule6.getInitiativeId(), YESTERDAY, null, false, false, true);
 
         Assertions.assertEquals(testCases.get(), rewardsRepository.count().block());
 
@@ -165,27 +174,32 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
     private final AtomicLong testCases = new AtomicLong(0L);
 
     private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf) {
-        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, null);
+        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, false, null);
     }
 
-    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, Long baseReward) {
-        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, baseReward, null);
+    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, boolean isDiscount) {
+        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, isDiscount, null);
     }
 
-    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, Long baseReward, Long rewardCents) {
+    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, boolean isDiscount, Long baseReward) {
+        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, isDiscount, baseReward, null);
+    }
+
+    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, boolean isDiscount, Long baseReward, Long rewardCents) {
         long baseId = testCases.getAndAdd(number);
         long baseR = ObjectUtils.firstNonNull(baseReward, baseId - 1);
         return rewardsRepository.saveAll(LongStream.range(baseId, baseId + number).mapToObj(bias -> {
-                    // TODO set some notifications with beneficiaryType=MERCHANT
-                    RewardsNotification reward = RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
-                            .beneficiaryId((hasCf ? "USERID_OK_%d" : "USERID_NOTFOUND_%d").formatted(bias))
-                            .beneficiaryType(BeneficiaryType.CITIZEN)
+                    RewardsNotification reward =
+                            RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
+                            .beneficiaryId(buildBeneficiaryIdFromUseCase(hasCf, isDiscount, bias))
+                            .beneficiaryType(isDiscount ? BeneficiaryType.MERCHANT : BeneficiaryType.CITIZEN)
                             .initiativeId(initiativeId)
                             .rewardCents(bias - baseR)
                             .notificationDate(notificationDate)
                             .exportId(exportId)
                             .build();
-                    reward.setId(reward.getId().replace("USERID", hasCf ? "USERID_OK_" : "USERID_NOTFOUND_"));
+
+                    reward.setId(replaceId(reward.getId(), hasCf, isDiscount));
 
                     if (rewardCents != null) {
                         reward.setRewardCents(rewardCents);
@@ -504,5 +518,17 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertEquals(3, ibanKo);
         Assertions.assertEquals(1, cfKo);
 
+    }
+
+    private String buildBeneficiaryIdFromUseCase(boolean hasCf, boolean isDiscount, long bias) {
+        String beneficiaryIdPrefix = isDiscount ? "MERCHANTID" : "USERID";
+        String hasCfString = hasCf ? "OK" : "NOTFOUND";
+        return "%s_%s_%d".formatted(beneficiaryIdPrefix, hasCfString, bias);
+    }
+
+    private String replaceId(String notificationId, boolean hasCf, boolean isDiscount) {
+        String beneficiaryIdPrefix = isDiscount ? "MERCHANTID" : "USERID";
+        String hasCfString = hasCf ? "OK" : "NOTFOUND";
+        return notificationId.replace(beneficiaryIdPrefix, "%s_%s_".formatted(beneficiaryIdPrefix, hasCfString));
     }
 }

@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out.mapper;
 
 import it.gov.pagopa.reward.notification.dto.mapper.RewardNotificationExport2CsvMapper;
-import it.gov.pagopa.reward.notification.dto.merchant.MerchantDetailDTO;
+import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;

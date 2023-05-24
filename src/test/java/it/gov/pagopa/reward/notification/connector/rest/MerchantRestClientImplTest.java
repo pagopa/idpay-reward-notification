@@ -45,7 +45,7 @@ class MerchantRestClientImplTest extends BaseIntegrationTest {
 
 
     @Test
-    void testSuspendKo() {
+    void testKo() {
         String merchantId = "MERCHANTID_NOTFOUND_1";
 
         MerchantDetailDTO result = merchantRestClient.getMerchant(merchantId, "ORGANIZATIONID", "INITIATIVEID").block();

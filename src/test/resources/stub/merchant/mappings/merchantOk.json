@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/INITIATIVEID/(MERCHANTID_OK_[0-9]+)/detail"
+    "urlPathPattern": "/(MERCHANTID_OK_[0-9]+)/organization/ORGANIZATIONID/initiative/INITIATIVEID/detail"
   },
   "response": {
     "status": "200",

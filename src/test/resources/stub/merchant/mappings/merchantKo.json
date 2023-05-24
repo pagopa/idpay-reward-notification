@@ -1,10 +1,10 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/INITIATIVEID/(MERCHANTID_NOTFOUND_[0-9]+)/detail"
+    "urlPathPattern": "/(MERCHANTID_NOTFOUND_[0-9]+)/organization/ORGANIZATIONID/initiative/INITIATIVEID/detail"
   },
   "response": {
-    "status": "500",
+    "status": "404",
     "headers": {
       "Content-Type": "application/json"
     }

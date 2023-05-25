@@ -30,10 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -69,6 +66,9 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
     private RewardNotificationRule rule4;
     private RewardNotificationRule rule5;
     private RewardNotificationRule rule6;
+    private RewardNotificationRule rule7;
+
+    private final List<String> discountInitiativeIds = new ArrayList<>();
 
     @Autowired
     private RewardNotificationRuleRepository ruleRepository;
@@ -98,15 +98,20 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         rule3 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(3).initiativeId("INITIATIVEID3").build()).block();
         rule4 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(4).initiativeId("INITIATIVEID4").build()).block();
         rule5 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(5).initiativeId("INITIATIVEID5").build()).block();
+        // discount initiatives
         rule6 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(6).initiativeId("INITIATIVEID6")
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT).build()).block();
+        rule7 = ruleRepository.save(RewardNotificationRuleFaker.mockInstanceBuilder(7).initiativeId("INITIATIVEID7")
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT).build()).block();
+
+        discountInitiativeIds.addAll(List.of(rule6.getInitiativeId(), rule7.getInitiativeId()));
 
         // useCase rewards to be notified, but without reward amount, initiative without other rewards
-        storeRewardsUseCases(1, rule0.getInitiativeId(), YESTERDAY, null, true, true, false, 0L);
-        storeRewardsUseCases(1, rule00.getInitiativeId(), YESTERDAY, null, true, true, false, 0L);
+        storeRewardsUseCases(1, rule0.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
+        storeRewardsUseCases(1, rule00.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
 
         // useCase rewards to be notified, but without reward amount
-        storeRewardsUseCases(3, rule1.getInitiativeId(), YESTERDAY, null, true, true, false, 0L);
+        storeRewardsUseCases(3, rule1.getInitiativeId(), YESTERDAY, null, true, true, null, 0L);
 
         // useCase rewards not to be notified
         storeRewardsUseCases(N, rule1.getInitiativeId(), null, null, true, true);
@@ -120,7 +125,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         // useCase rewards partially related to a stuck export
         long baseStuckReward = testCases.get() - 1;
         storeRewardsUseCases(N / 4, rule2.getInitiativeId(), stuckNotificationDate, "STUCKEXPORTID.5", true, true);
-        storeRewardsUseCases(N * 3 / 4, rule2.getInitiativeId(), stuckNotificationDate, null, true, true, false, baseStuckReward);
+        storeRewardsUseCases(N * 3 / 4, rule2.getInitiativeId(), stuckNotificationDate, null, true, true, baseStuckReward);
 
         // useCase rewards to be notified, but without iban
         storeRewardsUseCases(3, rule3.getInitiativeId(), YESTERDAY, null, false, true);
@@ -133,10 +138,11 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         List<RewardsNotification> suspendedUserNotification = storeRewardsUseCases(1, rule5.getInitiativeId(), YESTERDAY, null, true, true);
         suspendedUserNotification.forEach(n -> suspendedUserRepository.save(new RewardSuspendedUser(n.getBeneficiaryId(), n.getInitiativeId(), n.getOrganizationId())).block());
 
-        // useCase discount initiative (merchant to be refunded) - OK
-        storeRewardsUseCases(1, rule6.getInitiativeId(), YESTERDAY, null, false, true, true);
-        // useCase discount initiative (merchant to be refunded) - KO
-        storeRewardsUseCases(1, rule6.getInitiativeId(), YESTERDAY, null, false, false, true);
+
+        // useCase discount initiative - merchant OK
+        storeRewardsUseCases(1, rule6.getInitiativeId(), YESTERDAY, null, false, true);
+        // useCase discount initiative - merchant KO
+        storeRewardsUseCases(1, rule7.getInitiativeId(), YESTERDAY, null, false, false);
 
         Assertions.assertEquals(testCases.get(), rewardsRepository.count().block());
 
@@ -174,23 +180,20 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
     private final AtomicLong testCases = new AtomicLong(0L);
 
     private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf) {
-        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, false, null);
+        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, null);
     }
 
-    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, boolean isDiscount) {
-        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, isDiscount, null);
+    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, Long baseReward) {
+        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, baseReward, null);
     }
 
-    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, boolean isDiscount, Long baseReward) {
-        return storeRewardsUseCases(number, initiativeId, notificationDate, exportId, hasIban, hasCf, isDiscount, baseReward, null);
-    }
-
-    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, boolean isDiscount, Long baseReward, Long rewardCents) {
+    private List<RewardsNotification> storeRewardsUseCases(long number, String initiativeId, LocalDate notificationDate, String exportId, boolean hasIban, boolean hasCf, Long baseReward, Long rewardCents) {
         long baseId = testCases.getAndAdd(number);
         long baseR = ObjectUtils.firstNonNull(baseReward, baseId - 1);
         return rewardsRepository.saveAll(LongStream.range(baseId, baseId + number).mapToObj(bias -> {
-                    RewardsNotification reward =
-                            RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
+            boolean isDiscount = discountInitiativeIds.contains(initiativeId);  // tmp
+
+            RewardsNotification reward = RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
                             .beneficiaryId(buildBeneficiaryIdFromUseCase(hasCf, isDiscount, bias))
                             .beneficiaryType(isDiscount ? BeneficiaryType.MERCHANT : BeneficiaryType.CITIZEN)
                             .initiativeId(initiativeId)
@@ -198,7 +201,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                             .notificationDate(notificationDate)
                             .exportId(exportId)
                             .build();
-
                     reward.setId(replaceId(reward.getId(), hasCf, isDiscount));
 
                     if (rewardCents != null) {
@@ -260,7 +262,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                         "STUCKEXPORTID.7",
 
                         // 1 for INITIATIVEID4
-                        "INITIATIVEID4_%s.1".formatted(TODAY_STR)
+                        "INITIATIVEID4_%s.1".formatted(TODAY_STR),
+
+                        // 1 for INITIATIVEID6
+                        "INITIATIVEID6_%s.1".formatted(TODAY_STR)
                 ),
                 successfulExports.stream().map(RewardOrganizationExport::getId).collect(Collectors.toSet()),
                 "Unexpected exported files size: %s".formatted(result));
@@ -277,7 +282,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                         "INITIATIVEID3_%s.1".formatted(TODAY_STR),
 
                         // rule 5 because suspended
-                        "INITIATIVEID5_%s.1".formatted(TODAY_STR)
+                        "INITIATIVEID5_%s.1".formatted(TODAY_STR),
+
+                        // rule 7 because merchant info missing
+                        "INITIATIVEID7_%s.1".formatted(TODAY_STR)
                 ),
                 result.stream().filter(e -> RewardOrganizationExportStatus.SKIPPED.equals(e.getStatus())).map(RewardOrganizationExport::getId).collect(Collectors.toSet()),
                 "Unexpected result size: %s".formatted(result));
@@ -294,7 +302,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         checkInitiativeExports("STUCKEXPORTID.5", rule2, "rewards/notifications/ORGANIZATION_ID_2_izn/INITIATIVEID2/export/STUCKEXPORT.5.zip", 5L, stuckNotificationDate, result);
 
         checkIbanKoUseCases();
-        checkCfKoUseCases(result);
+        checkCitizenCfKoUseCases(result);
+        checkMerchantCfKoUseCases();
         checkSuspendedUseCases();
         checkNoRewardedUseCases();
 
@@ -412,29 +421,52 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         );
     }
 
-    private void checkCfKoUseCases(List<RewardOrganizationExport> result) {
+    private void checkCitizenCfKoUseCases(List<RewardOrganizationExport> result) {
         List<RewardsNotification> expectedCfKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
                 .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND)
                 .build())).collectList().block();
 
         Assertions.assertNotNull(expectedCfKo);
         Assertions.assertEquals(1, expectedCfKo.size());
-        expectedCfKo.forEach(r -> {
-            Assertions.assertEquals("IBAN_%s".formatted(r.getBeneficiaryId()), r.getIban());
-            Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getBeneficiaryId()), r.getCheckIbanResult());
-            Assertions.assertEquals(rule4.getInitiativeId(), r.getInitiativeId());
-            Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
-            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());
-            Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getResultCode());
-            Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
-            Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
-        });
+        expectedCfKo.forEach(this::citizenCfKoChecks);
 
         checkExport(result,
                 "INITIATIVEID4_%s.1".formatted(TODAY_STR)
                 , rule4, 1
                 , "rewards/notifications/ORGANIZATION_ID_4_fwi/INITIATIVEID4/export/NAME_4_wfp_%s.1.zip".formatted(TODAY_STR)
                 , TODAY, splitSize);
+    }
+
+    private void checkMerchantCfKoUseCases() {
+        List<RewardsNotification> expectedCfKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
+                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND)
+                .build())).collectList().block();
+
+        Assertions.assertNotNull(expectedCfKo);
+        Assertions.assertEquals(1, expectedCfKo.size());
+        expectedCfKo.forEach(this::merchantCfKoChecks);
+    }
+
+    private void citizenCfKoChecks(RewardsNotification r) {
+        Assertions.assertEquals("IBAN_%s".formatted(r.getBeneficiaryId()), r.getIban());
+        Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getBeneficiaryId()), r.getCheckIbanResult());
+        Assertions.assertEquals(rule4.getInitiativeId(), r.getInitiativeId());
+        Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getResultCode());
+        Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
+        Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
+    }
+
+    private void merchantCfKoChecks(RewardsNotification r) {
+        Assertions.assertNull(r.getIban());
+        Assertions.assertNull(r.getCheckIbanResult());
+        Assertions.assertEquals(rule7.getInitiativeId(), r.getInitiativeId());
+        Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND, r.getRejectionReason());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND, r.getResultCode());
+        Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
+        Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
     }
 
     private void checkSuspendedUseCases() {
@@ -493,6 +525,10 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 Assertions.assertEquals("INITIATIVEID4", n.getInitiativeId());
 
                 cfKo++;
+            } else if (ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND.equals(n.getRejectionCode())) {
+                Assertions.assertEquals("INITIATIVEID7", n.getInitiativeId());
+
+                cfKo++;
             } else {
                 Assertions.fail("Unexpected rejection code: %s".formatted(n));
             }
@@ -516,7 +552,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         }
 
         Assertions.assertEquals(3, ibanKo);
-        Assertions.assertEquals(1, cfKo);
+        Assertions.assertEquals(2, cfKo);
 
     }
 

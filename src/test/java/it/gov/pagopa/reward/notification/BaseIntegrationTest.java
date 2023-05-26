@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
                 "app.csv.export.schedule=-",
                 "app.rewards-notification.expired-initiatives.schedule=-",
                 "app.csv.tmp-dir=target/tmp",
-                "logging.level.it.gov.pagopa.reward.notification.service.RewardErrorNotifierServiceImpl=WARN",
+                "logging.level.it.gov.pagopa.common.kafka.service.ErrorNotifierServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
                 "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
                 //endregion

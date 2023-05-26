@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @ExtendWith(MockitoExtension.class)
 class IbanOutcomeMediatorServiceImplTest {
@@ -102,6 +103,7 @@ class IbanOutcomeMediatorServiceImplTest {
 
         // When
         ibanOutcomeMediatorService.execute(messageFlux);
+        TestUtils.wait(1, TimeUnit.SECONDS);
 
         // Then
         Mockito.verify(ibanOutcomeOperationsServiceMock, Mockito.times(4)).execute(Mockito.any());

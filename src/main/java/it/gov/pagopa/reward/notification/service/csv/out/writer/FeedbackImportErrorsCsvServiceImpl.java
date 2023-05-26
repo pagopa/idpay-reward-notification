@@ -5,7 +5,7 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportErrorsCsvDTO;
-import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
+import it.gov.pagopa.common.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

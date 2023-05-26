@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.model.RewardIban;
-import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsumer;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.LockService;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
+import it.gov.pagopa.common.reactive.service.LockService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -25,7 +25,7 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaBlockingPartitionCo
     private final Duration commitDelay;
 
     private final IbanOutcomeOperationsService ibanOutcomeOperationsService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
     private final ObjectReader objectReader;
 
@@ -33,14 +33,14 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaBlockingPartitionCo
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.ibanOutcomeConsumer-in-0.consumer.ackTime}")
             long commitMillis,
-            IbanOutcomeOperationsService ibanOutcomeOperationsService, ErrorNotifierService errorNotifierService,
+            IbanOutcomeOperationsService ibanOutcomeOperationsService, RewardErrorNotifierService rewardErrorNotifierService,
             LockService lockService,
             ObjectMapper objectMapper) {
         super(applicationName, lockService);
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.ibanOutcomeOperationsService = ibanOutcomeOperationsService;
 
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
 
         this.objectReader = objectMapper.readerFor(IbanOutcomeDTO.class);
     }
@@ -63,12 +63,12 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaBlockingPartitionCo
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyRewardIbanOutcome(message, "[REWARD_NOTIFICATION_IBAN_OUTCOME] Unexpected JSON", false, e);
+        return e -> rewardErrorNotifierService.notifyRewardIbanOutcome(message, "[REWARD_NOTIFICATION_IBAN_OUTCOME] Unexpected JSON", false, e);
     }
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyRewardIbanOutcome(message, "[REWARD_NOTIFICATION_IBAN_OUTCOME] An error occurred evaluating iban", false, e);
+        rewardErrorNotifierService.notifyRewardIbanOutcome(message, "[REWARD_NOTIFICATION_IBAN_OUTCOME] An error occurred evaluating iban", false, e);
     }
 
     @Override
@@ -78,9 +78,8 @@ public class IbanOutcomeMediatorServiceImpl extends BaseKafkaBlockingPartitionCo
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "REWARD_NOTIFICATION_IBAN_OUTCOME";
     }
-
 
 }

@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.notification.dto.controller.detail.RewardNotificationDetailDTO;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -15,7 +16,7 @@ public class RewardsNotification2DetailDTOMapper {
                 .externalId(notification.getExternalId())
                 .userId(notification.getBeneficiaryId())
                 .iban(notification.getIban())
-                .amount(Utils.cents2EurBigDecimal(notification.getRewardCents()))
+                .amount(CommonUtilities.centsToEuro(notification.getRewardCents()))
                 .startDate(notification.getStartDepositDate())
                 .endDate(notification.getNotificationDate())
                 .status(notification.getStatus())

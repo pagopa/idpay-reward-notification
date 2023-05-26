@@ -7,7 +7,7 @@ import it.gov.pagopa.reward.notification.dto.selc.UserResource;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

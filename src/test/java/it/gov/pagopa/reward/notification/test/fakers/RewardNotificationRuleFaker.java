@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;

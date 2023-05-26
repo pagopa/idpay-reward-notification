@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.connector.wallet;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;

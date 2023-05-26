@@ -158,7 +158,7 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
     void test() {
         // notificationId = USERID%d_INITIATIVEID%d_today.format(Utils.FORMATTER_DATE)
 
-        ibanOutcomeDTOList.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome, null, p.getUserId().concat(p.getInitiativeId()), p));
+        ibanOutcomeDTOList.forEach(p -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicIbanOutcome, null, p.getUserId().concat(p.getInitiativeId()), p));
 
         waitForIbanStoreChanged(totalIban, rewardIbanRepository);
 

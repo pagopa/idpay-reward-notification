@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.service.suspension;
 
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;

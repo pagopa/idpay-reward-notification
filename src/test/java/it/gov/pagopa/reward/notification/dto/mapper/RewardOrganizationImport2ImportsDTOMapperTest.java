@@ -3,15 +3,13 @@ package it.gov.pagopa.reward.notification.dto.mapper;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class RewardOrganizationImport2ImportsDTOMapperTest {
 

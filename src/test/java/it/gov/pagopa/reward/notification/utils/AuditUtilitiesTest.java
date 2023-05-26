@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.notification.utils;
 
 import ch.qos.logback.classic.LoggerContext;
+import it.gov.pagopa.common.utils.AuditLogger;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Uploading refunds file." +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s cs3Label=fileName cs3=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID,
                                 FILE_NAME
@@ -50,7 +52,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Downloading refunds file." +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID
                         ),
@@ -65,7 +67,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Export detail page about refunds." +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID
                         ),
@@ -81,7 +83,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User suspended" +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID,
                                 USER_ID
@@ -98,7 +100,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User suspension failed" +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID,
                                 USER_ID
@@ -115,7 +117,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User readmitted" +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID,
                                 USER_ID
@@ -132,7 +134,7 @@ class AuditUtilitiesTest {
                 ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=User readmission failed" +
                         " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s suser=%s")
                         .formatted(
-                                AuditUtilities.SRCIP,
+                                AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 ORGANIZATION_ID,
                                 USER_ID

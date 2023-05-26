@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.connector.wallet;
 
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;

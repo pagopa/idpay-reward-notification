@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.Rewards;
-import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsumer;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.LockService;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
+import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -33,7 +33,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
 
     private final RewardsService rewardsService;
     private final RewardNotificationRuleEvaluatorService ruleEvaluatorService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
     private final Duration commitDelay;
 
@@ -44,7 +44,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
             @Value("${spring.application.name}") String applicationName,
             LockService lockService,
             RewardsService rewardsService,
-            RewardNotificationRuleEvaluatorService ruleEvaluatorService, ErrorNotifierService errorNotifierService,
+            RewardNotificationRuleEvaluatorService ruleEvaluatorService, RewardErrorNotifierService rewardErrorNotifierService,
 
             @Value("${spring.cloud.stream.kafka.bindings.rewardTrxConsumer-in-0.consumer.ackTime}") long commitMillis,
 
@@ -53,7 +53,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
 
         this.rewardsService = rewardsService;
         this.ruleEvaluatorService = ruleEvaluatorService;
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
 
         this.objectReader = objectMapper.readerFor(RewardTransactionDTO.class);
@@ -71,7 +71,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION] An error occurred evaluating transaction result", true, e);
+        rewardErrorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION] An error occurred evaluating transaction result", true, e);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION] Unexpected JSON", true, e);
+        return e -> rewardErrorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION] Unexpected JSON", true, e);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "REWARD_NOTIFICATION";
     }
 

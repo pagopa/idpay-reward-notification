@@ -1,14 +1,13 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.charset.StandardCharsets;
@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
@@ -49,12 +49,12 @@ public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
 
         List<String> initiativePayloads = new ArrayList<>();
         initiativePayloads.addAll(buildValidPayloads(notValidInitiatives, validInitiatives/2));
-        initiativePayloads.addAll(IntStream.range(0,notValidInitiatives).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
+        initiativePayloads.addAll(IntStream.range(0,notValidInitiatives).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         initiativePayloads.addAll(buildValidPayloads(notValidInitiatives + (validInitiatives / 2) + notValidInitiatives, validInitiatives / 2));
 
         long timeStart=System.currentTimeMillis();
-        initiativePayloads.forEach(i->publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
-        publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        initiativePayloads.forEach(i->kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
         long countSaved = waitForInitiativeStored(validInitiatives);
@@ -81,7 +81,7 @@ public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicInitiative2StoreConsumer, groupIdInitiative2StoreConsumer, initiativePayloads.size()+1); // +1 due to other applicationName useCase
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = kafkaTestUtilitiesService.checkCommittedOffsets(topicInitiative2StoreConsumer, groupIdInitiative2StoreConsumer, initiativePayloads.size()+1); // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -103,7 +103,7 @@ public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
     public static long waitForInitiativeStored(int n, RewardNotificationRuleRepository rewardNotificationRuleRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardNotificationRuleRepository.count().block()) >= n, ()->"Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
+        TestUtils.waitFor(()->(countSaved[0]=rewardNotificationRuleRepository.count().block()) >= n, ()->"Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 

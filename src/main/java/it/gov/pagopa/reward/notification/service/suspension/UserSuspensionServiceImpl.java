@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.repository.RewardsSuspendedUserRepository;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

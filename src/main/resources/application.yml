@@ -280,3 +280,5 @@ app:
       uid: ${SELC_UID:idpay}
   wallet:
     base-url: ${WALLET_MS_HOST:}/idpay/wallet
+  merchant:
+    base-url: ${MERCHANT_MS_HOST:}/idpay/merchant

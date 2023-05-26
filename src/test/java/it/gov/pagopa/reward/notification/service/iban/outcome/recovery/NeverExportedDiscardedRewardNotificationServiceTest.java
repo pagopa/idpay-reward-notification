@@ -30,7 +30,7 @@ public class NeverExportedDiscardedRewardNotificationServiceTest extends BaseDis
 
     @Override
     protected OngoingStubbing<Flux<RewardsNotification>> getRewardNotificationRepoFindDiscardedMockWhen(RewardIban rewardIban) {
-        return Mockito.when(rewardsNotificationRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
+        return Mockito.when(rewardsNotificationRepositoryMock.findByBeneficiaryIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
                 rewardIban.getUserId(),
                 rewardIban.getInitiativeId(),
                 RewardNotificationStatus.ERROR,
@@ -69,7 +69,7 @@ public class NeverExportedDiscardedRewardNotificationServiceTest extends BaseDis
     private RewardsNotification mockIbanErrorNotification(int bias, RewardIban rewardIban) {
         return RewardsNotificationFaker.mockInstanceBuilder(bias)
                 .initiativeId(rewardIban.getInitiativeId())
-                .userId(rewardIban.getUserId())
+                .beneficiaryId(rewardIban.getUserId())
                 .status(RewardNotificationStatus.ERROR)
                 .exportDate(YESTERDAY.atStartOfDay())
                 .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)

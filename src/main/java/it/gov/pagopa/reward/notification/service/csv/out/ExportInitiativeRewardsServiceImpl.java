@@ -101,11 +101,11 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
                         rewardsNotificationRepository.findRewards2Notify(export.getInitiativeId(), export.getNotificationDate())
                 )
                 .filterWhen(notification ->
-                        suspensionService.isNotSuspendedUser(notification.getInitiativeId(), notification.getUserId())
+                        suspensionService.isNotSuspendedUser(notification.getInitiativeId(), notification.getBeneficiaryId())
                                 .flatMap(suspensionOutcome -> {
                                     if (Boolean.FALSE.equals(suspensionOutcome)) {
                                         log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Skipping notification on suspended user: notificationId {}; userId {}; initiativeId {}",
-                                                notification.getId(), notification.getUserId(), notification.getInitiativeId());
+                                                notification.getId(), notification.getBeneficiaryId(), notification.getInitiativeId());
 
                                         notification.setStatus(RewardNotificationStatus.SUSPENDED);
                                         return rewardsNotificationRepository.save(notification)

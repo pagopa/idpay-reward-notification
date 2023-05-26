@@ -42,7 +42,7 @@ public class RewardNotificationNotifierServiceImpl implements RewardNotification
         log.debug("[REWARD_NOTIFICATION_FEEDBACK] Notifying reward feedback {} of export {} with status {} and deltaRewardCents {}", notification.getId(), notification.getExportId(), notification.getStatus(), deltaRewardCents);
 
         Message<RewardFeedbackDTO> message = MessageBuilder.withPayload(mapper.apply(notification, deltaRewardCents))
-                .setHeader(KafkaHeaders.MESSAGE_KEY, "%s_%s".formatted(notification.getUserId(), notification.getInitiativeId()))
+                .setHeader(KafkaHeaders.MESSAGE_KEY, "%s_%s".formatted(notification.getBeneficiaryId(), notification.getInitiativeId()))
                 .build();
 
         if (!streamBridge.send("rewardNotificationFeedback-out-0", message)) {

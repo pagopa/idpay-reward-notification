@@ -81,6 +81,7 @@ microservice-chart:
       SELC_BASE_URL: selc_base_url
       EMAIL_NOTIFICATION_MS_HOST: email_notification_ms_host
       WALLET_MS_HOST: idpay_wallet_host
+      MERCHANT_MS_HOST: idpay_merchant_host
 
   envSecret:
     MONGODB_URI: mongodb-connection-string

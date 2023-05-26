@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.service.csv.out;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
@@ -204,7 +204,7 @@ class ExportInitiativeRewardsServiceTest {
             invocationOrder.add("writing export %s".formatted(invocationExport.getId()));
             return Mono.fromSupplier(() ->{
                 // first splits will wait more time
-                BaseIntegrationTest.wait((maxProgressive-invocationExport.getProgressive()), TimeUnit.SECONDS);
+                TestUtils.wait((maxProgressive-invocationExport.getProgressive()), TimeUnit.SECONDS);
                 invocationOrder.add("export %s completed".formatted(invocationExport.getId()));
                 return invocationExport;
             });

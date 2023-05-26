@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImpor
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
-import it.gov.pagopa.reward.notification.utils.ZipUtils;
+import it.gov.pagopa.common.utils.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

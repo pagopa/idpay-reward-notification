@@ -4,7 +4,7 @@ import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.notification.dto.rule.*;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;

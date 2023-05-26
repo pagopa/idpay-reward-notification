@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.Initiative2RewardNotificationRuleMapper;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
-import it.gov.pagopa.reward.notification.service.BaseKafkaConsumer;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -28,7 +28,7 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     private final Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper;
     private final RewardNotificationRuleValidatorService rewardNotificationRuleValidatorService;
     private final RewardNotificationRuleService rewardNotificationRuleService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
     private final ObjectReader objectReader;
 
@@ -39,13 +39,13 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
             Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapper,
             RewardNotificationRuleValidatorService rewardNotificationRuleValidatorService, RewardNotificationRuleService rewardNotificationRuleService,
 
-            ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+            RewardErrorNotifierService rewardErrorNotifierService, ObjectMapper objectMapper) {
         super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.initiative2RewardNotificationRuleMapper = initiative2RewardNotificationRuleMapper;
         this.rewardNotificationRuleValidatorService = rewardNotificationRuleValidatorService;
         this.rewardNotificationRuleService = rewardNotificationRuleService;
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
 
         this.objectReader = objectMapper.readerFor(InitiativeRefund2StoreDTO.class);
     }
@@ -69,12 +69,12 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyRewardNotifierRule(message, "[REWARD_NOTIFICATION_RULE] Unexpected JSON", true, e);
+        return e -> rewardErrorNotifierService.notifyRewardNotifierRule(message, "[REWARD_NOTIFICATION_RULE] Unexpected JSON", true, e);
     }
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyRewardNotifierRule(message, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", true, e);
+        rewardErrorNotifierService.notifyRewardNotifierRule(message, "[REWARD_NOTIFICATION_RULE] An error occurred handling initiative", true, e);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class RefundRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "REWARD_NOTIFICATION_RULE";
     }
 }

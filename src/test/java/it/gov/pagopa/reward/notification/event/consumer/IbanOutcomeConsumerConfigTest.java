@@ -1,13 +1,12 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.charset.StandardCharsets;
@@ -55,19 +55,19 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         long maxWaitingMs = 30000;
 
         List<String> ibanPayloads = new ArrayList<>(notValidIban+ibanOkAndUnknown);
-        ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
+        ibanPayloads.addAll(IntStream.range(0,notValidIban).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         ibanPayloads.addAll(buildCheckIbanOutcome(notValidIban, notValidIban+ibanOkAndUnknown, false));
 
         List<String> ibanPayloadsKO = buildCheckIbanOutcome(notValidIban, notValidIban+ibanKO, true);
 
         long timeStart=System.currentTimeMillis();
-        ibanPayloads.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
+        ibanPayloads.forEach(p -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
         long timePublishingOKAndUnknownEnd=System.currentTimeMillis();
         waitForIbanStoreChanged(ibanOkAndUnknown);
 
         long timePublishingKoStart=System.currentTimeMillis();
-        ibanPayloadsKO.forEach(p -> publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
-        publishIntoEmbeddedKafka(topicIbanOutcome, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        ibanPayloadsKO.forEach(p -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicIbanOutcome,null,null, p));
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicIbanOutcome, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
         waitForIbanStoreChanged(ibanOkAndUnknown-ibanKO);
@@ -94,7 +94,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicIbanOutcome, groupIdIbanOutcomeConsumer, ibanPayloads.size()+ibanPayloadsKO.size()+1); // +1 due to other applicationName useCase
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = kafkaTestUtilitiesService.checkCommittedOffsets(topicIbanOutcome, groupIdIbanOutcomeConsumer, ibanPayloads.size()+ibanPayloadsKO.size()+1); // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -201,7 +201,7 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
     public static long waitForIbanStoreChanged(int n, RewardIbanRepository rewardIbanRepository) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) == n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
+        TestUtils.waitFor(()->(countSaved[0]=rewardIbanRepository.findAll().filter(r->r.getCheckIbanOutcome()!=null).collectList().block().size()) == n, ()->"Expected %d saved iban, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 }

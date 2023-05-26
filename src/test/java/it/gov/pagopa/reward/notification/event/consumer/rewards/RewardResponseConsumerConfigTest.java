@@ -1,6 +1,9 @@
 package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
@@ -8,14 +11,11 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -63,7 +64,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         trxAuthorized.setId("AUTHORIZEDTRX");
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
-        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getKey().get()).toList());
+        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
 
         trxs.add(TestUtils.jsonSerializer(trxNotRewarded));
@@ -79,16 +80,16 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         int[] i = new int[]{0};
         trxs.forEach(p -> {
             final String userId = Utils.readUserId(p);
-            publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p);
+            kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p);
 
             // to test duplicate trx and their right processing order
             if (i[0] < duplicateTrx) {
                 i[0]++;
-                publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
+                kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardResponse, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
         });
         //to test applicationName header
-        publishIntoEmbeddedKafka(topicRewardResponse, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardResponse, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeBeforeDbCheck = System.currentTimeMillis();
@@ -204,7 +205,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
     }
 
     private RewardTransactionDTO mockInstance(int bias) {
-        return useCases.get(bias % useCases.size()).getKey().apply(bias);
+        return useCases.get(bias % useCases.size()).getFirst().apply(bias);
     }
 
     Set<String> errorUseCasesStored_userid = Set.of("NOT_EXISTENT_INITIATIVE_ID_USER_ID");
@@ -214,7 +215,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
             String userId = reward.getUserId();
             int biasRetrieve = Integer.parseInt(userId.substring(6));
             if(biasRetrieve >= errorUseCases.size()){
-                useCases.get(biasRetrieve % useCases.size()).getValue().accept(reward);
+                useCases.get(biasRetrieve % useCases.size()).getSecond().accept(reward);
             }
         } else {
             Assertions.assertTrue(errorUseCasesStored_userid.contains(reward.getUserId()), "Invalid rejected reward: " + reward);
@@ -355,7 +356,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .rewards(Map.of(initiativeId, new Reward(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD)))
                                 .build();
                         String expectedNotificationId = "%s_%s_1".formatted(trx.getUserId(), initiativeId);
-                        updateExpectedRewardNotification(expectedNotificationId, NEXT_WEEK, trx, initiativeId, Utils.euro2Cents(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD), DepositType.PARTIAL);
+                        updateExpectedRewardNotification(expectedNotificationId, NEXT_WEEK, trx, initiativeId, CommonUtilities.euroToCents(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD), DepositType.PARTIAL);
                         return trx;
                     },
                     reward -> assertRewards(reward, INITIATIVE_ID_NOTIFY_THRESHOLD

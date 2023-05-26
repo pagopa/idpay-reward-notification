@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.reward.notification.enums.OperationType;
 import it.gov.pagopa.reward.notification.enums.RewardStatus;
-import it.gov.pagopa.reward.notification.utils.json.BigDecimalScale2Deserializer;
+import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

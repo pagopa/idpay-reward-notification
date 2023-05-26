@@ -1,13 +1,13 @@
 package it.gov.pagopa.reward.notification.service.iban.outcome;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.reactive.service.LockServiceImpl;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.model.RewardIban;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
-import it.gov.pagopa.reward.notification.service.LockServiceImpl;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.notification.test.fakers.IbanOutcomeDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.IbanConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ class IbanOutcomeMediatorServiceImplTest {
     @Mock
     private IbanOutcomeOperationsService ibanOutcomeOperationsServiceMock;
     @Mock
-    private ErrorNotifierService errorNotifierServiceMock;
+    private RewardErrorNotifierService rewardErrorNotifierServiceMock;
 
 
     private IbanOutcomeMediatorService ibanOutcomeMediatorService;
@@ -40,8 +40,8 @@ class IbanOutcomeMediatorServiceImplTest {
                     "appName",
                     1000,
                     ibanOutcomeOperationsServiceMock,
-                    errorNotifierServiceMock,
-                    new LockServiceImpl(10, 60),
+                    rewardErrorNotifierServiceMock,
+                    new LockServiceImpl(10, 10, 60),
                     TestUtils.objectMapper);
     }
 
@@ -105,8 +105,8 @@ class IbanOutcomeMediatorServiceImplTest {
 
         // Then
         Mockito.verify(ibanOutcomeOperationsServiceMock, Mockito.times(4)).execute(Mockito.any());
-        Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
-        Mockito.verify(errorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
+        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(2)).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(Throwable.class));
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardIbanOutcome(Mockito.any(Message.class), Mockito.anyString(), Mockito.same(false),Mockito.any(JsonParseException.class));
     }
 
     private static Message<String> buildMessage(String ibanOutcomeKoDTO) {
@@ -130,13 +130,13 @@ class IbanOutcomeMediatorServiceImplTest {
                         .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
                         .setHeader(KafkaHeaders.OFFSET, 0L)
                 )
-                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 
         // When
         ibanOutcomeMediatorService.execute(msgs);
 
         // Then
-        Mockito.verifyNoInteractions(ibanOutcomeOperationsServiceMock, errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(ibanOutcomeOperationsServiceMock, rewardErrorNotifierServiceMock);
     }
 }

@@ -12,8 +12,8 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRep
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
-import it.gov.pagopa.reward.notification.utils.ZipUtils;
-import it.gov.pagopa.reward.notification.utils.csv.HeaderColumnNameStrategy;
+import it.gov.pagopa.common.utils.ZipUtils;
+import it.gov.pagopa.common.utils.csv.HeaderColumnNameStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

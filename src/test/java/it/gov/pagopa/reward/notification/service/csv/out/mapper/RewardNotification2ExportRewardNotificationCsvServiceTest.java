@@ -1,12 +1,15 @@
 package it.gov.pagopa.reward.notification.service.csv.out.mapper;
 
 import it.gov.pagopa.reward.notification.dto.mapper.RewardNotificationExport2CsvMapper;
+import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Iban2NotifyRetrieverService;
+import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Merchant2NotifyRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.User2NotifyRetrieverService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
@@ -26,12 +29,13 @@ class RewardNotification2ExportRewardNotificationCsvServiceTest {
     @Mock private Iban2NotifyRetrieverService iban2NotifyRetrieverServiceMock;
     @Mock private User2NotifyRetrieverService user2NotifyRetrieverServiceMock;
     @Mock private RewardNotificationExport2CsvMapper rewardNotificationExport2CsvMapperMock;
+    @Mock private Merchant2NotifyRetrieverService merchant2NotifyRetrieverServiceMock;
 
     private RewardNotification2ExportCsvService service;
 
     @BeforeEach
     void init(){
-        service = new RewardNotification2ExportCsvServiceImpl(rewardsNotificationRepositoryMock, iban2NotifyRetrieverServiceMock, user2NotifyRetrieverServiceMock, rewardNotificationExport2CsvMapperMock);
+        service = new RewardNotification2ExportCsvServiceImpl(rewardsNotificationRepositoryMock, iban2NotifyRetrieverServiceMock, user2NotifyRetrieverServiceMock, rewardNotificationExport2CsvMapperMock, merchant2NotifyRetrieverServiceMock);
     }
 
     @AfterEach
@@ -51,6 +55,7 @@ class RewardNotification2ExportRewardNotificationCsvServiceTest {
         // Given
         RewardsNotification reward = new RewardsNotification();
         reward.setRewardCents(1_00L);
+        reward.setBeneficiaryType(BeneficiaryType.CITIZEN);
 
         Mockito.when(iban2NotifyRetrieverServiceMock.retrieveIban(Mockito.same(reward))).thenReturn(ibanRetrieveResult);
 
@@ -73,6 +78,7 @@ class RewardNotification2ExportRewardNotificationCsvServiceTest {
         // Given
         RewardsNotification reward = new RewardsNotification();
         reward.setRewardCents(1_00L);
+        reward.setBeneficiaryType(BeneficiaryType.CITIZEN);
 
         Mockito.when(iban2NotifyRetrieverServiceMock.retrieveIban(Mockito.same(reward))).thenReturn(Mono.just(reward));
         Mockito.when(user2NotifyRetrieverServiceMock.retrieveUser(Mockito.same(reward))).thenReturn(userRetrieveResult);
@@ -85,10 +91,11 @@ class RewardNotification2ExportRewardNotificationCsvServiceTest {
     }
 
     @Test
-    void test() {
+    void testUser() {
         // Given
         RewardsNotification reward = new RewardsNotification();
         reward.setRewardCents(1_00L);
+        reward.setBeneficiaryType(BeneficiaryType.CITIZEN);
         User user = new User();
         RewardNotificationExportCsvDto expectedCsvLine = new RewardNotificationExportCsvDto();
 
@@ -105,11 +112,30 @@ class RewardNotification2ExportRewardNotificationCsvServiceTest {
     }
 
     @Test
+    void testMerchant() {
+        // Given
+        RewardsNotification reward = new RewardsNotification();
+        reward.setRewardCents(1_00L);
+        reward.setBeneficiaryType(BeneficiaryType.MERCHANT);
+        MerchantDetailDTO merchant = new MerchantDetailDTO();
+        RewardNotificationExportCsvDto expectedCsvLine = new RewardNotificationExportCsvDto();
+
+        Mockito.when(merchant2NotifyRetrieverServiceMock.retrieve(Mockito.same(reward))).thenReturn(Mono.just(Pair.of(reward, merchant)));
+        Mockito.when(rewardNotificationExport2CsvMapperMock.apply(Mockito.same(reward), Mockito.same(merchant))).thenReturn(expectedCsvLine);
+
+        // When
+        RewardNotificationExportCsvDto result = service.apply(reward).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertSame(expectedCsvLine, result);
+    }
+
+    @Test
     void testNoRewardAmount(){
         // Given
         RewardsNotification reward = new RewardsNotification();
         reward.setRewardCents(0L);
-
         Mockito.when(rewardsNotificationRepositoryMock.save(Mockito.same(reward))).thenReturn(Mono.just(reward));
 
         // When

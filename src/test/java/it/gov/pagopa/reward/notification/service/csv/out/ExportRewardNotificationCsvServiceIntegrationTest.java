@@ -439,7 +439,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
     private void checkMerchantCfKoUseCases() {
         List<RewardsNotification> expectedCfKo = rewardsRepository.findAll(Example.of(RewardsNotification.builder()
-                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND)
+                .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND)
                 .build())).collectList().block();
 
         Assertions.assertNotNull(expectedCfKo);
@@ -463,8 +463,8 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertNull(r.getCheckIbanResult());
         Assertions.assertEquals(rule7.getInitiativeId(), r.getInitiativeId());
         Assertions.assertEquals(RewardNotificationStatus.ERROR, r.getStatus());
-        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND, r.getRejectionReason());
-        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND, r.getResultCode());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND, r.getRejectionReason());
+        Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND, r.getResultCode());
         Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
         Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
     }
@@ -525,7 +525,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
                 Assertions.assertEquals("INITIATIVEID4", n.getInitiativeId());
 
                 cfKo++;
-            } else if (ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND.equals(n.getRejectionCode())) {
+            } else if (ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND.equals(n.getRejectionCode())) {
                 Assertions.assertEquals("INITIATIVEID7", n.getInitiativeId());
 
                 cfKo++;

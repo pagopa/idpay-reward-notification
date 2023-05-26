@@ -36,8 +36,8 @@ public class Merchant2NotifyRetrieverServiceImpl implements Merchant2NotifyRetri
                             reward.getBeneficiaryId(), reward.getInitiativeId());
 
                     reward.setStatus(RewardNotificationStatus.ERROR);
-                    reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND);
-                    reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_CF_NOT_FOUND);
+                    reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND);
+                    reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND);
                     reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
                             .flatMap(rn -> {

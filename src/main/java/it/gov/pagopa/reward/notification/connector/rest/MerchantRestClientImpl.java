@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class MerchantRestClientImpl implements MerchantRestClient {
 
-    private static final String GET_MERCHANT_URI = "/{merchantId}/organization/{organizationId}/initiative/{initiativeId}/detail";
+    private static final String GET_MERCHANT_URI = "/{merchantId}/organization/{organizationId}/initiative/{initiativeId}";
     private final WebClient webClient;
 
     public MerchantRestClientImpl(@Value("${app.merchant.base-url}") String merchantUrl,

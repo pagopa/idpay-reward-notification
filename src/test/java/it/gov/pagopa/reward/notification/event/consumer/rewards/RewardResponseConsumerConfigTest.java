@@ -63,6 +63,10 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         trxAuthorized.setStatus(TrxConstants.TRX_STATUS_AUTHORIZED);
         trxAuthorized.setId("AUTHORIZEDTRX");
 
+        RewardTransactionDTO trxCancelled = RewardTransactionDTOFaker.mockInstance(1);
+        trxCancelled.setStatus(TrxConstants.TRX_STATUS_CANCELLED);
+        trxCancelled.setId("CANCELLEDTRX");
+
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
@@ -70,6 +74,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         trxs.add(TestUtils.jsonSerializer(trxNotRewarded));
         trxs.add(TestUtils.jsonSerializer(trxAlreadyProcessed));
         trxs.add(TestUtils.jsonSerializer(trxAuthorized));
+        trxs.add(TestUtils.jsonSerializer(trxCancelled));
         int alreadyProcessed = 1;
 
         long totalSendMessages = trxs.size() + duplicateTrx;

@@ -46,7 +46,7 @@ public class UserRestClientImpl implements UserRestClient {
                                 .uri(URI, Map.of("token", userId))
                                 .retrieve()
                                 .toEntity(UserInfoPDV.class),
-                        x -> "httpStatus %s".formatted(x.getStatusCodeValue())
+                        x -> "httpStatus %s".formatted(x.getStatusCode().value())
                 )
                 .map(HttpEntity::getBody)
                 .retryWhen(Retry.fixedDelay(pdvMaxAttempts, Duration.ofMillis(pdvRetryDelay))

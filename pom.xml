@@ -10,7 +10,7 @@
     </parent>
     <groupId>it.gov.pagopa</groupId>
     <artifactId>idpay-reward-notification</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>idpay-reward-notification</name>
     <properties>
         <java.version>17</java.version>

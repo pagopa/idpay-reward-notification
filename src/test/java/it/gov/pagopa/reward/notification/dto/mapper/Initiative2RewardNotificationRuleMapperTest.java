@@ -4,7 +4,7 @@ package it.gov.pagopa.reward.notification.dto.mapper;
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

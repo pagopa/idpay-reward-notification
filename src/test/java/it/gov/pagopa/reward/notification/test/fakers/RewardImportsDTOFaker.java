@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.time.LocalDateTime;

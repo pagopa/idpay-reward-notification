@@ -1,15 +1,15 @@
 package it.gov.pagopa.reward.notification.test.utils;
 
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
+import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.utils.Utils;
-import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -54,13 +54,6 @@ class UtilsTest {
     private String readUserIdUsingRegexp(String payload) {
         final Matcher matcher = userIdPatternMatch.matcher(payload);
         return matcher.find() ? matcher.group(1) : "";
-    }
-
-    @Test
-    void testEuro2Cents() {
-        Assertions.assertNull(Utils.euro2Cents(null));
-        Assertions.assertEquals(100L, Utils.euro2Cents(BigDecimal.ONE));
-        Assertions.assertEquals(-100L, Utils.euro2Cents(BigDecimal.ONE.negate()));
     }
 
     @ParameterizedTest

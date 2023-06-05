@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -25,16 +26,16 @@ public class RewardOrganizationExports2ExportsDTOMapper implements Function<Rewa
                 .filePath(filePath)
                 .notificationDate(rewardOrganizationExport.getNotificationDate())
 
-                .rewardsExported(Utils.cents2Eur(rewardOrganizationExport.getRewardsExportedCents()))
-                .rewardsResults(Utils.cents2Eur(rewardOrganizationExport.getRewardsResultsCents()))
+                .rewardsExported(CommonUtilities.centsToEuroString(rewardOrganizationExport.getRewardsExportedCents()))
+                .rewardsResults(CommonUtilities.centsToEuroString(rewardOrganizationExport.getRewardsResultsCents()))
 
                 .rewardNotified(rewardOrganizationExport.getRewardNotified())
                 .rewardsResulted(rewardOrganizationExport.getRewardsResulted())
                 .rewardsResultedOk(rewardOrganizationExport.getRewardsResultedOk())
 
-                .percentageResulted(Utils.percentageFormat(rewardOrganizationExport.getPercentageResulted()))
-                .percentageResultedOk(Utils.percentageFormat(rewardOrganizationExport.getPercentageResultedOk()))
-                .percentageResults(Utils.percentageFormat(rewardOrganizationExport.getPercentageResults()))
+                .percentageResulted(Utils.formatAsPercentage(rewardOrganizationExport.getPercentageResulted()))
+                .percentageResultedOk(Utils.formatAsPercentage(rewardOrganizationExport.getPercentageResultedOk()))
+                .percentageResults(Utils.formatAsPercentage(rewardOrganizationExport.getPercentageResults()))
 
                 .feedbackDate(rewardOrganizationExport.getFeedbackDate())
                 .status(rewardOrganizationExport.getStatus())

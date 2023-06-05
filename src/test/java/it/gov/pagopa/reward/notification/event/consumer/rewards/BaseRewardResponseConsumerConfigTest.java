@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
@@ -15,8 +17,7 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
-import it.gov.pagopa.reward.notification.service.LockServiceImpl;
-import it.gov.pagopa.reward.notification.utils.Utils;
+import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -87,7 +88,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
 
     protected long waitForRewardsStored(int n) {
         long[] countSaved = {0};
-        waitFor(() -> (countSaved[0] = fetchNewRewardsStored().size()) >= n, () -> "Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
+        TestUtils.waitFor(() -> (countSaved[0] = fetchNewRewardsStored().size()) >= n, () -> "Expected %d saved reward notification rules, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 
@@ -251,7 +252,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                 .build())
                         .build()
         );
-        rules.forEach(i -> publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
+        rules.forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
 
         RefundRuleConsumerConfigTest.waitForInitiativeStored(rules.size(), ruleRepository);
     }
@@ -261,13 +262,13 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     }
 
     protected Long add2InitiativeThresholdCents(BigDecimal euro) {
-        return Utils.euro2Cents(add2InitiativeThreshold(euro));
+        return CommonUtilities.euroToCents(add2InitiativeThreshold(euro));
     }
     //endregion
 
     protected void checkOffsets(long expectedReadMessages) {
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardResponse, groupIdRewardResponse, expectedReadMessages, 20, 1000);
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = kafkaTestUtilitiesService.checkCommittedOffsets(topicRewardResponse, groupIdRewardResponse, expectedReadMessages, 20, 1000);
         long timeCommitChecked = System.currentTimeMillis();
 
         System.out.printf("""

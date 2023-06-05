@@ -3,10 +3,10 @@ package it.gov.pagopa.reward.notification.service.rewards;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.Rewards;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.LockService;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
+import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,13 +36,13 @@ class RewardMediatorServiceTest {
     @Mock private LockService lockServiceMock;
     @Mock private RewardsService rewardsServiceMock;
     @Mock private RewardNotificationRuleEvaluatorService ruleEvaluatorServiceMock;
-    @Mock private ErrorNotifierService errorNotifierServiceMock;
+    @Mock private RewardErrorNotifierService rewardErrorNotifierServiceMock;
 
     private RewardsMediatorServiceImpl service;
 
     @BeforeEach
     void init(){
-        service=new RewardsMediatorServiceImpl("APPNAME", lockServiceMock, rewardsServiceMock, ruleEvaluatorServiceMock, errorNotifierServiceMock, 500, TestUtils.objectMapper);
+        service=new RewardsMediatorServiceImpl("APPNAME", lockServiceMock, rewardsServiceMock, ruleEvaluatorServiceMock, rewardErrorNotifierServiceMock, 500, TestUtils.objectMapper);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.service.csv.out;
 
+import it.gov.pagopa.common.utils.ZipUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
@@ -14,7 +15,6 @@ import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
-import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 @TestPropertySource(properties = {
         "app.csv.export.split-size=500",
         "logging.level.it.gov.pagopa.reward.notification.connector.rest.UserRestClientImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationTest {
 
@@ -512,7 +512,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         int ibanKo = 0;
         int cfKo = 0;
 
-        for (ConsumerRecord<String, String> msg : consumeMessages(topicRewardNotificationFeedback, 4, 1000)) {
+        for (ConsumerRecord<String, String> msg : kafkaTestUtilitiesService.consumeMessages(topicRewardNotificationFeedback, 4, 1000)) {
             RewardFeedbackDTO n = objectMapper.readValue(msg.value(), RewardFeedbackDTO.class);
 
             Assertions.assertEquals(RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_REJECTED, n.getStatus());

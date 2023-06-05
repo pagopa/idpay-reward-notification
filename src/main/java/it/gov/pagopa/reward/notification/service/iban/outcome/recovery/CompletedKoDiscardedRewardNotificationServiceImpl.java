@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

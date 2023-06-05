@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Iban2NotifyRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Merchant2NotifyRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.User2NotifyRetrieverService;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

@@ -1,13 +1,11 @@
 package it.gov.pagopa.common.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.annotations.ApiModelProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import jakarta.validation.constraints.NotBlank;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
@@ -17,10 +15,8 @@ import jakarta.validation.constraints.NotBlank;
 public class ErrorDTO {
 
     @NotBlank
-    @ApiModelProperty(required = true, value = "Code of the error message", example = "Code")
     String code;
     @NotBlank
-    @ApiModelProperty(required = true, value = "Content of the error message", example = "Message")
     String message;
 
 }

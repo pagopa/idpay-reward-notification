@@ -682,7 +682,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         if(n.getFeedbackProgressive()==1 && expected2FeedbackRewards2Previous.containsKey(n.getRewardNotificationId())){
                             n.setFeedbackDate(n.getFeedbackDate().truncatedTo(ChronoUnit.HOURS));
                         }
-                        Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), msg.key());
+                        Assertions.assertEquals("%s_%s".formatted(n.getBeneficiaryId(), n.getInitiativeId()), msg.key());
                         return n;
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException("Cannot deserialize payload as %s: %s".formatted(RewardFeedbackDTO.class, msg.value()), e);

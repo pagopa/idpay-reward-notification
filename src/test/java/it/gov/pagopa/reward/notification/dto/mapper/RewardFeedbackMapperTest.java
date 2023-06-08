@@ -109,7 +109,8 @@ class RewardFeedbackMapperTest {
     private void checkCommonFields(RewardsNotification notification, long deltaRewardCents, String expectedStatus, RewardFeedbackDTO result) {
         Assertions.assertEquals(notification.getId(), result.getRewardNotificationId());
         Assertions.assertEquals(notification.getInitiativeId(), result.getInitiativeId());
-        Assertions.assertEquals(notification.getBeneficiaryId(), result.getUserId());
+        Assertions.assertEquals(notification.getBeneficiaryId(), result.getBeneficiaryId());
+        Assertions.assertEquals(notification.getBeneficiaryType(), result.getBeneficiaryType());
         Assertions.assertEquals(notification.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(expectedStatus, result.getStatus());
         Assertions.assertEquals(RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED.equals(expectedStatus) ? null : notification.getResultCode(), result.getRejectionCode());

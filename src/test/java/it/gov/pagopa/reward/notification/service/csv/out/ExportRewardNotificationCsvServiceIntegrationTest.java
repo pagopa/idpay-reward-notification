@@ -537,7 +537,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
 
             Assertions.assertNotNull(n.getExternalId());
             Assertions.assertNotNull(n.getRewardNotificationId());
-            Assertions.assertNotNull(n.getUserId());
+            Assertions.assertNotNull(n.getBeneficiaryId());
             Assertions.assertNotEquals(0, n.getEffectiveRewardCents());
 
             Assertions.assertNull(n.getCro());
@@ -548,7 +548,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(0L, n.getRewardCents());
             Assertions.assertEquals(n.getRejectionCode(), n.getRejectionReason());
 
-            Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), msg.key());
+            Assertions.assertEquals("%s_%s".formatted(n.getBeneficiaryId(), n.getInitiativeId()), msg.key());
         }
 
         Assertions.assertEquals(3, ibanKo);

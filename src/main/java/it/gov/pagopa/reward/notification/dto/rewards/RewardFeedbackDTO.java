@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.dto.rewards;
 
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.AllArgsConstructor;
@@ -18,7 +19,8 @@ public class RewardFeedbackDTO {
     private String id;
     private String externalId;
     private String initiativeId;
-    private String userId;
+    private String beneficiaryId;
+    private BeneficiaryType beneficiaryType;
     private String organizationId;
     private String rewardNotificationId;
     private String iban;

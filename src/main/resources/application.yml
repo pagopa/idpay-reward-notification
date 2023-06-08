@@ -5,6 +5,8 @@ reactor:
   bufferSize:
     small: ${REACTOR_BUFFER_SIZE:256}
 
+springdoc.swagger-ui.path: "/swagger-ui/index.html"
+
 spring:
   application:
     name: "@project.artifactId@"

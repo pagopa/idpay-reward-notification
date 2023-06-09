@@ -3,7 +3,8 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.utils.ZipUtils;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -11,7 +12,6 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackExportDelta;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.RewardNotificationFeedbackHandlerOutcome;
-import it.gov.pagopa.reward.notification.utils.ZipUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +58,7 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
     @AfterEach
     void checkCsvExistance() throws IOException {
         try{
-            BaseIntegrationTest.waitFor(()->!Files.exists(sampleCsv), ()->"The local csv has not been deleted! %s".formatted(sampleCsv), 5, 500);
+            TestUtils.waitFor(()->!Files.exists(sampleCsv), ()->"The local csv has not been deleted! %s".formatted(sampleCsv), 5, 500);
         } finally {
             Files.deleteIfExists(sampleCsv);
             Files.deleteIfExists(sampleCsv.getParent());

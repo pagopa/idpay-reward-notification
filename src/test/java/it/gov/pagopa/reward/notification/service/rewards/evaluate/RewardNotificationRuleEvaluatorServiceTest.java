@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.rewards.RewardsService;
 import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
@@ -30,7 +30,7 @@ class RewardNotificationRuleEvaluatorServiceTest {
     @Mock private RewardNotificationRuleService rewardNotificationRuleServiceMock;
     @Mock private RewardNotificationHandlerFacadeService rewardNotificationHandlerFacadeServiceMock;
     @Mock private RewardsService rewardsServiceMock;
-    @Mock private ErrorNotifierService errorNotifierServiceMock;
+    @Mock private RewardErrorNotifierService rewardErrorNotifierServiceMock;
     @Mock private RewardsNotificationRepository notificationRepositoryMock;
 
     private final RewardMapper rewardMapper = new RewardMapper();
@@ -45,7 +45,7 @@ class RewardNotificationRuleEvaluatorServiceTest {
                 rewardMapper,
                 rewardsServiceMock,
                 notificationRepositoryMock,
-                errorNotifierServiceMock);
+                rewardErrorNotifierServiceMock);
 
         Mockito.when(rewardsServiceMock.save(Mockito.any())).thenAnswer(a->Mono.just(a.getArgument(0)));
     }
@@ -67,10 +67,10 @@ class RewardNotificationRuleEvaluatorServiceTest {
         Assertions.assertEquals(RewardStatus.REJECTED, result.getStatus());
 
         Mockito.verify(rewardNotificationRuleServiceMock).findById(initiativeId);
-        Mockito.verify(errorNotifierServiceMock).notifyRewardResponse(Mockito.same(message), Mockito.eq("[REWARD_NOTIFICATION] Cannot find initiative having id: INITIATIVEID"), Mockito.eq(true), Mockito.notNull());
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardResponse(Mockito.same(message), Mockito.eq("[REWARD_NOTIFICATION] Cannot find initiative having id: INITIATIVEID"), Mockito.eq(true), Mockito.notNull());
         Mockito.verify(rewardsServiceMock).save(Mockito.same(result));
 
-        Mockito.verifyNoMoreInteractions(rewardNotificationRuleServiceMock, errorNotifierServiceMock, rewardsServiceMock);
+        Mockito.verifyNoMoreInteractions(rewardNotificationRuleServiceMock, rewardErrorNotifierServiceMock, rewardsServiceMock);
         Mockito.verifyNoInteractions(rewardNotificationHandlerFacadeServiceMock, notificationRepositoryMock);
     }
 
@@ -97,10 +97,10 @@ class RewardNotificationRuleEvaluatorServiceTest {
 
         Mockito.verify(rewardNotificationRuleServiceMock).findById(initiativeId);
         Mockito.verify(rewardNotificationHandlerFacadeServiceMock).configureRewardNotification(Mockito.same(trx), Mockito.same(rule), Mockito.same(trx.getRewards().get(initiativeId)));
-        Mockito.verify(errorNotifierServiceMock).notifyRewardResponse(Mockito.same(message), Mockito.eq("[REWARD_NOTIFICATION] Cannot configure notificationId for reward: IDTRXACQUIRER1ACQUIRERCODE120220525T05101000ACQUIRERID1_INITIATIVEID"), Mockito.eq(true), Mockito.notNull());
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardResponse(Mockito.same(message), Mockito.eq("[REWARD_NOTIFICATION] Cannot configure notificationId for reward: IDTRXACQUIRER1ACQUIRERCODE120220525T05101000ACQUIRERID1_INITIATIVEID"), Mockito.eq(true), Mockito.notNull());
         Mockito.verify(rewardsServiceMock).save(Mockito.same(result));
 
-        Mockito.verifyNoMoreInteractions(rewardNotificationRuleServiceMock, rewardNotificationHandlerFacadeServiceMock, errorNotifierServiceMock, rewardsServiceMock);
+        Mockito.verifyNoMoreInteractions(rewardNotificationRuleServiceMock, rewardNotificationHandlerFacadeServiceMock, rewardErrorNotifierServiceMock, rewardsServiceMock);
         Mockito.verifyNoInteractions(notificationRepositoryMock);
     }
 
@@ -136,6 +136,6 @@ class RewardNotificationRuleEvaluatorServiceTest {
         Mockito.verify(notificationRepositoryMock).save(Mockito.argThat(n -> n.getTrxIds().contains(result.getTrxId())));
 
         Mockito.verifyNoMoreInteractions(rewardNotificationRuleServiceMock, rewardNotificationHandlerFacadeServiceMock, rewardsServiceMock, notificationRepositoryMock);
-        Mockito.verifyNoInteractions(errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(rewardErrorNotifierServiceMock);
     }
 }

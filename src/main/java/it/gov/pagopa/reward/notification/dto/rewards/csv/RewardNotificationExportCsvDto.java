@@ -18,8 +18,7 @@ public class RewardNotificationExportCsvDto {
     @CsvBindByName(column="progressiveCode") private Long progressiveCode;
     @CsvBindByName(column="uniqueID") private String uniqueID;
     @CsvBindByName(column="fiscalCode") private String fiscalCode;
-    @CsvBindByName(column="accountHolderName") private String accountHolderName;
-    @CsvBindByName(column="accountHolderSurname") private String accountHolderSurname;
+    @CsvBindByName(column="beneficiaryName") private String beneficiaryName;
     @CsvBindByName(column="iban") private String iban;
     @CsvBindByName(column="amount") private Long amount;
     @CsvBindByName(column="paymentReason") private String paymentReason;

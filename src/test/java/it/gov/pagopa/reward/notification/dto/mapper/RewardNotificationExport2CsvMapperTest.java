@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -50,8 +50,7 @@ class RewardNotificationExport2CsvMapperTest {
         Assertions.assertEquals(reward.getId(), result.getId());
         Assertions.assertEquals(reward.getExternalId(), result.getUniqueID());
         Assertions.assertEquals("CF", result.getFiscalCode());
-        Assertions.assertEquals("NAME", result.getAccountHolderName());
-        Assertions.assertEquals("SURNAME", result.getAccountHolderSurname());
+        Assertions.assertEquals("NAME SURNAME", result.getBeneficiaryName());
         Assertions.assertEquals(reward.getIban(), result.getIban());
         Assertions.assertEquals(reward.getRewardCents(), result.getAmount());
         Assertions.assertEquals("Rimborso NAME_1_jmy 2022-01-01 2022-01-31", result.getPaymentReason());

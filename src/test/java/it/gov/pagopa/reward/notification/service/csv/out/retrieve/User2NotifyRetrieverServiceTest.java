@@ -35,7 +35,7 @@ class User2NotifyRetrieverServiceTest {
     void noUserTest(){
         // Given
         RewardsNotification reward = new RewardsNotification();
-        reward.setUserId("USERID");
+        reward.setBeneficiaryId("USERID");
         reward.setStatus(RewardNotificationStatus.TO_SEND);
 
         Mockito.when(userServiceMock.getUserInfo("USERID")).thenReturn(Mono.empty());
@@ -60,7 +60,7 @@ class User2NotifyRetrieverServiceTest {
     void successfulTest(){
         // Given
         RewardsNotification reward = new RewardsNotification();
-        reward.setUserId("USERID");
+        reward.setBeneficiaryId("USERID");
         reward.setStatus(RewardNotificationStatus.TO_SEND);
 
         User expectedUserRetrieved = User.builder().fiscalCode("CF").build();
@@ -85,7 +85,7 @@ class User2NotifyRetrieverServiceTest {
     void testWhenException(){
         // Given
         RewardsNotification reward = new RewardsNotification();
-        reward.setUserId("USERID");
+        reward.setBeneficiaryId("USERID");
         reward.setStatus(RewardNotificationStatus.TO_SEND);
 
         Mockito.when(userServiceMock.getUserInfo("USERID")).thenReturn(Mono.error(new RuntimeException("DUMMY")));

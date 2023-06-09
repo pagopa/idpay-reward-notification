@@ -1,13 +1,13 @@
 package it.gov.pagopa.reward.notification.service.rule;
 
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.dto.mapper.Initiative2RewardNotificationRuleMapper;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierServiceImpl;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.notification.test.fakers.InitiativeRefundDTOFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -25,10 +25,10 @@ class RefundRuleMediatorServiceTest {
         long commitMillis = 1000;
         Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapperMock= Mockito.mock(Initiative2RewardNotificationRuleMapper.class);
         RewardNotificationRuleService rewardNotificationRuleServiceMock = Mockito.mock(RewardNotificationRuleService.class);
-        ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
+        RewardErrorNotifierService rewardErrorNotifierServiceMock = Mockito.mock(RewardErrorNotifierService.class);
         RewardNotificationRuleValidatorService rewardNotificationRuleValidatorServiceMock = Mockito.mock(RewardNotificationRuleValidatorService.class);
 
-        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl("appName", commitMillis,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleValidatorServiceMock, rewardNotificationRuleServiceMock,errorNotifierServiceMock, TestUtils.objectMapper);
+        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl("appName", commitMillis,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleValidatorServiceMock, rewardNotificationRuleServiceMock, rewardErrorNotifierServiceMock, TestUtils.objectMapper);
 
         InitiativeRefund2StoreDTO initiativeRefund2StoreDTO1 = InitiativeRefundDTOFaker.mockInstance(1);
         InitiativeRefund2StoreDTO initiativeRefund2StoreDTO2 = InitiativeRefundDTOFaker.mockInstance(2);
@@ -38,7 +38,7 @@ class RefundRuleMediatorServiceTest {
                 .map(TestUtils::jsonSerializer)
                 .map(payload -> MessageBuilder
                         .withPayload(payload)
-                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
                         .setHeader(KafkaHeaders.OFFSET, 0L)
                 )
                 .map(MessageBuilder::build);
@@ -58,7 +58,7 @@ class RefundRuleMediatorServiceTest {
         // Then
         Mockito.verify(initiative2RewardNotificationRuleMapperMock, Mockito.times(3)).apply(Mockito.any());
         Mockito.verify(rewardNotificationRuleServiceMock).save(Mockito.any());
-        Mockito.verify(errorNotifierServiceMock, Mockito.times(2)).notifyRewardNotifierRule(Mockito.any(), Mockito.anyString(), Mockito.anyBoolean(), Mockito.any());
+        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(2)).notifyRewardNotifierRule(Mockito.any(), Mockito.anyString(), Mockito.anyBoolean(), Mockito.any());
 
     }
 
@@ -67,10 +67,10 @@ class RefundRuleMediatorServiceTest {
         // Given
         Initiative2RewardNotificationRuleMapper initiative2RewardNotificationRuleMapperMock= Mockito.mock(Initiative2RewardNotificationRuleMapper.class);
         RewardNotificationRuleService rewardNotificationRuleServiceMock = Mockito.mock(RewardNotificationRuleService.class);
-        ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
+        RewardErrorNotifierService rewardErrorNotifierServiceMock = Mockito.mock(RewardErrorNotifierService.class);
         RewardNotificationRuleValidatorService rewardNotificationRuleValidatorServiceMock = Mockito.mock(RewardNotificationRuleValidatorService.class);
 
-        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl("appName", 1000,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleValidatorServiceMock, rewardNotificationRuleServiceMock,errorNotifierServiceMock, TestUtils.objectMapper);
+        RefundRuleMediatorService mediator = new RefundRuleMediatorServiceImpl("appName", 1000,initiative2RewardNotificationRuleMapperMock,rewardNotificationRuleValidatorServiceMock, rewardNotificationRuleServiceMock, rewardErrorNotifierServiceMock, TestUtils.objectMapper);
 
 
         RewardNotificationRule rewardNotificationRule1 = RewardNotificationRuleFaker.mockInstance(1);
@@ -80,16 +80,16 @@ class RefundRuleMediatorServiceTest {
                 .map(TestUtils::jsonSerializer)
                 .map(payload -> MessageBuilder
                         .withPayload(payload)
-                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
                         .setHeader(KafkaHeaders.OFFSET, 0L)
                 )
-                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 
         // When
         mediator.execute(msgs);
 
         // Then
-        Mockito.verifyNoInteractions(initiative2RewardNotificationRuleMapperMock, rewardNotificationRuleServiceMock, errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(initiative2RewardNotificationRuleMapperMock, rewardNotificationRuleServiceMock, rewardErrorNotifierServiceMock);
     }
 }

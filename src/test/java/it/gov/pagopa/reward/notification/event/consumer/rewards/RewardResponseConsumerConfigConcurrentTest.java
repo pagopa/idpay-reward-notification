@@ -1,14 +1,16 @@
 package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
-import it.gov.pagopa.reward.notification.utils.Utils;
 import it.gov.pagopa.reward.notification.test.fakers.RewardTransactionDTOFaker;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -32,8 +34,8 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
     private final BigDecimal thresholdReward = BigDecimal.valueOf(7);
     private final int trxNumberInThreshold = INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.divide(thresholdReward, 0, RoundingMode.CEILING).intValue();
     private final int totalThresholdNotifications = (int)Math.ceil((double)validTrx/trxNumberInThreshold);
-    private final long completedThresholdCents = trxNumberInThreshold*Utils.euro2Cents(thresholdReward);
-    private final long lastThresholdCents = Utils.euro2Cents(thresholdReward)*validTrx % completedThresholdCents;
+    private final long completedThresholdCents = trxNumberInThreshold* CommonUtilities.euroToCents(thresholdReward);
+    private final long lastThresholdCents = CommonUtilities.euroToCents(thresholdReward)*validTrx % completedThresholdCents;
 
     @Test
     void testConsumer() {
@@ -46,7 +48,7 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
         long totalSendMessages = trxs.size();
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(p -> publishIntoEmbeddedKafka(topicRewardResponse, null,p.getUserId(), p));
+        trxs.forEach(p -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardResponse, null,p.getUserId(), p));
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeBeforeDbCheck = System.currentTimeMillis();
@@ -146,7 +148,8 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
                             .initiativeName("INITIATIVE_NAME_" + n.getInitiativeId())
                             .organizationId("ORGANIZATION_ID_" + n.getInitiativeId())
                             .organizationFiscalCode("ORGANIZATION_VAT_" + n.getInitiativeId())
-                            .userId("USERID")
+                            .beneficiaryId("USERID")
+                            .beneficiaryType(BeneficiaryType.CITIZEN)
                             .progressive(1L)
                             .trxIds(trxs.stream().map(TransactionDTO::getId).toList())
                             .depositType(DepositType.PARTIAL)

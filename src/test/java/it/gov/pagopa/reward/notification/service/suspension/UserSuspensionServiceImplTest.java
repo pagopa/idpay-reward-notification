@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.service.suspension;
 
 import it.gov.pagopa.reward.notification.connector.wallet.WalletRestClient;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardSuspendedUser;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -208,13 +208,13 @@ class UserSuspensionServiceImplTest {
         Mockito.when(rewardsSuspendedUserRepositoryMock.delete(Mockito.any(RewardSuspendedUser.class))).thenReturn(Mono.empty());
 
         RewardsNotification notification1 = RewardsNotificationFaker.mockInstanceBuilder(1)
-                .userId(USER_ID)
+                .beneficiaryId(USER_ID)
                 .initiativeId(INITIATIVE_ID)
                 .organizationId(ORGANIZATION_ID)
                 .status(RewardNotificationStatus.SUSPENDED)
                 .notificationDate(now.minusDays(3))
                 .build();
-        Mockito.when(rewardsNotificationRepositoryMock.findByUserIdAndInitiativeIdAndStatus(USER_ID, INITIATIVE_ID, RewardNotificationStatus.SUSPENDED))
+        Mockito.when(rewardsNotificationRepositoryMock.findByBeneficiaryIdAndInitiativeIdAndStatus(USER_ID, INITIATIVE_ID, RewardNotificationStatus.SUSPENDED))
                 .thenReturn(Flux.just(notification1));
 
         RewardsNotification notification2 = notification1.toBuilder().notificationDate(now).build();
@@ -246,7 +246,7 @@ class UserSuspensionServiceImplTest {
                 .thenReturn(Mono.just(expected));
         Mockito.when(rewardsSuspendedUserRepositoryMock.delete(expected)).thenReturn(Mono.empty());
 
-        Mockito.when(rewardsNotificationRepositoryMock.findByUserIdAndInitiativeIdAndStatus(USER_ID, INITIATIVE_ID, RewardNotificationStatus.SUSPENDED))
+        Mockito.when(rewardsNotificationRepositoryMock.findByBeneficiaryIdAndInitiativeIdAndStatus(USER_ID, INITIATIVE_ID, RewardNotificationStatus.SUSPENDED))
                 .thenReturn(Flux.fromIterable(Collections.emptyList()));
 
         Mockito.when(walletRestClientMock.readmit(INITIATIVE_ID, USER_ID)).thenReturn(Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR")));

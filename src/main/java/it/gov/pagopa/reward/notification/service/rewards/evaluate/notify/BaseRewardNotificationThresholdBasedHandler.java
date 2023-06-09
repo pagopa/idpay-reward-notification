@@ -41,7 +41,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
 
     @Override
     public Mono<RewardsNotification> handle(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
-        return rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)
+        return rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)
                 .switchIfEmpty(Mono.defer(()->handleNoOpenNotification(trx, rule, reward)))
                 .last()
                 .doOnNext(n -> {
@@ -68,7 +68,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
         Flux<RewardsNotification> findFutureIfRefund;
         if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) <= 0){
             log.debug("[REWARD_NOTIFICATION] searching for future notification for userId {} and initiativeId {}", trx.getUserId(), rule.getInitiativeId());
-            findFutureIfRefund = rewardsNotificationRepository.findByUserIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND);
+            findFutureIfRefund = rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND);
         } else {
             findFutureIfRefund = Flux.empty();
         }

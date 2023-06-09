@@ -23,7 +23,7 @@ public abstract class BaseRewardNotificationHandlerService implements RewardNoti
         this.mapper = mapper;
     }
     protected Mono<RewardsNotification> createNewNotification(RewardTransactionDTO trx, RewardNotificationRule rule, LocalDate notificationDate, String notificationId) {
-        return rewardsNotificationRepository.countByUserIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())
+        return rewardsNotificationRepository.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())
                 .defaultIfEmpty(0L)
                 .map(progressive -> mapper.apply(notificationId, notificationDate, progressive+1, trx, rule));
     }

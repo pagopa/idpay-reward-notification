@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.dto.trx;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.reward.notification.enums.OperationType;
-import it.gov.pagopa.reward.notification.utils.json.BigDecimalScale2Deserializer;
+import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -17,7 +17,7 @@ import java.util.List;
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
 @FieldNameConstants
 public class TransactionDTO {
     private String idTrxAcquirer;

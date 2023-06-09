@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.dto.rewards.csv;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvIgnore;
-import it.gov.pagopa.reward.notification.utils.csv.LocalDateConverter;
+import it.gov.pagopa.common.utils.csv.LocalDateConverter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

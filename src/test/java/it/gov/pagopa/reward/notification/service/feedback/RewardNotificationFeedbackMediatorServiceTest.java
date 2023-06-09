@@ -5,13 +5,13 @@ import it.gov.pagopa.reward.notification.dto.mapper.StorageEvent2OrganizationImp
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationImportsRepository;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.LockService;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
+import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.csv.in.ImportRewardNotificationFeedbackCsvService;
 import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRetrieverService;
 import it.gov.pagopa.reward.notification.test.fakers.StorageEventDtoFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -42,7 +42,7 @@ class RewardNotificationFeedbackMediatorServiceTest {
     @Mock
     private ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvServiceMock;
     @Mock
-    private ErrorNotifierService errorNotifierServiceMock;
+    private RewardErrorNotifierService rewardErrorNotifierServiceMock;
     @Mock
     private EmailNotificationService emailNotificationServiceMock;
 
@@ -50,12 +50,12 @@ class RewardNotificationFeedbackMediatorServiceTest {
 
     @BeforeEach
     void init() {
-        feedbackMediatorService = new RewardNotificationFeedbackMediatorServiceImpl("APPNAME", 500, mapper, lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, errorNotifierServiceMock, emailNotificationServiceMock, TestUtils.objectMapper);
+        feedbackMediatorService = new RewardNotificationFeedbackMediatorServiceImpl("APPNAME", 500, mapper, lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, rewardErrorNotifierServiceMock, emailNotificationServiceMock, TestUtils.objectMapper);
     }
 
     @AfterEach
     void verifyNotMoreMocksInteraction() {
-        Mockito.verifyNoMoreInteractions(lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, errorNotifierServiceMock);
+        Mockito.verifyNoMoreInteractions(lockServiceMock, importsRepositoryMock, csvRetrieverServiceMock, importRewardNotificationFeedbackCsvServiceMock, rewardErrorNotifierServiceMock);
     }
 
     @Test

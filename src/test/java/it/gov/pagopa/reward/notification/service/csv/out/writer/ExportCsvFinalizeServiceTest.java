@@ -13,7 +13,7 @@ import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRep
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
-import it.gov.pagopa.reward.notification.utils.ZipUtils;
+import it.gov.pagopa.common.utils.ZipUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,8 +61,7 @@ class ExportCsvFinalizeServiceTest {
                         .id("REWARDNOTIFICATIONID%d".formatted(i))
                         .uniqueID("REWARDNOTIFICATIONEXTERNALID%d".formatted(i))
                         .fiscalCode("fiscalCode%d".formatted(i))
-                        .accountHolderName("accountHolderName%d".formatted(i))
-                        .accountHolderSurname("accountHolderSurname%d".formatted(i))
+                        .beneficiaryName("accountHolderName%d".formatted(i))
                         .iban("IBAN%d".formatted(i))
                         .amount(100L)
                         .paymentReason("paymentReason%d".formatted(i))
@@ -138,7 +137,7 @@ class ExportCsvFinalizeServiceTest {
 
             List<String> csvLinesStrs = Files.readAllLines(csvPath);
             Assertions.assertEquals(
-                    "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"accountHolderName\";\"accountHolderSurname\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
+                    "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"beneficiaryName\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
                     csvLinesStrs.get(0));
 
             for (int i = 0; i < csvLines.size(); i++) {
@@ -156,8 +155,7 @@ class ExportCsvFinalizeServiceTest {
             e -> e.getProgressiveCode()+"",
             RewardNotificationExportCsvDto::getUniqueID,
             RewardNotificationExportCsvDto::getFiscalCode,
-            RewardNotificationExportCsvDto::getAccountHolderName,
-            RewardNotificationExportCsvDto::getAccountHolderSurname,
+            RewardNotificationExportCsvDto::getBeneficiaryName,
             RewardNotificationExportCsvDto::getIban,
             e -> e.getAmount()+"",
             RewardNotificationExportCsvDto::getPaymentReason,

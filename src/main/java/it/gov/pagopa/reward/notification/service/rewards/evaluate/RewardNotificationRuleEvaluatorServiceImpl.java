@@ -7,7 +7,7 @@ import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.notification.service.rewards.RewardsService;
 import it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,15 +25,15 @@ public class RewardNotificationRuleEvaluatorServiceImpl implements RewardNotific
     private final RewardMapper rewardMapper;
     private final RewardsService rewardsService;
     private final RewardsNotificationRepository notificationRepository;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
-    public RewardNotificationRuleEvaluatorServiceImpl(RewardNotificationRuleService rewardNotificationRuleService, RewardNotificationHandlerFacadeService rewardNotificationHandlerFacadeService, RewardMapper rewardMapper, RewardsService rewardsService, RewardsNotificationRepository notificationRepository, ErrorNotifierService errorNotifierService) {
+    public RewardNotificationRuleEvaluatorServiceImpl(RewardNotificationRuleService rewardNotificationRuleService, RewardNotificationHandlerFacadeService rewardNotificationHandlerFacadeService, RewardMapper rewardMapper, RewardsService rewardsService, RewardsNotificationRepository notificationRepository, RewardErrorNotifierService rewardErrorNotifierService) {
         this.rewardNotificationRuleService = rewardNotificationRuleService;
         this.rewardNotificationHandlerFacadeService = rewardNotificationHandlerFacadeService;
         this.rewardMapper = rewardMapper;
         this.rewardsService = rewardsService;
         this.notificationRepository = notificationRepository;
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
     }
 
     @Override
@@ -47,14 +47,14 @@ public class RewardNotificationRuleEvaluatorServiceImpl implements RewardNotific
                                     if (rule2Notification.getValue() == null) {
                                         String errorMsg = "[REWARD_NOTIFICATION] Cannot configure notificationId for reward: %s_%s"
                                                 .formatted(trx.getId(), initiativeId);
-                                        errorNotifierService.notifyRewardResponse(message, errorMsg, true, new IllegalStateException(errorMsg));
+                                        rewardErrorNotifierService.notifyRewardResponse(message, errorMsg, true, new IllegalStateException(errorMsg));
                                     }
                                 })
                 )
 
                 .switchIfEmpty(Mono.fromSupplier(() -> {
                     String errorMsg = "[REWARD_NOTIFICATION] Cannot find initiative having id: %s".formatted(initiativeId);
-                    errorNotifierService.notifyRewardResponse(message, errorMsg, true, new IllegalStateException(errorMsg));
+                    rewardErrorNotifierService.notifyRewardResponse(message, errorMsg, true, new IllegalStateException(errorMsg));
                     return Pair.of(null, null);
                 }))
 

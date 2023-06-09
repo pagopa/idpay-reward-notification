@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -46,7 +46,7 @@ public class UserRestClientImpl implements UserRestClient {
                                 .uri(URI, Map.of("token", userId))
                                 .retrieve()
                                 .toEntity(UserInfoPDV.class),
-                        x -> "httpStatus %s".formatted(x.getStatusCodeValue())
+                        x -> "httpStatus %s".formatted(x.getStatusCode().value())
                 )
                 .map(HttpEntity::getBody)
                 .retryWhen(Retry.fixedDelay(pdvMaxAttempts, Duration.ofMillis(pdvRetryDelay))

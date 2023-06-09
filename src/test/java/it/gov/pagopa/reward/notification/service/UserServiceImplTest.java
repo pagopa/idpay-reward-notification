@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.notification.service;
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.connector.rest.UserRestClient;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

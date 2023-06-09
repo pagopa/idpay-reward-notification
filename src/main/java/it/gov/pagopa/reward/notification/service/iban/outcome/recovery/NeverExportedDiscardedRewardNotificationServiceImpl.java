@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationDateReschedulerService;
 import it.gov.pagopa.reward.notification.utils.ExportCsvConstants;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -33,7 +33,7 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
 
         // case 1 - Notification never exported
         return PerformanceLogger.logTimingOnNext("IBAN_OUTCOME_RECOVER_ERROR_IBAN",
-                rewardsNotificationRepository.findByUserIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
+                rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndStatusAndRejectionReasonAndExportIdNull(
                         rewardIban.getUserId(),
                         rewardIban.getInitiativeId(),
                         RewardNotificationStatus.ERROR,
@@ -47,16 +47,16 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
     }
 
     private Mono<RewardsNotification> recoverNeverExportedDiscardedRewardNotification(RewardsNotification notification) {
-        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Found discarded never exported rewardNotification having id {} on userId {} and initiativeId {}",
-                notification.getId(), notification.getUserId(), notification.getInitiativeId());
+        log.info("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Found discarded never exported rewardNotification having id {} on beneficiaryId {} beneficiaryType {} initiativeId {}",
+                notification.getId(), notification.getBeneficiaryId(), notification.getBeneficiaryType(), notification.getInitiativeId());
 
         return Mono.just(notification)
                 .doOnNext(this::resetRewardNotificationStatus)
                 .flatMap(notificationDateReschedulerService::setHandledNotificationDate)
                 .flatMap(rewardsNotificationRepository::save)
                 .onErrorResume(e -> {
-                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to userId {} and initiativeId {}",
-                            notification.getId(), notification.getUserId(), notification.getInitiativeId(), e);
+                    log.error("[REWARD_NOTIFICATION_IBAN_OUTCOME] [IBAN_OUTCOME_RECOVER_ERROR_IBAN] Something went wrong while recovering never exported rewardNotification having id {} related to beneficiaryId {} beneficiaryType {} initiativeId {}",
+                            notification.getId(), notification.getBeneficiaryId(), notification.getBeneficiaryType(), notification.getInitiativeId(), e);
                     return Mono.empty();
                 });
     }

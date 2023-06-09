@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
 import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
@@ -17,9 +18,7 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationExportsFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import it.gov.pagopa.reward.notification.test.fakers.StorageEventDtoFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -27,6 +26,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN",
-        "logging.level.it.gov.pagopa.reward.notification.utils.PerformanceLogger=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationTest {
 
@@ -88,7 +88,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
 
         storeTestData();
 
-        List<Pair<String, String>> payloads = new ArrayList<>(Stream.concat(
+        List<org.apache.commons.lang3.tuple.Pair<String, String>> payloads = new ArrayList<>(Stream.concat(
                         IntStream.range(0, messages)
                                 .mapToObj(StorageEventDtoFaker::mockInstance),
 
@@ -98,19 +98,19 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                                         .subject(RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX + notExistentFileUseCase).build()
                         )
                 )
-                .map(p -> Pair.of(messageKey, "[%s]".formatted(TestUtils.jsonSerializer(p))))
+                .map(p -> org.apache.commons.lang3.tuple.Pair.of(messageKey, "[%s]".formatted(TestUtils.jsonSerializer(p))))
                 .toList());
 
         // ignored message cause not an upload
-        payloads.add(Pair.of(null, "[{\"id\":\"FAKEID\",\"eventType\":\"Microsoft.Storage.BlobDeleted\",\"subject\":\"/blobServices/default/containers/refund/blobs/orgId/initiativeId/import/tmpFile.zip\",\"eventTime\":\"2022-11-23T00:00Z\"}]"));
+        payloads.add(org.apache.commons.lang3.tuple.Pair.of(null, "[{\"id\":\"FAKEID\",\"eventType\":\"Microsoft.Storage.BlobDeleted\",\"subject\":\"/blobServices/default/containers/refund/blobs/orgId/initiativeId/import/tmpFile.zip\",\"eventTime\":\"2022-11-23T00:00Z\"}]"));
         // ignored message cause not in the import directory
-        payloads.add(Pair.of(null, "[{\"id\":\"FAKEID\",\"eventType\":\"%s\",\"subject\":\"%sorgId/initiativeId/unexpectedDir/tmpFile.zip\",\"eventTime\":\"2022-11-23T00:00Z\"}]"
+        payloads.add(org.apache.commons.lang3.tuple.Pair.of(null, "[{\"id\":\"FAKEID\",\"eventType\":\"%s\",\"subject\":\"%sorgId/initiativeId/unexpectedDir/tmpFile.zip\",\"eventTime\":\"2022-11-23T00:00Z\"}]"
                 .formatted(RewardFeedbackConstants.AZURE_STORAGE_EVENT_TYPE_BLOB_CREATED, RewardFeedbackConstants.AZURE_STORAGE_SUBJECT_PREFIX)));
 
-        payloads.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> Pair.<String, String>of(null, errorUseCases.get(i).getKey().get())).toList());
+        payloads.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> org.apache.commons.lang3.tuple.Pair.<String, String>of(null, errorUseCases.get(i).getFirst().get())).toList());
 
         long timeStart = System.currentTimeMillis();
-        payloads.forEach(p -> publishIntoEmbeddedKafka(topicRewardNotificationUpload, null, p.getKey(), p.getValue()));
+        payloads.forEach(p -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardNotificationUpload, null, p.getKey(), p.getValue()));
         long timePublishingEnd = System.currentTimeMillis();
 
         waitForRewardNotificationFeedbacks();
@@ -142,7 +142,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardNotificationUpload, groupIdRewardNotificationUpload, payloads.size());
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = kafkaTestUtilitiesService.checkCommittedOffsets(topicRewardNotificationUpload, groupIdRewardNotificationUpload, payloads.size());
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -263,7 +263,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         long[] countSaved = {0};
         int expectedImportMessages = rewardNotificationImportIds.size();
         //noinspection ConstantConditions
-        waitFor(() -> (countSaved[0] = rewardOrganizationImportsRepository.findAllById(rewardNotificationImportIds)
+        TestUtils.waitFor(() -> (countSaved[0] = rewardOrganizationImportsRepository.findAllById(rewardNotificationImportIds)
                 .filter(i -> finalStatuses.contains(i.getStatus()))
                 .count().block()) == expectedImportMessages, () -> "Expected %d saved feedback operations, read %d".formatted(expectedImportMessages, countSaved[0]), 60, 1000);
     }
@@ -275,7 +275,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
         return Pattern.compile("\"id\":\"id_([0-9]+)_?[^\"]*\"");
     }
 
-    private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
+    private final List<org.springframework.data.util.Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
 
     {
         String useCaseJsonNotExpected = "{\"id\":\"id_0\",unexpectedStructure:0}";
@@ -633,7 +633,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
     }
 
     private void checkNotifications() {
-        List<ConsumerRecord<String, String>> msgs = consumeMessages(topicRewardNotificationFeedback, rewardNotificationImportIds.size() - 1 + expected2FeedbackRewards2Previous.size(), 5000); // -1 due to useCase unexpected initiativeId, +X due to resubmit of rewards in import1
+        List<ConsumerRecord<String, String>> msgs = kafkaTestUtilitiesService.consumeMessages(topicRewardNotificationFeedback, rewardNotificationImportIds.size() - 1 + expected2FeedbackRewards2Previous.size(), 5000); // -1 due to useCase unexpected initiativeId, +X due to resubmit of rewards in import1
 
         List<String> ids = testDataRewardsNotifications.stream().map(RewardsNotification::getId).toList();
         List<RewardsNotification> rewards = rewardsNotificationRepository.findAllById(ids).collectList().block();
@@ -682,7 +682,7 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                         if(n.getFeedbackProgressive()==1 && expected2FeedbackRewards2Previous.containsKey(n.getRewardNotificationId())){
                             n.setFeedbackDate(n.getFeedbackDate().truncatedTo(ChronoUnit.HOURS));
                         }
-                        Assertions.assertEquals("%s_%s".formatted(n.getUserId(), n.getInitiativeId()), msg.key());
+                        Assertions.assertEquals("%s_%s".formatted(n.getBeneficiaryId(), n.getInitiativeId()), msg.key());
                         return n;
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException("Cannot deserialize payload as %s: %s".formatted(RewardFeedbackDTO.class, msg.value()), e);

@@ -8,13 +8,13 @@ import it.gov.pagopa.reward.notification.dto.mapper.StorageEvent2OrganizationImp
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationImportsRepository;
-import it.gov.pagopa.reward.notification.service.BaseKafkaBlockingPartitionConsumer;
-import it.gov.pagopa.reward.notification.service.ErrorNotifierService;
-import it.gov.pagopa.reward.notification.service.LockService;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
+import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
+import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.csv.in.ImportRewardNotificationFeedbackCsvService;
 import it.gov.pagopa.reward.notification.service.email.EmailNotificationService;
 import it.gov.pagopa.reward.notification.service.feedback.retrieve.FeedbackCsvRetrieverService;
-import it.gov.pagopa.reward.notification.utils.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +37,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
     private final RewardOrganizationImportsRepository importsRepository;
     private final FeedbackCsvRetrieverService csvRetrieverService;
     private final ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
     private final EmailNotificationService emailNotificationService;
 
     private final Duration commitDelay;
@@ -55,7 +55,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
             RewardOrganizationImportsRepository importsRepository,
             FeedbackCsvRetrieverService csvRetrieverService,
             ImportRewardNotificationFeedbackCsvService importRewardNotificationFeedbackCsvService,
-            ErrorNotifierService errorNotifierService, EmailNotificationService emailNotificationService,
+            RewardErrorNotifierService rewardErrorNotifierService, EmailNotificationService emailNotificationService,
             ObjectMapper objectMapper) {
         super(applicationName, lockService);
         this.mapper = mapper;
@@ -63,7 +63,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
         this.csvRetrieverService = csvRetrieverService;
         this.importRewardNotificationFeedbackCsvService = importRewardNotificationFeedbackCsvService;
 
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.emailNotificationService = emailNotificationService;
 
@@ -83,7 +83,7 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyOrganizationFeedbackUpload(message, "[REWARD_NOTIFICATION_FEEDBACK] An error occurred handling organization feedback upload event", true, e);
+        rewardErrorNotifierService.notifyOrganizationFeedbackUpload(message, "[REWARD_NOTIFICATION_FEEDBACK] An error occurred handling organization feedback upload event", true, e);
     }
 
     @Override
@@ -93,11 +93,11 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyOrganizationFeedbackUpload(message, "[REWARD_NOTIFICATION_FEEDBACK] Unexpected JSON", true, e);
+        return e -> rewardErrorNotifierService.notifyOrganizationFeedbackUpload(message, "[REWARD_NOTIFICATION_FEEDBACK] Unexpected JSON", true, e);
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "REWARD_NOTIFICATION_FEEDBACK";
     }
 

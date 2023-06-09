@@ -30,9 +30,9 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
 
     @Override
     public Mono<Pair<RewardsNotification, User>> retrieveUser(RewardsNotification reward) {
-        return userService.getUserInfo(reward.getUserId())
+        return userService.getUserInfo(reward.getBeneficiaryId())
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find fiscalCode related to user {}", reward.getUserId());
+                    log.error("[REWARD_NOTIFICATION_EXPORT_CSV] Cannot find fiscalCode related to user {}", reward.getBeneficiaryId());
 
                     reward.setStatus(RewardNotificationStatus.ERROR);
                     reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND);
@@ -46,7 +46,7 @@ public class User2NotifyRetrieverServiceImpl implements User2NotifyRetrieverServ
                             .then(Mono.empty());
                 }))
                 .map(user -> {
-                    log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] fiscalCode related to user {} retrieved", reward.getUserId());
+                    log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] fiscalCode related to user {} retrieved", reward.getBeneficiaryId());
 
                     return Pair.of(reward, user);
                 })

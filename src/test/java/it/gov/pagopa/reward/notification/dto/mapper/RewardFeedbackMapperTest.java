@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
-import it.gov.pagopa.reward.notification.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -109,7 +109,8 @@ class RewardFeedbackMapperTest {
     private void checkCommonFields(RewardsNotification notification, long deltaRewardCents, String expectedStatus, RewardFeedbackDTO result) {
         Assertions.assertEquals(notification.getId(), result.getRewardNotificationId());
         Assertions.assertEquals(notification.getInitiativeId(), result.getInitiativeId());
-        Assertions.assertEquals(notification.getUserId(), result.getUserId());
+        Assertions.assertEquals(notification.getBeneficiaryId(), result.getBeneficiaryId());
+        Assertions.assertEquals(notification.getBeneficiaryType(), result.getBeneficiaryType());
         Assertions.assertEquals(notification.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(expectedStatus, result.getStatus());
         Assertions.assertEquals(RewardFeedbackMapper.REWARD_NOTIFICATION_FEEDBACK_STATUS_ACCEPTED.equals(expectedStatus) ? null : notification.getResultCode(), result.getRejectionCode());

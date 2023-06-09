@@ -5,6 +5,8 @@ reactor:
   bufferSize:
     small: ${REACTOR_BUFFER_SIZE:256}
 
+springdoc.swagger-ui.path: "/swagger-ui/index.html"
+
 spring:
   application:
     name: "@project.artifactId@"
@@ -14,9 +16,9 @@ spring:
     activate:
       on-profile: default
   cloud:
+    function:
+      definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback;errors
     stream:
-      function:
-        definition: refundRuleConsumer;rewardTrxConsumer;ibanOutcomeConsumer;rewardNotificationUploadConsumer;rewardNotificationFeedback;errors
       bindings:
         refundRuleConsumer-in-0:
           destination: ${KAFKA_REFUND_RULE_REQUEST_TOPIC:idpay-transaction-rule-update}
@@ -193,9 +195,12 @@ spring:
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
 
-management.endpoints:
-  web:
-    exposure.include: info, health
+management:
+  endpoint:
+    health.logging.slow-indicator-threshold: ${HEALTH_ACTUATOR_LOGGER_TIMEOUT_DURATION:PT1S}
+  endpoints:
+    web:
+      exposure.include: info, health
 
 logging:
   level:
@@ -224,6 +229,8 @@ app:
   trx-lock:
     # the size of the locks bucket
     bucket-size: ${TRX_LOCK_BUCKET_SIZE:1000}
+    # the max size of threads that could be created
+    max-threads: ${TRX_LOCK_MAX_THREADS:256}
     # the maximum seconds to wait before to continue even if the lock is acquired
     timeout: ${TRX_LOCK_SECONDS_TIMEOUT:180}
   threads:
@@ -280,3 +287,5 @@ app:
       uid: ${SELC_UID:idpay}
   wallet:
     base-url: ${WALLET_MS_HOST:}/idpay/wallet
+  merchant:
+    base-url: ${MERCHANT_MS_HOST:}/idpay/merchant

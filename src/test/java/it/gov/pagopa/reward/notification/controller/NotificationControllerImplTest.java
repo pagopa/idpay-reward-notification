@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.controller;
 
-import it.gov.pagopa.reward.notification.config.JsonConfig;
+import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;

@@ -1,9 +1,10 @@
 package it.gov.pagopa.reward.notification.connector.wallet;
 
-import it.gov.pagopa.reward.notification.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -35,7 +36,7 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .toBodilessEntity()
                 .map(r -> validateWalletResponse(r, "suspend", initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new ClientExceptionNoBody(e.getStatusCode(), "Something gone wrong while invoking wallet to suspend user %s on initiative %s".formatted(userId, initiativeId), true, e);
+                    throw new ClientExceptionNoBody((HttpStatus) e.getStatusCode(), "Something gone wrong while invoking wallet to suspend user %s on initiative %s".formatted(userId, initiativeId), true, e);
                 });
     }
 
@@ -49,7 +50,7 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .toBodilessEntity()
                 .map(r -> validateWalletResponse(r, "readmit", initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new ClientExceptionNoBody(e.getStatusCode(), "Something gone wrong while invoking wallet to readmit user %s on initiative %s".formatted(userId, initiativeId), true, e);
+                    throw new ClientExceptionNoBody((HttpStatus) e.getStatusCode(), "Something gone wrong while invoking wallet to readmit user %s on initiative %s".formatted(userId, initiativeId), true, e);
                 });
     }
 
@@ -57,7 +58,7 @@ public class WalletRestClientImpl implements WalletRestClient {
         if (r.getStatusCode().is2xxSuccessful()) {
             return r;
         } else {
-            throw new ClientExceptionNoBody(r.getStatusCode(), "Something gone wrong while invoking wallet to %s user %s on initiative %s".formatted(op, userId, initiativeId));
+            throw new ClientExceptionNoBody((HttpStatus) r.getStatusCode(), "Something gone wrong while invoking wallet to %s user %s on initiative %s".formatted(op, userId, initiativeId));
         }
     }
 }

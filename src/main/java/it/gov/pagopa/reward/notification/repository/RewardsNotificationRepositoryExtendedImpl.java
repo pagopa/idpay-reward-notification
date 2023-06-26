@@ -35,7 +35,7 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     private final ReactiveMongoTemplate mongoTemplate;
 
     public RewardsNotificationRepositoryExtendedImpl(
-            @Value("${app.csv.export.day-before}") int dayBeforeToSearch,
+            @Value("${app.csv.export.day-before:30}") int dayBeforeToSearch,
             ReactiveMongoTemplate mongoTemplate) {
         this.dayBeforeToSearch = dayBeforeToSearch;
         this.mongoTemplate = mongoTemplate;

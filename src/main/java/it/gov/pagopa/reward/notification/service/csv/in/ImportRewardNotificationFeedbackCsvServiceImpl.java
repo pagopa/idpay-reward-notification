@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.exceptionhandler.ExceptionHandlerQueue;
 import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.common.utils.csv.HeaderColumnNameStrategy;
@@ -54,18 +53,19 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     @Override
     public Mono<RewardOrganizationImport> evaluate(Path csv, RewardOrganizationImport importRequest) {
         log.info("[REWARD_NOTIFICATION_FEEDBACK] Processing csv file: {}", csv);
+        int[] rowNumber = new int[]{1};
+
         Reader reader;
         CsvToBean<RewardNotificationImportCsvDto> csvReader;
         try {
             reader = Files.newBufferedReader(csv);
-            csvReader = buildCsvReader(reader);
+            csvReader = buildCsvReader(reader, rowNumber);
         } catch (IOException e) {
             throw new IllegalStateException("[REWARD_NOTIFICATION_FEEDBACK] Cannot read csv: %s".formatted(csv), e);
         }
 
         Map<String, RewardOrganizationExport> exportCache = new ConcurrentHashMap<>();
 
-        int[] rowNumber = new int[]{1};
         return Flux.fromStream(csvReader.stream())
                 .doOnEach(r -> {
                     int n = rowNumber[0]++;
@@ -100,13 +100,16 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .map(counters -> updateImportRequest(counters, importRequest));
     }
 
-    private CsvToBean<RewardNotificationImportCsvDto> buildCsvReader(Reader reader) {
+    private CsvToBean<RewardNotificationImportCsvDto> buildCsvReader(Reader reader, int[] rowNumber) {
         return new CsvToBeanBuilder<RewardNotificationImportCsvDto>(reader)
                 .withType(RewardNotificationImportCsvDto.class)
                 .withMappingStrategy(mappingStrategy)
                 .withSeparator(csvSeparator)
                 .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
-                .withExceptionHandler(new ExceptionHandlerQueue())
+                .withExceptionHandler(e -> {
+                    rowNumber[0]++;
+                    return e;
+                })
                 .build();
     }
 

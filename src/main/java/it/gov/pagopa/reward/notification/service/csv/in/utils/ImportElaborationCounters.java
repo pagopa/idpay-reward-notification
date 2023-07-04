@@ -76,7 +76,7 @@ public class ImportElaborationCounters {
             }
 
             counter.getErrors().add(new RewardOrganizationImport.RewardOrganizationImportError(
-                    (int) e.getLineNumber(),
+                    (int) e.getLineNumber()-1,
                     getRowErrorFromException(e)));
         });
     }

@@ -364,8 +364,8 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .status(RewardOrganizationImportStatus.WARN)
                             .errorsSize(2)
                             .errors(List.of(
-                                    new RewardOrganizationImport.RewardOrganizationImportError(4, RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND),
-                                    new RewardOrganizationImport.RewardOrganizationImportError(5, RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE)
+                                    new RewardOrganizationImport.RewardOrganizationImportError(4, RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE),
+                                    new RewardOrganizationImport.RewardOrganizationImportError(5, RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND)
                             ))
                             .build(),
                     stored1

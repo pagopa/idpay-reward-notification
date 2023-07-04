@@ -87,7 +87,7 @@ public class ImportElaborationCounters {
 
     private static RewardFeedbackConstants.ImportFeedbackRowErrors getRowErrorFromException(CsvException e) {
         if (e instanceof CsvDataTypeMismatchException dataTypeMismatchException
-                && dataTypeMismatchException.getDestinationClass().equals(LocalDate.class)) {
+                && LocalDate.class.equals(dataTypeMismatchException.getDestinationClass())) {
             return RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE;
         }
 

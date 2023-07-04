@@ -28,7 +28,7 @@ class ImportElaborationCountersTest {
 
         List<RewardOrganizationImport.RewardOrganizationImportError> expectedErrors = List.of(
                 new RewardOrganizationImport.RewardOrganizationImportError(-2, RewardFeedbackConstants.ImportFeedbackRowErrors.GENERIC_ERROR),
-                new RewardOrganizationImport.RewardOrganizationImportError(1, RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE),
+                new RewardOrganizationImport.RewardOrganizationImportError(1, RewardFeedbackConstants.ImportFeedbackRowErrors.GENERIC_ERROR),
                 new RewardOrganizationImport.RewardOrganizationImportError(2, RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE),
                 new RewardOrganizationImport.RewardOrganizationImportError(3, RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE)
         );
@@ -36,7 +36,7 @@ class ImportElaborationCountersTest {
     }
 
     private static List<CsvException> provideExceptionList() {
-        CsvDataTypeMismatchException csvDateExceptionNoLine = new CsvDataTypeMismatchException(null, LocalDate.class);
+        CsvDataTypeMismatchException csvDateExceptionNoLine = new CsvDataTypeMismatchException();
         csvDateExceptionNoLine.setLineNumber(2);
 
         String[] koLine = new String[]{"uniqueId","KO","","cro","2023-07-04"};

@@ -32,7 +32,7 @@ public final class RewardFeedbackConstants {
         INVALID_RESULT("Esito non riconosciuto, gli unici valori ammessi sono :%s".formatted(Arrays.stream(RewardOrganizationImportResult.values()).map(x->"'%s'".formatted(x.value)).collect(Collectors.joining(",")))),
         NOT_FOUND("UniqueId non esistente"),
         CANNOT_UPDATE_RECOVERED_NOTIFICATION("Non e' possibile recepire esiti su una disposizione gia' recuperata da una disposizione correttiva"),
-
+        INVALID_DATE("Il formato della data inserita non e' valido"),
         GENERIC_ERROR("Qualcosa e' andato storto durante l'elaborazione della riga");
 
         public final String description;

@@ -2,20 +2,22 @@ package it.gov.pagopa.reward.notification.service.csv.in;
 
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.exceptionhandler.ExceptionHandlerQueue;
 import com.opencsv.enums.CSVReaderNullFieldIndicator;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
+import it.gov.pagopa.common.utils.csv.HeaderColumnNameStrategy;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationImportCsvDto;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.service.csv.in.retrieve.RewardNotificationExportFeedbackRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.in.utils.ImportElaborationCounters;
-import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
-import it.gov.pagopa.common.utils.csv.HeaderColumnNameStrategy;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -65,7 +67,12 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
 
         int[] rowNumber = new int[]{1};
         return Flux.fromStream(csvReader.stream())
-                .doOnNext(r -> r.setRowNumber(rowNumber[0]++))
+                .doOnEach(r -> {
+                    int n = rowNumber[0]++;
+                    if (SignalType.ON_NEXT.equals(r.getType()) && r.get() != null) {
+                        r.get().setRowNumber(n);
+                    }
+                })
 
                 .flatMap(line -> PerformanceLogger.logTimingOnNext(
                         "FEEDBACK_FILE_LINE_EVALUATION",
@@ -74,6 +81,8 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .map(ImportElaborationCounters::fromElaborationResult)
 
                 .reduce(ImportElaborationCounters::add)
+                .doOnNext(c -> ImportElaborationCounters.updateWithException(c, csvReader.getCapturedExceptions()))
+
                 .doFinally(x -> {
                     try {
                         reader.close();
@@ -97,6 +106,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                 .withMappingStrategy(mappingStrategy)
                 .withSeparator(csvSeparator)
                 .withFieldAsNull(CSVReaderNullFieldIndicator.BOTH)
+                .withExceptionHandler(new ExceptionHandlerQueue())
                 .build();
     }
 

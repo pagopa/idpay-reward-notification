@@ -351,19 +351,22 @@ class OrganizationFeedbackUploadEventConsumerConfigTest extends BaseIntegrationT
                             .contentLength(1000)
                             .url("https://STORAGEACCOUNT.blob.core.windows.net/CONTAINERNAME/orgId/initiativeId/import/reward-dispositive-1.zip")
 
-                            .rewardsResulted(4L)
-                            .rewardsResultedError(1L)
-                            .rewardsResultedOk(3L)
-                            .rewardsResultedOkError(1L)
+                            .rewardsResulted(5L)
+                            .rewardsResultedError(2L)
+                            .rewardsResultedOk(4L)
+                            .rewardsResultedOkError(2L)
 
-                            .percentageResulted(75_00L)
-                            .percentageResultedOk(75_00L)
+                            .percentageResulted(60_00L)
+                            .percentageResultedOk(80_00L)
                             .percentageResultedOkElab(66_66L)
                             .elabDate(stored1.getElabDate())
                             .exportIds(List.of("exportId0", "exportId1", "exportId2"))
                             .status(RewardOrganizationImportStatus.WARN)
-                            .errorsSize(1)
-                            .errors(List.of(new RewardOrganizationImport.RewardOrganizationImportError(4, RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND)))
+                            .errorsSize(2)
+                            .errors(List.of(
+                                    new RewardOrganizationImport.RewardOrganizationImportError(4, RewardFeedbackConstants.ImportFeedbackRowErrors.NOT_FOUND),
+                                    new RewardOrganizationImport.RewardOrganizationImportError(5, RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE)
+                            ))
                             .build(),
                     stored1
             );

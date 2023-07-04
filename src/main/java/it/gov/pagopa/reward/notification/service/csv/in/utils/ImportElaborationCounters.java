@@ -1,9 +1,13 @@
 package it.gov.pagopa.reward.notification.service.csv.in.utils;
 
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvException;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportResult;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
+import it.gov.pagopa.reward.notification.utils.RewardFeedbackConstants;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Getter
@@ -59,5 +63,34 @@ public class ImportElaborationCounters {
             out.getErrors().add(outcome.getError());
         }
         return out;
+    }
+
+    public static void updateWithException(ImportElaborationCounters counter, List<CsvException> csvExceptions) {
+        csvExceptions.forEach(e -> {
+            counter.rewardsResulted++;
+            counter.rewardsResultedError++;
+
+            if(isOkOutcome(e.getLine())) {
+                counter.rewardsResultedOk++;
+                counter.rewardsResultedOkError++;
+            }
+
+            counter.getErrors().add(new RewardOrganizationImport.RewardOrganizationImportError(
+                    (int) e.getLineNumber(),
+                    getRowErrorFromException(e)));
+        });
+    }
+
+    private static boolean isOkOutcome(String[] line) {
+        return line!=null && RewardOrganizationImportResult.OK.value.equals(line[1]);
+    }
+
+    private static RewardFeedbackConstants.ImportFeedbackRowErrors getRowErrorFromException(CsvException e) {
+        if (e instanceof CsvDataTypeMismatchException dataTypeMismatchException
+                && dataTypeMismatchException.getDestinationClass().equals(LocalDate.class)) {
+            return RewardFeedbackConstants.ImportFeedbackRowErrors.INVALID_DATE;
+        }
+
+        return RewardFeedbackConstants.ImportFeedbackRowErrors.GENERIC_ERROR;
     }
 }

@@ -53,16 +53,16 @@ public class RewardOrganizationImport {
         private String errorCode;
         private String errorDescription;
 
-        public RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors noRows) {
+        public RewardOrganizationImportError(RewardFeedbackConstants.ImportFileErrors error) {
             this.row=-1;
-            this.errorCode=noRows.name();
-            this.errorDescription=noRows.description;
+            this.errorCode=error.name();
+            this.errorDescription=error.description;
         }
 
-        public RewardOrganizationImportError(int row, RewardFeedbackConstants.ImportFeedbackRowErrors noRows) {
+        public RewardOrganizationImportError(int row, RewardFeedbackConstants.ImportFeedbackRowErrors error) {
             this.row=row;
-            this.errorCode=noRows.name();
-            this.errorDescription=noRows.description;
+            this.errorCode=error.name();
+            this.errorDescription=error.description;
         }
     }
 }

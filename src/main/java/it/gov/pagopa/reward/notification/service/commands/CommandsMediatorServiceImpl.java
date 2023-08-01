@@ -48,7 +48,7 @@ public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperat
     @Override
     protected void subscribeAfterCommits(Flux<List<String>> afterCommits2subscribe) {
         afterCommits2subscribe
-                .subscribe(r -> log.info("[COMMANDS_OPERATION] Processed offsets committed successfully"));
+                .subscribe(r -> log.info("[REWARD_NOTIFICATION_COMMANDS] Processed offsets committed successfully"));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperat
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        rewardErrorNotifierService.notifyRewardResponse(message, "[REWARD_NOTIFICATION_COMMANDS] An error occurred evaluating commands", true, e);
+        rewardErrorNotifierService.notifyRewardCommands(message, "[REWARD_NOTIFICATION_COMMANDS] An error occurred evaluating commands", true, e);
     }
 
     @Override

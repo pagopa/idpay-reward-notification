@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
+import com.mongodb.MongoException;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.commands.CommandOperationDTO;
@@ -15,6 +16,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
@@ -199,6 +201,22 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_COMMANDS] Unexpected JSON", jsonNotValid)
+        ));
+
+        final String errorInitiativeId = "INITIATIVEID_ERROR2";
+        CommandOperationDTO commandOperationError = CommandOperationDTO.builder()
+                .operationId(errorInitiativeId)
+                .operationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE)
+                .operationTime(LocalDateTime.now())
+                .build();
+        String commandOperationErrorString = TestUtils.jsonSerializer(commandOperationError);
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new MongoException("Command error dummy"))
+                            .when(rewardNotificationRuleRepository).deleteById(errorInitiativeId);
+                    return commandOperationErrorString;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_COMMANDS] An error occurred evaluating commands", commandOperationErrorString)
         ));
     }
 

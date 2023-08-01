@@ -55,6 +55,7 @@ class DeleteInitiativeServiceImplTest {
 
         RewardOrganizationExport rewardOrganizationExport = RewardOrganizationExportsFaker.mockInstanceBuilder(1)
                 .initiativeId(initiativeId)
+                .filePath(null)
                 .build();
         Mockito.when(rewardOrganizationExportsRepositoryMock.deleteByInitiativeId(initiativeId))
                 .thenReturn(Flux.just(rewardOrganizationExport));

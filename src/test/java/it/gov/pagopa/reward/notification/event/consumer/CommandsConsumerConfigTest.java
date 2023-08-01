@@ -123,12 +123,12 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                 .mapToObj(i -> {
                     initializeDB(i);
                     CommandOperationDTO command = CommandOperationDTO.builder()
-                            .operationId(INITIATIVEID.formatted(i))
+                            .entityId(INITIATIVEID.formatted(i))
                             .operationTime(LocalDateTime.now())
                             .build();
 
                     if(i%2 == 0){
-                        INITIATIVES_DELETED.add(command.getOperationId());
+                        INITIATIVES_DELETED.add(command.getEntityId());
                         command.setOperationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE);
                     } else {
                         command.setOperationType("ANOTHER_TYPE");
@@ -205,7 +205,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
         final String errorInitiativeId = "INITIATIVEID_ERROR2";
         CommandOperationDTO commandOperationError = CommandOperationDTO.builder()
-                .operationId(errorInitiativeId)
+                .entityId(errorInitiativeId)
                 .operationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE)
                 .operationTime(LocalDateTime.now())
                 .build();

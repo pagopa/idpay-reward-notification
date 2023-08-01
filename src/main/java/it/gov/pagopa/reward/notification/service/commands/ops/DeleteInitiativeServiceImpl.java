@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Service
 @Slf4j
 public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
@@ -62,7 +60,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 ));
     }
 
-    private Mono<List<RewardOrganizationExport>> deleteRewardOrganizationExport(String initiativeId){
+    private Mono<Void> deleteRewardOrganizationExport(String initiativeId){
         return rewardOrganizationExportsRepository.deleteByInitiativeId(initiativeId)
                 .doOnNext(rewardOrganizationExport ->
                         auditUtilities.logDeletedRewardOrgExports(
@@ -70,10 +68,10 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                                 rewardOrganizationExport.getOrganizationId(),
                                 retrieveFileName(rewardOrganizationExport.getFilePath())
                 ))
-                .collectList();
+                .then();
     }
 
-    private Mono<List<RewardOrganizationImport>> deleteRewardOrganizationImport(String initiativeId){
+    private Mono<Void> deleteRewardOrganizationImport(String initiativeId){
         return rewardOrganizationImportsRepository.deleteByInitiativeId(initiativeId)
                 .doOnNext(rewardOrganizationImport ->
                         auditUtilities.logDeletedRewardOrgImports(
@@ -81,40 +79,40 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                                 rewardOrganizationImport.getOrganizationId(),
                                 retrieveFileName(rewardOrganizationImport.getFilePath())
                         ))
-                .collectList();
+                .then();
     }
 
-    private Mono<List<String>> deleteRewardNotification(String initiativeId){
+    private Mono<Void> deleteRewardNotification(String initiativeId){
         return rewardsNotificationRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardsNotification::getBeneficiaryId)
                 .distinct()
                 .doOnNext(beneficiaryId ->
                         auditUtilities.logDeletedRewardNotification(beneficiaryId, initiativeId))
-                .collectList();
+                .then();
     }
 
-    private Mono<List<String>> deletedIban(String initiativeId){
+    private Mono<Void> deletedIban(String initiativeId){
         return rewardIbanRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardIban::getUserId)
                 .distinct()
                 .doOnNext(userId -> auditUtilities.logDeletedRewardIban(userId, initiativeId))
-                .collectList();
+                .then();
     }
 
-    private Mono<List<String>> deletedRewards(String initiativeId){
+    private Mono<Void> deletedRewards(String initiativeId){
         return rewardsRepository.deleteByInitiativeId(initiativeId)
                 .map(Rewards::getUserId)
                 .distinct()
                 .doOnNext(userId -> auditUtilities.logDeletedRewards(userId, initiativeId))
-                .collectList();
+                .then();
     }
 
-    private Mono<List<String>> deleteRewardSuspendedUser(String initiativeId){
+    private Mono<Void> deleteRewardSuspendedUser(String initiativeId){
         return rewardsSuspendedUserRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardSuspendedUser::getUserId)
                 .distinct()
                 .doOnNext(userId -> auditUtilities.logDeletedSuspendedUser(userId, initiativeId))
-                .collectList();
+                .then();
     }
 
 

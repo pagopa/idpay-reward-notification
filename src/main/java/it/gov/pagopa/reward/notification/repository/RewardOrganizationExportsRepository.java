@@ -23,4 +23,6 @@ public interface RewardOrganizationExportsRepository extends ReactiveMongoReposi
                 .concatWith(findByExportDate(LocalDate.now()))
                 .distinct(RewardOrganizationExport::getId);
     }
+
+    Flux<RewardOrganizationExport> deleteByInitiativeId(String initiativeId);
 }

@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.rewardNotificationFeedback-out-0.destination}",
+        "${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -84,6 +85,7 @@ import java.util.regex.Pattern;
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-reward-notification-upload.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-reward-notification-feedback.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
                 //region mongodb
@@ -129,6 +131,8 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardNotificationFeedback;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
+    @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}")
+    protected String topicCommands;
 
     @Value("${spring.cloud.stream.bindings.refundRuleConsumer-in-0.group}")
     protected String groupIdInitiative2StoreConsumer;
@@ -138,6 +142,8 @@ public abstract class BaseIntegrationTest {
     protected String groupIdIbanOutcomeConsumer;
     @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.group}")
     protected String groupIdRewardNotificationUpload;
+    @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.group}")
+    protected String groupIdCommands;
 
     @Autowired
     private WireMockServer wireMockServer;

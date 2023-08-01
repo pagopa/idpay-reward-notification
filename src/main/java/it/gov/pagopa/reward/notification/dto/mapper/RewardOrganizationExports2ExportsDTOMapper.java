@@ -15,8 +15,7 @@ public class RewardOrganizationExports2ExportsDTOMapper implements Function<Rewa
     public RewardExportsDTO apply(RewardOrganizationExport rewardOrganizationExport) {
         String filePath = rewardOrganizationExport.getFilePath();
         if(filePath!=null){
-            String[] pathSplit = filePath.split("/");
-            filePath=pathSplit[pathSplit.length-1];
+            filePath=retrieveFileName(filePath);
         }
         return RewardExportsDTO.builder()
                 .id(rewardOrganizationExport.getId())
@@ -40,5 +39,9 @@ public class RewardOrganizationExports2ExportsDTOMapper implements Function<Rewa
                 .feedbackDate(rewardOrganizationExport.getFeedbackDate())
                 .status(rewardOrganizationExport.getStatus())
                 .build();
+    }
+    public static String retrieveFileName(String filePath){
+        String[] pathSplit = filePath.split("/");
+        return pathSplit[pathSplit.length-1];
     }
 }

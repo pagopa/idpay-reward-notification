@@ -75,4 +75,9 @@ public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperat
         return Mono.empty();
     }
 
+    @Override
+    public String getFlowName() {
+        return "REWARD_NOTIFICATION_COMMANDS";
+    }
+
 }

@@ -52,7 +52,7 @@ spring:
           binder: kafka-commands
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_COMMANDS:idpay-commands}
-          group: ${KAFKA_NOTIFICATION_GROUP_IN:idpay-commands-reward-notification-consumer-group}
+          group: ${KAFKA_COMMANDS_GROUP_IN:idpay-commands-reward-notification-consumer-group}
       binders:
         kafka-idpay-rule:
           type: kafka

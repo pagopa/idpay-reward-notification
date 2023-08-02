@@ -213,7 +213,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         String commandOperationErrorString = TestUtils.jsonSerializer(commandOperationError);
         errorUseCases.add(Pair.of(
                 () -> {
-                    Mockito.doReturn(Mono.error(new MongoException("Command error dummy")))
+                    Mockito.doThrow(new MongoException("Command error dummy"))
                             .when(rewardNotificationRuleRepository).deleteById(errorInitiativeId);
                     return commandOperationErrorString;
                 },

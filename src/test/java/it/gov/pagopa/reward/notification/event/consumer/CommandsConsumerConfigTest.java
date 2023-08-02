@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -185,25 +186,25 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     }
 
     protected Pattern getErrorUseCaseIdPatternMatch() {
-        return Pattern.compile("\"operationId\":\"INITIATIVEID_ERROR([0-9]+)\"");
+        return Pattern.compile("\"entityId\":\"ENTITYID_ERROR([0-9]+)\"");
     }
 
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
 
     {
-        String useCaseJsonNotExpected = "{\"operationId\":\"INITIATIVEID_ERROR0\",unexpectedStructure:0}";
+        String useCaseJsonNotExpected = "{\"entityId\":\"ENTITYID_ERROR0\",unexpectedStructure:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_COMMANDS] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
-        String jsonNotValid = "{\"operationId\":\"INITIATIVEID_ERROR1\",invalidJson";
+        String jsonNotValid = "{\"entityId\":\"ENTITYID_ERROR1\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_COMMANDS] Unexpected JSON", jsonNotValid)
         ));
 
-        final String errorInitiativeId = "INITIATIVEID_ERROR2";
+        final String errorInitiativeId = "ENTITYID_ERROR2";
         CommandOperationDTO commandOperationError = CommandOperationDTO.builder()
                 .entityId(errorInitiativeId)
                 .operationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE)
@@ -212,7 +213,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         String commandOperationErrorString = TestUtils.jsonSerializer(commandOperationError);
         errorUseCases.add(Pair.of(
                 () -> {
-                    Mockito.doThrow(new MongoException("Command error dummy"))
+                    Mockito.doReturn(Mono.error(new MongoException("Command error dummy")))
                             .when(rewardNotificationRuleRepository).deleteById(errorInitiativeId);
                     return commandOperationErrorString;
                 },

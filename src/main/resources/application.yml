@@ -101,7 +101,7 @@ spring:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_COMMANDS_BROKER:${KAFKA_BROKER:}}
               configuration:
-                sasl.jaas.config: ${KAFKA_OUTCOME_OUT_SASL_JAAS_CONFIG:}
+                sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       kafka:
         binder:
           auto-create-topics: false

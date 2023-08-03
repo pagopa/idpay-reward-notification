@@ -87,7 +87,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .map(RewardsNotification::getBeneficiaryId)
                 .distinct()
                 .doOnNext(beneficiaryId ->
-                        auditUtilities.logDeletedRewardNotification(beneficiaryId, initiativeId))
+                        auditUtilities.logDeletedRewardNotification(initiativeId, beneficiaryId))
                 .then();
     }
 

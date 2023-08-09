@@ -77,6 +77,8 @@ microservice-chart:
       KAFKA_REWARD_NOTIFICATION_UPLOAD_TOPIC: idpay_reward_notification_storage_events_topic
       KAFKA_REWARD_NOTIFICATION_FEEDBACK_BROKER: kafka_broker
       KAFKA_REWARD_NOTIFICATION_FEEDBACK_TOPIC: idpay_reward_notification_response_topic
+      KAFKA_COMMANDS_BROKER: kafka_broker
+      KAFKA_COMMANDS_TOPIC: idpay_commands_topic
     idpay-eventhub-00:
       KAFKA_CHECKIBAN_OUTCOME_BROKER: kafka_broker
       KAFKA_CHECKIBAN_OUTCOME_TOPIC: idpay_checkiban_outcome_topic

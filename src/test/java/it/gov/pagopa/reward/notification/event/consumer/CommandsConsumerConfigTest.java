@@ -65,7 +65,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
         List<String> commandsPayloads = new ArrayList<>(notValidMessages+validMessages);
         commandsPayloads.addAll(IntStream.range(0,notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
-        commandsPayloads.addAll(buildValidPayloads(notValidMessages, notValidMessages+validMessages));
+        commandsPayloads.addAll(buildValidPayloads(notValidMessages, validMessages));
 
         long timeStart=System.currentTimeMillis();
         commandsPayloads.forEach(cp -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicCommands, null, null, cp));
@@ -120,7 +120,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private List<String> buildValidPayloads(int startValue, int messagesNumber) {
-        return IntStream.range(startValue, messagesNumber)
+        return IntStream.range(startValue, startValue+messagesNumber)
                 .mapToObj(i -> {
                     initializeDB(i);
                     CommandOperationDTO command = CommandOperationDTO.builder()

@@ -32,6 +32,11 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private final String organizationFeedbackUploadTopic;
     private final String organizationFeedbackUploadGroup;
 
+    private final String rewardCommandsServiceType;
+    private final String rewardCommandsServer;
+    private final String rewardCommandsTopic;
+    private final String rewardCommandsGroup;
+
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
 
@@ -53,7 +58,12 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
                                           @Value("${spring.cloud.stream.binders.kafka-reward-notification-upload.type}") String organizationFeedbackUploadServiceType,
                                           @Value("${spring.cloud.stream.binders.kafka-reward-notification-upload.environment.spring.cloud.stream.kafka.binder.brokers}") String organizationFeedbackUploadServer,
                                           @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.destination}") String organizationFeedbackUploadTopic,
-                                          @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.group}") String organizationFeedbackUploadGroup
+                                          @Value("${spring.cloud.stream.bindings.rewardNotificationUploadConsumer-in-0.group}") String organizationFeedbackUploadGroup,
+
+                                          @Value("${spring.cloud.stream.binders.kafka-commands.type}") String rewardCommandsServiceType,
+                                          @Value("${spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardCommandsServer,
+                                          @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}") String rewardCommandsTopic,
+                                          @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.group}") String rewardCommandsGroup
     ) {
         this.errorNotifierService = errorNotifierService;
 
@@ -76,6 +86,11 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
         this.organizationFeedbackUploadServer = organizationFeedbackUploadServer;
         this.organizationFeedbackUploadTopic = organizationFeedbackUploadTopic;
         this.organizationFeedbackUploadGroup = organizationFeedbackUploadGroup;
+
+        this.rewardCommandsServiceType = rewardCommandsServiceType;
+        this.rewardCommandsServer = rewardCommandsServer;
+        this.rewardCommandsTopic = rewardCommandsTopic;
+        this.rewardCommandsGroup = rewardCommandsGroup;
     }
 
     @Override
@@ -91,6 +106,11 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     @Override
     public void notifyRewardIbanOutcome(Message<String> message, String description, boolean retryable, Throwable exception) {
         notify(rewardIbanOutcomeServiceType, rewardIbanOutcomeServer, rewardIbanOutcomeTopic, rewardIbanOutcomeGroup, message, description, retryable, true, exception);
+    }
+
+    @Override
+    public void notifyRewardCommands(Message<String> message, String description, boolean retryable, Throwable exception) {
+        notify(rewardCommandsServiceType, rewardCommandsServer, rewardCommandsTopic, rewardCommandsGroup, message, description, retryable, true, exception);
     }
 
     @Override

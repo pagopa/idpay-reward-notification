@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import org.slf4j.Logger;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface RewardOrganizationImportsRepository extends ReactiveMongoRepository<RewardOrganizationImport, String>, RewardOrganizationImportsRepositoryExtended {
@@ -16,4 +17,6 @@ public interface RewardOrganizationImportsRepository extends ReactiveMongoReposi
                     return Mono.empty();
                 });
     }
+
+    Flux<RewardOrganizationImport> deleteByInitiativeId(String initiativeId);
 }

@@ -70,7 +70,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                             rewardOrganizationExport.getOrganizationId(),
                             retrieveFileName(rewardOrganizationExport.getFilePath())))
                 .then()
-                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_organization_exports", initiativeId));
+                .log("[DELETE_INITIATIVE] Deleted initiative %s from collection: rewards_organization_exports".formatted(initiativeId));
     }
 
     private Mono<Void> deleteRewardOrganizationImport(String initiativeId) {
@@ -98,12 +98,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         return rewardIbanRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardIban::getUserId)
                 .distinct()
-                .doOnNext(userId -> {
-                    log.info("[DELETE_INITIATIVE] Deleted IBAN of the user {} on initiative {}", userId, initiativeId);
-                    auditUtilities.logDeletedRewardIban(userId, initiativeId);
-                })
+                .doOnNext(userId -> auditUtilities.logDeletedRewardIban(userId, initiativeId))
                 .then()
-                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_iban", initiativeId));
+                .doOnNext(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_iban", initiativeId));
     }
 
     private Mono<Void> deletedRewards(String initiativeId){

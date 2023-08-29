@@ -70,7 +70,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                             rewardOrganizationExport.getOrganizationId(),
                             retrieveFileName(rewardOrganizationExport.getFilePath())))
                 .then()
-                .log("[DELETE_INITIATIVE] Deleted initiative %s from collection: rewards_organization_exports".formatted(initiativeId));
+                .doOnNext(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_organization_exports", initiativeId));
     }
 
     private Mono<Void> deleteRewardOrganizationImport(String initiativeId) {

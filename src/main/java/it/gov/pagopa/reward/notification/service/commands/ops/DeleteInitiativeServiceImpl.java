@@ -64,38 +64,34 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
 
     private Mono<Void> deleteRewardOrganizationExport(String initiativeId){
         return rewardOrganizationExportsRepository.deleteByInitiativeId(initiativeId)
-                .doOnNext(rewardOrganizationExport -> {
-                    log.info("[DELETE_INITIATIVE] Deleted organizations exports on initiative {}", initiativeId);
+                .doOnNext(rewardOrganizationExport ->
                     auditUtilities.logDeletedRewardOrgExports(
                             initiativeId,
                             rewardOrganizationExport.getOrganizationId(),
-                            retrieveFileName(rewardOrganizationExport.getFilePath()));
-                })
-                .then();
+                            retrieveFileName(rewardOrganizationExport.getFilePath())))
+                .then()
+                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_organization_exports", initiativeId));
     }
 
     private Mono<Void> deleteRewardOrganizationImport(String initiativeId) {
         return rewardOrganizationImportsRepository.deleteByInitiativeId(initiativeId)
-                .doOnNext(rewardOrganizationImport -> {
-                    log.info("[DELETE_INITIATIVE] Deleted organizations imports on initiative {}", initiativeId);
-                    auditUtilities.logDeletedRewardOrgImports(
+                .doOnNext(rewardOrganizationImport ->
+                        auditUtilities.logDeletedRewardOrgImports(
                             initiativeId,
                             rewardOrganizationImport.getOrganizationId(),
-                            retrieveFileName(rewardOrganizationImport.getFilePath())
-                    );
-                })
-                .then();
+                            retrieveFileName(rewardOrganizationImport.getFilePath())))
+                .then()
+                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_organization_imports", initiativeId));
+
     }
 
     private Mono<Void> deleteRewardNotification(String initiativeId) {
         return rewardsNotificationRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardsNotification::getBeneficiaryId)
                 .distinct()
-                .doOnNext(beneficiaryId -> {
-                    log.info("[DELETE_INITIATIVE] Deleted notifications of the beneficiary {} on initiative {}", beneficiaryId, initiativeId);
-                    auditUtilities.logDeletedRewardNotification(initiativeId, beneficiaryId);
-                })
-                .then();
+                .doOnNext(beneficiaryId -> auditUtilities.logDeletedRewardNotification(initiativeId, beneficiaryId))
+                .then()
+                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_notification", initiativeId));
     }
 
     private Mono<Void> deletedIban(String initiativeId){
@@ -106,29 +102,26 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                     log.info("[DELETE_INITIATIVE] Deleted IBAN of the user {} on initiative {}", userId, initiativeId);
                     auditUtilities.logDeletedRewardIban(userId, initiativeId);
                 })
-                .then();
+                .then()
+                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_iban", initiativeId));
     }
 
     private Mono<Void> deletedRewards(String initiativeId){
         return rewardsRepository.deleteByInitiativeId(initiativeId)
                 .map(Rewards::getUserId)
                 .distinct()
-                .doOnNext(userId -> {
-                    log.info("[DELETE_INITIATIVE] Deleted rewards of the user {} on initiative {}", userId, initiativeId);
-                    auditUtilities.logDeletedRewards(userId, initiativeId);
-                })
-                .then();
+                .doOnNext(userId -> auditUtilities.logDeletedRewards(userId, initiativeId))
+                .then()
+                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards", initiativeId));
     }
 
     private Mono<Void> deleteRewardSuspendedUser(String initiativeId){
         return rewardsSuspendedUserRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardSuspendedUser::getUserId)
                 .distinct()
-                .doOnNext(userId -> {
-                    log.info("[DELETE_INITIATIVE] Deleted suspended user {} on initiative {}", userId, initiativeId);
-                    auditUtilities.logDeletedSuspendedUser(userId, initiativeId);
-                })
-                .then();
+                .doOnNext(userId -> auditUtilities.logDeletedSuspendedUser(userId, initiativeId))
+                .then()
+                .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_suspended_users", initiativeId));
     }
 
 

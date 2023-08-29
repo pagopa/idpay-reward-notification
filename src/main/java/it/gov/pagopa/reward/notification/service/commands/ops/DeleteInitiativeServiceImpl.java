@@ -98,7 +98,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         return rewardIbanRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardIban::getUserId)
                 .distinct()
-                .doOnNext(userId -> auditUtilities.logDeletedRewardIban(userId, initiativeId))
+                .doOnNext(userId -> auditUtilities.logDeletedRewardIban(initiativeId, userId))
                 .then()
                 .doOnNext(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_iban", initiativeId));
     }
@@ -107,7 +107,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         return rewardsRepository.deleteByInitiativeId(initiativeId)
                 .map(Rewards::getUserId)
                 .distinct()
-                .doOnNext(userId -> auditUtilities.logDeletedRewards(userId, initiativeId))
+                .doOnNext(userId -> auditUtilities.logDeletedRewards(initiativeId, userId))
                 .then()
                 .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards", initiativeId));
     }
@@ -116,7 +116,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         return rewardsSuspendedUserRepository.deleteByInitiativeId(initiativeId)
                 .map(RewardSuspendedUser::getUserId)
                 .distinct()
-                .doOnNext(userId -> auditUtilities.logDeletedSuspendedUser(userId, initiativeId))
+                .doOnNext(userId -> auditUtilities.logDeletedSuspendedUser(initiativeId, userId))
                 .then()
                 .doOnSuccess(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_suspended_users", initiativeId));
     }

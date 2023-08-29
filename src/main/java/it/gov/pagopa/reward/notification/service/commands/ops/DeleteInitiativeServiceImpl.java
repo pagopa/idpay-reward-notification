@@ -56,7 +56,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private Mono<Void> deleteRewardRuleNotification(String initiativeId){
         return rewardNotificationRuleRepository.deleteById(initiativeId)
                 .doOnSuccess(v -> {
-                    log.info("[DELETE_INITIATIVE] Deleted rule notification on initiative {}", initiativeId);
+                    log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: reward_notification_rule", initiativeId);
                     auditUtilities.logDeletedRewardRuleNotification(
                         initiativeId);
                 });

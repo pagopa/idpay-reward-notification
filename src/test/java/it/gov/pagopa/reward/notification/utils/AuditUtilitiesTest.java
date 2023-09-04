@@ -142,4 +142,120 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logDeletedRewardRuleNotification() {
+        auditUtilities.logDeletedRewardRuleNotification(INITIATIVE_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Reward rule notification deleted." +
+                        " cs1Label=initiativeId cs1=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID
+
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedRewardOrgExports(){
+        auditUtilities.logDeletedRewardOrgExports(INITIATIVE_ID, ORGANIZATION_ID, FILE_NAME);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Reward organization exports deleted." +
+                        " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s cs3Label=fileName cs3=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                ORGANIZATION_ID,
+                                FILE_NAME
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedRewardOrgImports(){
+        auditUtilities.logDeletedRewardOrgImports(INITIATIVE_ID, ORGANIZATION_ID, FILE_NAME);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Reward organization imports deleted." +
+                        " cs1Label=initiativeId cs1=%s cs2Label=organizationId cs2=%s cs3Label=fileName cs3=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                ORGANIZATION_ID,
+                                FILE_NAME
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedRewardNotification() {
+        auditUtilities.logDeletedRewardNotification(INITIATIVE_ID, USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Reward notification deleted." +
+                        " cs1Label=initiativeId cs1=%s cs2Label=beneficiaryId cs2=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                USER_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedRewardIban() {
+        auditUtilities.logDeletedRewardIban(INITIATIVE_ID, USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Reward IBAN deleted." +
+                        " cs1Label=initiativeId cs1=%s suser=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                USER_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedRewards() {
+        auditUtilities.logDeletedRewards(INITIATIVE_ID, USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Rewards deleted." +
+                        " cs1Label=initiativeId cs1=%s suser=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                USER_ID
+
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedSuspendedUser() {
+        auditUtilities.logDeletedSuspendedUser(INITIATIVE_ID, USER_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=RewardNotification dstip=%s msg=Suspend user deleted." +
+                        " cs1Label=initiativeId cs1=%s suser=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                USER_ID
+
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
 }

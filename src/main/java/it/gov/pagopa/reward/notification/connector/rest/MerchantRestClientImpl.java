@@ -43,7 +43,7 @@ public class MerchantRestClientImpl implements MerchantRestClient {
                 .toEntity(MerchantDetailDTO.class)
                 .map(HttpEntity::getBody)
 
-                .retryWhen(Retry.fixedDelay(merchantRetryDelay, Duration.ofMillis(merchantMaxAttempts))
+                .retryWhen(Retry.fixedDelay(merchantMaxAttempts, Duration.ofMillis(merchantRetryDelay))
                         .filter(ex -> {
                             boolean retry = (ex instanceof WebClientResponseException.TooManyRequests);
                             if (retry) {

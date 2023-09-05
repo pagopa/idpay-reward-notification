@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/MERCHANTID_TOOMANYREQUESTS_1/organization/(ORGANIZATION_?ID_?[a-zA-Z0-9]*_?[a-zA-Z0-9]*)/initiative/(INITIATIVEID[0-9]*)"
+  },
+  "response": {
+    "status": "429",
+    "jsonBody": {
+      "type": "type",
+      "title": "Too many request",
+      "status": "429",
+      "details": "details",
+      "instance": "instance"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

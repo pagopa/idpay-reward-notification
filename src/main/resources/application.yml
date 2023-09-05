@@ -328,3 +328,6 @@ app:
     base-url: ${WALLET_MS_HOST:}/idpay/wallet
   merchant:
     base-url: ${MERCHANT_MS_HOST:}/idpay/merchant
+    retry:
+      delay-millis: ${MERCHANT_RETRY_DELAY_MILLIS:2000}
+      max-attempts: ${MERCHANT_RETRY_MAX_ATTEMPTS:${RETRY_MAX_ATTEMPTS:10}}

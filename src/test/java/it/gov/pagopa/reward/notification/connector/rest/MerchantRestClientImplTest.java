@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
+import reactor.core.Exceptions;
 
 import java.time.LocalDateTime;
 
@@ -51,5 +52,16 @@ class MerchantRestClientImplTest extends BaseIntegrationTest {
         MerchantDetailDTO result = merchantRestClient.getMerchant(merchantId, "ORGANIZATIONID", "INITIATIVEID").block();
 
         Assertions.assertNull(result);
+    }
+
+    @Test
+    void retrieveUserInfoTooManyRequest() {
+        String merchantId = "MERCHANTID_TOOMANYREQUESTS_1";
+
+        try{
+            merchantRestClient.getMerchant(merchantId, "ORGANIZATIONID", "INITIATIVEID").block();
+        }catch (Throwable e){
+            Assertions.assertTrue(Exceptions.isRetryExhausted(e));
+        }
     }
 }

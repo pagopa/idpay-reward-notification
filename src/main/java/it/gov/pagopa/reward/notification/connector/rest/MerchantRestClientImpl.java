@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
+import java.time.Duration;
 
 @Service
 @Slf4j
@@ -16,9 +19,15 @@ public class MerchantRestClientImpl implements MerchantRestClient {
 
     private static final String GET_MERCHANT_URI = "/{merchantId}/organization/{organizationId}/initiative/{initiativeId}";
     private final WebClient webClient;
+    private final int merchantRetryDelay;
+    private final long merchantMaxAttempts;
 
     public MerchantRestClientImpl(@Value("${app.merchant.base-url}") String merchantUrl,
-                                WebClient.Builder webClientBuilder) {
+                                WebClient.Builder webClientBuilder,
+                                  @Value("${app.merchant.retry.delay-millis}") int merchantRetryDelay,
+                                  @Value("${app.merchant.retry.max-attempts}") int merchantMaxAttempts) {
+        this.merchantRetryDelay = merchantRetryDelay;
+        this.merchantMaxAttempts = merchantMaxAttempts;
         this.webClient = webClientBuilder.clone()
                 .baseUrl(merchantUrl)
                 .build();
@@ -34,6 +43,15 @@ public class MerchantRestClientImpl implements MerchantRestClient {
                 .toEntity(MerchantDetailDTO.class)
                 .map(HttpEntity::getBody)
 
+                .retryWhen(Retry.fixedDelay(merchantMaxAttempts, Duration.ofMillis(merchantRetryDelay))
+                        .filter(ex -> {
+                            boolean retry = (ex instanceof WebClientResponseException.TooManyRequests);
+                            if (retry) {
+                                log.info("[MERCHANT_INTEGRATION] Retrying invocation due to exception: {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
+                            }
+                            return retry;
+                        })
+                )
                 .onErrorResume(WebClientResponseException.NotFound.class, x -> {
                     log.warn("merchantId not found {} for initiativeId {}", merchantId, initiativeId);
                     return Mono.empty();

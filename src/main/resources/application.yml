@@ -306,9 +306,13 @@ app:
       separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
       # The maximum number of rows to store in each csv
       split-size: ${EXPORT_CSV_SPLIT_SIZE:500000}
+      # The maximum number of thread to use when updating reward_notification rows
+      db-update-parallelism: ${EXPORT_CSV_DB_UPDATE_PARALLELISM:20}
     import:
       # column separator to use when importing csv
       separator: ${IMPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
+      # The maximum number of thread to use when updating reward_notification rows
+      db-update-parallelism: ${IMPORT_CSV_DB_UPDATE_PARALLELISM:20}
   pdv:
     base-url: ${PDV_BASE_URL:https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1}
     headers:

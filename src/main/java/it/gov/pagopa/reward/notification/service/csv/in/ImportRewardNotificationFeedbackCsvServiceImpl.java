@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -38,9 +40,11 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
     private final RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService;
 
     private final HeaderColumnNameStrategy<RewardNotificationImportCsvDto> mappingStrategy;
+    private final Scheduler rewardNotificationUpdateScheduler;
 
     public ImportRewardNotificationFeedbackCsvServiceImpl(
             @Value("${app.csv.import.separator}") char csvSeparator,
+            @Value("${app.csv.import.db-update-parallelism}") int parallelism,
 
             RewardNotificationFeedbackHandlerService rewardNotificationFeedbackHandlerService, RewardNotificationExportFeedbackRetrieverService exportFeedbackRetrieverService) {
         this.csvSeparator = csvSeparator;
@@ -48,6 +52,7 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
         this.exportFeedbackRetrieverService = exportFeedbackRetrieverService;
 
         this.mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationImportCsvDto.class);
+        rewardNotificationUpdateScheduler = Schedulers.newBoundedElastic(parallelism, Integer.MAX_VALUE, "impNotifySave");
     }
 
     @Override
@@ -91,9 +96,11 @@ public class ImportRewardNotificationFeedbackCsvServiceImpl implements ImportRew
                         log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot close local csv {}", csv, e);
                     }
                 })
+
                 .flatMap(counters -> Flux.fromIterable(counters.getExportDeltas().values())
                         .flatMap(exportFeedbackRetrieverService::updateCounters)
                         .collectList()
+                        .publishOn(rewardNotificationUpdateScheduler)
                         .flatMapMany(x -> exportFeedbackRetrieverService.updateExportStatus(counters.getExportDeltas().keySet()))
                         .then(Mono.just(counters))
                 )

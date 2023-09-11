@@ -125,7 +125,6 @@ class CompletedKoDiscardedRewardNotificationServiceTest extends BaseDiscardedRew
                 .initiativeId(rewardIban.getInitiativeId())
                 .beneficiaryId(rewardIban.getUserId())
                 .status(RewardNotificationStatus.COMPLETED_KO)
-                .exportDate(YESTERDAY.atStartOfDay())
                 .resultCode("RESULTCODE")
                 .rejectionReason("REJECTIONREASON")
                 .feedbackDate(TODAY.atStartOfDay())

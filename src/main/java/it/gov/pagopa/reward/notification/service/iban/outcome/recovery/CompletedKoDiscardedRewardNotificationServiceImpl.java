@@ -68,7 +68,6 @@ public class CompletedKoDiscardedRewardNotificationServiceImpl implements Comple
         RewardsNotification remedial = discarded.toBuilder()
                 .status(RewardNotificationStatus.TO_SEND)
                 .exportId(null)
-                .exportDate(null)
                 .iban(null)
                 .rejectionReason(null)
                 .resultCode(null)

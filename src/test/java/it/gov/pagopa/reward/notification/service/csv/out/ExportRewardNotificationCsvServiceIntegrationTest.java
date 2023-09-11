@@ -361,7 +361,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals("IBAN_%s".formatted(r.getBeneficiaryId()), r.getIban());
             Assertions.assertEquals("CHECKIBAN_OUTCOME_%s".formatted(r.getBeneficiaryId()), r.getCheckIbanResult());
             Assertions.assertEquals(RewardNotificationStatus.EXPORTED, r.getStatus());
-            Assertions.assertEquals(LocalDate.now(), r.getExportDate().toLocalDate());
         });
 
         Path originalZipFile = Paths.get(csvTmpDir, export.getFilePath());
@@ -412,7 +411,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getRejectionReason());
             Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND, r.getResultCode());
             Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
-            Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });
 
         // check not export
@@ -455,7 +453,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getRejectionReason());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_CF_NOT_FOUND, r.getResultCode());
         Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
-        Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
     }
 
     private void merchantCfKoChecks(RewardsNotification r) {
@@ -466,7 +463,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND, r.getRejectionReason());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND, r.getResultCode());
         Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
-        Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
     }
 
     private void checkSuspendedUseCases() {
@@ -496,7 +492,6 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
             Assertions.assertNull(r.getRejectionReason());
             Assertions.assertNull(r.getResultCode());
             Assertions.assertEquals(YESTERDAY, r.getNotificationDate());
-            Assertions.assertEquals(TODAY, r.getExportDate().toLocalDate());
         });
 
         // check not export

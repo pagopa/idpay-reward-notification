@@ -709,7 +709,6 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .status(RewardNotificationStatus.EXPORTED)
                                 .notificationDate(TODAY)
                                 .rewardCents(15_20L)
-                                .exportDate(TODAY.atStartOfDay())
                                 .build()).block();
 
                         expectedRewardNotifications.put(expectedNotificationId, previousRN);
@@ -741,7 +740,6 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                                 .status(RewardNotificationStatus.EXPORTED)
                                 .notificationDate(TODAY)
                                 .rewardCents(18_20L)
-                                .exportDate(TODAY.atStartOfDay())
                                 .build()).block();
 
                         expectedRewardNotifications.put(expectedNotificationId, previousRN);

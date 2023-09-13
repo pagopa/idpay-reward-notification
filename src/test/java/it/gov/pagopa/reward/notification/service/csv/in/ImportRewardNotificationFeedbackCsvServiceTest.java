@@ -50,7 +50,7 @@ class ImportRewardNotificationFeedbackCsvServiceTest {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.ConvertUtils")).setLevel(Level.OFF);
 
-        service = new ImportRewardNotificationFeedbackCsvServiceImpl(';', rowHandlerServiceMock, exportFeedbackRetrieverServiceMock);
+        service = new ImportRewardNotificationFeedbackCsvServiceImpl(';', 8, rowHandlerServiceMock, exportFeedbackRetrieverServiceMock);
 
         ZipUtils.unzip("src/test/resources/feedbackUseCasesZip/valid/validUseCase.zip", sampleCsv.getParent().toString());
     }

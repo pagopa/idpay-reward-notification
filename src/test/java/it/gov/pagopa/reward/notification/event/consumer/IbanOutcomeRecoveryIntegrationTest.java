@@ -218,7 +218,6 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, recovered.getStatus(), "notification %s".formatted(recovered.getId()));
         Assertions.assertNull(recovered.getRejectionReason());
         Assertions.assertNull(recovered.getResultCode());
-        Assertions.assertNull(recovered.getExportDate());
 
         checkNotificationDate(i, recovered.getNotificationDate(), recovered.getId());
     }
@@ -243,7 +242,6 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(i < 12 ? r.getExternalId() : r.getOrdinaryExternalId(), remedial.getOrdinaryExternalId());
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, remedial.getStatus());
         Assertions.assertNull(remedial.getExportId());
-        Assertions.assertNull(remedial.getExportDate());
         Assertions.assertNull(remedial.getIban());
         Assertions.assertNull(remedial.getRejectionReason());
         Assertions.assertNull(remedial.getResultCode());

@@ -49,7 +49,7 @@ class ExportCsvFinalizeServiceTest {
     void init() {
         ((Logger) LoggerFactory.getLogger("org.apache.commons.beanutils.converters")).setLevel(Level.OFF);
         char csvSeparator = ';';
-        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock, emailNotificationServiceMock, auditUtilitiesMock);
+        service = new ExportCsvFinalizeServiceImpl("target/tmp", csvSeparator, 8, rewardsNotificationRepositoryMock, rewardOrganizationExportsRepositoryMock, rewardsNotificationBlobClientMock, emailNotificationServiceMock, auditUtilitiesMock);
     }
 
     @Test

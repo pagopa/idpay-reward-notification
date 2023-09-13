@@ -163,6 +163,5 @@ class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
         Assertions.assertEquals("CHECKIBANRESULT", result.getCheckIbanResult());
         Assertions.assertEquals("EXPORTID", result.getExportId());
         Assertions.assertEquals(RewardNotificationStatus.EXPORTED, result.getStatus());
-        Assertions.assertNotNull(result.getExportDate());
     }
 }

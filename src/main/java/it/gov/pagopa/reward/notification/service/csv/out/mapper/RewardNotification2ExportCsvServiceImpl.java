@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.service.csv.out.mapper;
 
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardNotificationExport2CsvMapper;
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.BeneficiaryType;
@@ -9,12 +10,9 @@ import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepositor
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Iban2NotifyRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.Merchant2NotifyRetrieverService;
 import it.gov.pagopa.reward.notification.service.csv.out.retrieve.User2NotifyRetrieverService;
-import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -76,7 +74,6 @@ public class RewardNotification2ExportCsvServiceImpl implements RewardNotificati
             log.info("[REWARD_NOTIFICATION_EXPORT_CSV] Skipping export of notification because has reward 0 {}; beneficiaryId {} beneficiaryType {} initiativeId {}",
                     notification.getId(), notification.getBeneficiaryId(), notification.getBeneficiaryType(), notification.getInitiativeId());
             notification.setStatus(RewardNotificationStatus.SKIPPED);
-            notification.setExportDate(LocalDateTime.now());
             return rewardsNotificationRepository.save(notification)
                     .then(Mono.empty());
         } else {

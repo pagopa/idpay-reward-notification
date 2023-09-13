@@ -15,7 +15,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +27,6 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
     public static final String FIELD_NOTIFICATION_DATE = RewardsNotification.Fields.notificationDate;
     public static final String FIELD_IBAN = RewardsNotification.Fields.iban;
     public static final String FIELD_CHECK_IBAN_RESULT = RewardsNotification.Fields.checkIbanResult;
-    public static final String FIELD_EXPORT_DATE = RewardsNotification.Fields.exportDate;
     public static final String FIELD_EXPORT_ID = RewardsNotification.Fields.exportId;
 
     private final int dayBeforeToSearch;
@@ -92,7 +90,6 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
                         .set(FIELD_IBAN, iban)
                         .set(FIELD_CHECK_IBAN_RESULT, checkIbanResult)
                         .set(FIELD_STATUS, RewardNotificationStatus.EXPORTED)
-                        .set(FIELD_EXPORT_DATE, LocalDateTime.now())
                         .set(FIELD_EXPORT_ID, exportId),
                 RewardsNotification.class
         ).map(x->rewardNotificationId);

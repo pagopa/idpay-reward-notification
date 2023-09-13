@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 
@@ -38,12 +39,12 @@ public class RewardNotificationExportFeedbackRetrieverServiceImpl implements Rew
         } else {
             return repository.findById(notification.getExportId())
                     .switchIfEmpty(Mono.defer(() -> {
-                        log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot find export related to current feedback reward notification: rewardNotificationId {}, externalId {}, exportDate {}, exportId {}, rowNumber: {}, filePath {}", notification.getId(), row.getUniqueID(), notification.getExportDate(), notification.getExportId(), row.getRowNumber(), importRequest.getFilePath());
+                        log.error("[REWARD_NOTIFICATION_FEEDBACK] Cannot find export related to current feedback reward notification: rewardNotificationId {}, externalId {}, exportId {}, rowNumber: {}, filePath {}", notification.getId(), row.getUniqueID(), notification.getExportId(), row.getRowNumber(), importRequest.getFilePath());
                         return repository.save(RewardOrganizationExport.builder()
                                 .id(notification.getExportId())
                                 .organizationId(importRequest.getOrganizationId())
                                 .initiativeId(importRequest.getInitiativeId())
-                                .exportDate(notification.getExportDate().toLocalDate())
+                                .exportDate(LocalDate.now())
                                 .notificationDate(notification.getNotificationDate())
                                 .rewardNotified(-1L)
                                 .rewardsExportedCents(-1L)

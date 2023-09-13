@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,7 +60,6 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         rn.setExportId("EXPORTID");
         rn.setInitiativeId("INITITATIVEID");
         rn.setOrganizationId("ORGANIZATIONID");
-        rn.setExportDate(LocalDateTime.now());
 
         Mockito.when(repositoryMock.findById(rn.getExportId())).thenReturn(Mono.empty());
 
@@ -81,7 +80,7 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
                         .initiativeId(importRequest.getInitiativeId())
                         .organizationId(importRequest.getOrganizationId())
                         .notificationDate(rn.getNotificationDate())
-                        .exportDate(rn.getExportDate().toLocalDate())
+                        .exportDate(LocalDate.now())
                         .rewardsExportedCents(-1L)
                         .rewardNotified(-1L)
                         .status(RewardOrganizationExportStatus.EXPORTED)
@@ -109,7 +108,6 @@ class RewardNotificationExportFeedbackRetrieverServiceTest {
         rn.setExportId("EXPORTID");
         rn.setInitiativeId("INITITATIVEID");
         rn.setOrganizationId("ORGANIZATIONID");
-        rn.setExportDate(LocalDateTime.now());
 
         RewardOrganizationExport expectedExport = RewardOrganizationExportsFaker.mockInstance(0);
 

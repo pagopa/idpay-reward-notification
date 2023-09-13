@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,10 +41,12 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
     private final RewardsNotificationBlobClient azureBlobClient;
     private final EmailNotificationService emailNotificationService;
     private final AuditUtilities auditUtilities;
+    private final Scheduler rewardNotificationUpdateScheduler;
 
     public ExportCsvFinalizeServiceImpl(
             @Value("${app.csv.tmp-dir}") String csvTmpDir,
             @Value("${app.csv.export.separator}") char csvSeparator,
+            @Value("${app.csv.export.db-update-parallelism}") int parallelism,
             RewardsNotificationRepository rewardsNotificationRepository, RewardOrganizationExportsRepository rewardOrganizationExportsRepository, RewardsNotificationBlobClient azureBlobClient,
             EmailNotificationService emailNotificationService, AuditUtilities auditUtilities) {
         this.csvTmpDir = csvTmpDir;
@@ -52,7 +56,9 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
         this.azureBlobClient = azureBlobClient;
         this.emailNotificationService = emailNotificationService;
         this.auditUtilities = auditUtilities;
+
         mappingStrategy = new HeaderColumnNameStrategy<>(RewardNotificationExportCsvDto.class);
+        rewardNotificationUpdateScheduler = Schedulers.newBoundedElastic(parallelism, Integer.MAX_VALUE, "expNotifySave");
     }
 
     @Override
@@ -85,6 +91,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
                     }
                 })
                 .flatMapMany(x -> Flux.fromIterable(csvLines)
+                        .publishOn(rewardNotificationUpdateScheduler)
                         .flatMap(l -> rewardsNotificationRepository.updateExportStatus(l.getId(), l.getIban(), l.getCheckIban(), export.getId()))
                         .doOnNext(rId -> log.debug("[REWARD_NOTIFICATION_EXPORT_CSV] Updated exported RewardNotifications status {} and related to export {}", rId, export.getId()))
                 )

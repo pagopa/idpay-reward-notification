@@ -36,10 +36,9 @@ public class Iban2NotifyRetrieverServiceImpl implements Iban2NotifyRetrieverServ
                     reward.setStatus(RewardNotificationStatus.ERROR);
                     reward.setResultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
                     reward.setRejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND);
-                    reward.setExportDate(LocalDateTime.now());
                     return rewardsNotificationRepository.save(reward)
                             .flatMap(rn -> {
-                                rn.setFeedbackDate(reward.getExportDate());
+                                rn.setFeedbackDate(LocalDateTime.now());
                                 return errorNotifierService.notify(rn, 0L);
                             })
                             .then(Mono.empty());

@@ -53,7 +53,6 @@ class Merchant2NotifyRetrieverServiceTest {
         Assertions.assertEquals(RewardNotificationStatus.ERROR, reward.getStatus());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND, reward.getRejectionReason());
         Assertions.assertEquals(ExportCsvConstants.EXPORT_REJECTION_REASON_MERCHANT_NOT_FOUND, reward.getResultCode());
-        Assertions.assertNotNull(reward.getExportDate());
 
         Mockito.verifyNoMoreInteractions(merchantRestClientMock, rewardsNotificationRepositoryMock, errorNotifierServiceMock);
     }

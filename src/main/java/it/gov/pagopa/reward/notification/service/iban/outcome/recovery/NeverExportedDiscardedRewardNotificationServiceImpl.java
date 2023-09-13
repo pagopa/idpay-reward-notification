@@ -65,6 +65,5 @@ public class NeverExportedDiscardedRewardNotificationServiceImpl implements Neve
         rewardsNotification.setStatus(RewardNotificationStatus.TO_SEND);
         rewardsNotification.setRejectionReason(null);
         rewardsNotification.setResultCode(null);
-        rewardsNotification.setExportDate(null);
     }
 }

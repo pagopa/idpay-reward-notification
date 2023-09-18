@@ -71,7 +71,6 @@ public class NeverExportedDiscardedRewardNotificationServiceTest extends BaseDis
                 .initiativeId(rewardIban.getInitiativeId())
                 .beneficiaryId(rewardIban.getUserId())
                 .status(RewardNotificationStatus.ERROR)
-                .exportDate(YESTERDAY.atStartOfDay())
                 .resultCode(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
                 .rejectionReason(ExportCsvConstants.EXPORT_REJECTION_REASON_IBAN_NOT_FOUND)
                 .build();

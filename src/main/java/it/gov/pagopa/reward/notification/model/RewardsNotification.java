@@ -48,8 +48,6 @@ public class RewardsNotification {
     private LocalDate startDepositDate;
     /** The notification date searched */
     private LocalDate notificationDate;
-    /** The export creation date  */
-    private LocalDateTime exportDate;
     private String exportId;
     private String iban;
     private String checkIbanResult;

@@ -145,7 +145,6 @@ class RewardNotification2ExportRewardNotificationCsvServiceTest {
         Assertions.assertNull(result);
 
         Assertions.assertEquals(RewardNotificationStatus.SKIPPED, reward.getStatus());
-        Assertions.assertNotNull(reward.getExportDate());
     }
 
 }

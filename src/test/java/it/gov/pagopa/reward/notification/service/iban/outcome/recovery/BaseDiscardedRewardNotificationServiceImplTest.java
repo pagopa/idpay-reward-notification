@@ -205,7 +205,6 @@ abstract class BaseDiscardedRewardNotificationServiceImplTest {
         Assertions.assertEquals(RewardNotificationStatus.TO_SEND, result.getStatus());
         Assertions.assertNull(result.getRejectionReason());
         Assertions.assertNull(result.getResultCode());
-        Assertions.assertNull(result.getExportDate());
         Assertions.assertNull(result.getFeedbackDate());
         Assertions.assertEquals(Collections.emptyList(), result.getFeedbackHistory());
         Assertions.assertEquals(expectedNotificationDate, result.getNotificationDate());

@@ -11,4 +11,5 @@ public interface RewardOrganizationImportsRepositoryExtended {
     Flux<RewardOrganizationImport> findAllBy(String organizationId, String initiativeId, Pageable pageable, FeedbackImportFilter filters);
     Mono<Long> countAll(String organizationId, String initiativeId, FeedbackImportFilter filters);
     Mono<RewardOrganizationImport> findByImportId(String organizationId, String initiativeId, String importId);
+    Flux<RewardOrganizationImport> findByInitiativeIdWithBatch(String initiativeId, int batchSize);
 }

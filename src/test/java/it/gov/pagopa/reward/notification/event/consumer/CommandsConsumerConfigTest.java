@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -120,12 +119,16 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private List<String> buildValidPayloads(int startValue, int messagesNumber) {
+        HashMap<String, String> additionalParams = new HashMap<>();
+        additionalParams.put("pagination", "100");
+        additionalParams.put("delay", "50");
         return IntStream.range(startValue, startValue+messagesNumber)
                 .mapToObj(i -> {
                     initializeDB(i);
                     CommandOperationDTO command = CommandOperationDTO.builder()
                             .entityId(INITIATIVEID.formatted(i))
                             .operationTime(LocalDateTime.now())
+                            .additionalParams(additionalParams)
                             .build();
 
                     if(i%2 == 0){

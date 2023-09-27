@@ -127,6 +127,12 @@ public class RewardsNotificationRepositoryExtendedImpl implements RewardsNotific
         }
     }
 
+    @Override
+    public Flux<RewardsNotification> findByInitiativeIdWithBatch(String initiativeId, int batchSize) {
+        Query query = Query.query(Criteria.where(RewardsNotification.Fields.initiativeId).is(initiativeId)).cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, RewardsNotification.class);
+    }
+
     private boolean checkStatusNotValid(String status) {
         return !NotificationConstants.REWARD_NOTIFICATION_EXPOSED_STATUS.contains(RewardNotificationStatus.valueOf(status));
     }

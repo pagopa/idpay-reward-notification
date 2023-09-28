@@ -32,6 +32,7 @@ class DeleteInitiativeServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
 
     private DeleteInitiativeService deleteInitiativeService;
+    private static final int PAGE_SIZE = 100;
 
     @BeforeEach
     void setUp() {
@@ -43,7 +44,7 @@ class DeleteInitiativeServiceImplTest {
                 rewardIbanRepositoryMock,
                 rewardsRepositoryMock,
                 rewardsSuspendedUserRepositoryMock,
-                auditUtilitiesMock);
+                auditUtilitiesMock, PAGE_SIZE, 1000L);
     }
 
     @Test
@@ -51,13 +52,11 @@ class DeleteInitiativeServiceImplTest {
         String initiativeId = "INITIATIVEID";
         String userid = "USERID";
         String id = "ID";
-        int pageSize = 2;
-        long delay = 1;
 
         RewardNotificationRule rewardNotificationRule = RewardNotificationRuleFaker.mockInstanceBuilder(1)
                 .initiativeId(initiativeId)
                 .build();
-        Mockito.when(rewardNotificationRuleRepositoryMock.findByIdWithBatch(initiativeId,pageSize))
+        Mockito.when(rewardNotificationRuleRepositoryMock.findByIdWithBatch(initiativeId,PAGE_SIZE))
                 .thenReturn(Flux.just(rewardNotificationRule));
         Mockito.when(rewardNotificationRuleRepositoryMock.deleteById(rewardNotificationRule.getInitiativeId()))
                 .thenReturn(Mono.empty());
@@ -71,7 +70,7 @@ class DeleteInitiativeServiceImplTest {
 
         RewardOrganizationImport rewardOrganizationImport = RewardOrganizationImportFaker.mockInstance(1);
         rewardOrganizationImport.setInitiativeId(initiativeId);
-        Mockito.when(rewardOrganizationImportsRepositoryMock.findByInitiativeIdWithBatch(initiativeId, pageSize))
+        Mockito.when(rewardOrganizationImportsRepositoryMock.findByInitiativeIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenReturn(Flux.just(rewardOrganizationImport));
         Mockito.when(rewardOrganizationImportsRepositoryMock.deleteById(rewardOrganizationImport.getFilePath()))
                 .thenReturn(Mono.empty());
@@ -79,7 +78,7 @@ class DeleteInitiativeServiceImplTest {
         RewardsNotification rewardsNotification = RewardsNotificationFaker
                 .mockInstanceBuilder(1, initiativeId, LocalDate.now())
                 .build();
-        Mockito.when(rewardsNotificationRepositoryMock.findByInitiativeIdWithBatch(initiativeId, pageSize))
+        Mockito.when(rewardsNotificationRepositoryMock.findByInitiativeIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenReturn(Flux.just(rewardsNotification));
         Mockito.when(rewardsNotificationRepositoryMock.deleteById(rewardsNotification.getId()))
                 .thenReturn(Mono.empty());
@@ -89,7 +88,7 @@ class DeleteInitiativeServiceImplTest {
                 .userId(userid)
                 .initiativeId(initiativeId)
                 .build();
-        Mockito.when(rewardIbanRepositoryMock.findByInitiativeIdWithBatch(initiativeId, pageSize))
+        Mockito.when(rewardIbanRepositoryMock.findByInitiativeIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenReturn(Flux.just(rewardIban));
         Mockito.when(rewardIbanRepositoryMock.deleteById(rewardIban.getId()))
                 .thenReturn(Mono.empty());
@@ -99,7 +98,7 @@ class DeleteInitiativeServiceImplTest {
                 .userId(userid)
                 .initiativeId(initiativeId)
                 .build();
-        Mockito.when(rewardsRepositoryMock.findByInitiativeIdWithBatch(initiativeId, pageSize))
+        Mockito.when(rewardsRepositoryMock.findByInitiativeIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenReturn(Flux.just(rewards));
         Mockito.when(rewardsRepositoryMock.deleteById(rewards.getId()))
                 .thenReturn(Mono.empty());
@@ -109,12 +108,12 @@ class DeleteInitiativeServiceImplTest {
                 .userId(userid)
                 .initiativeId(initiativeId)
                 .build();
-        Mockito.when(rewardsSuspendedUserRepositoryMock.findByInitiativeIdWithBatch(initiativeId, pageSize))
+        Mockito.when(rewardsSuspendedUserRepositoryMock.findByInitiativeIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenReturn(Flux.just(rewardSuspendedUser));
         Mockito.when(rewardsSuspendedUserRepositoryMock.deleteById(rewardSuspendedUser.getId()))
                 .thenReturn(Mono.empty());
 
-        String result = deleteInitiativeService.execute(initiativeId, pageSize, delay).block();
+        String result = deleteInitiativeService.execute(initiativeId).block();
 
         Assertions.assertNotNull(result);
 
@@ -136,13 +135,11 @@ class DeleteInitiativeServiceImplTest {
     @Test
     void executeError() {
         String initiativeId = "INITIATIVEID";
-        int pageSize = 2;
-        long delay = 1;
-        Mockito.when(rewardNotificationRuleRepositoryMock.findByIdWithBatch(initiativeId, pageSize))
+        Mockito.when(rewardNotificationRuleRepositoryMock.findByIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenThrow(new MongoException("DUMMY_EXCEPTION"));
 
         try{
-            deleteInitiativeService.execute(initiativeId, pageSize, delay).block();
+            deleteInitiativeService.execute(initiativeId).block();
             Assertions.fail();
         }catch (Throwable t){
             Assertions.assertTrue(t instanceof  MongoException);

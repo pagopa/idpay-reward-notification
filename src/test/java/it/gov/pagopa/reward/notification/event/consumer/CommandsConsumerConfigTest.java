@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
@@ -32,13 +33,15 @@ import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.commands.CommandsMediatorServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.notification.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.notification.service.commands.ops.DeleteInitiativeServiceImpl=WARN"
 })
 class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
     private final String ORGANIZATIONID = "ORGANIZATIONID%d";
     private final String FILEPATH = "directory/fileName%d";
     private final Set<String> INITIATIVES_DELETED = new HashSet<>();
+    @Value("${app.delete.paginationSize}")
+    private int pageSize;
     @SpyBean
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;
     @Autowired
@@ -119,16 +122,12 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private List<String> buildValidPayloads(int startValue, int messagesNumber) {
-        HashMap<String, String> additionalParams = new HashMap<>();
-        additionalParams.put("pagination", "100");
-        additionalParams.put("delay", "50");
         return IntStream.range(startValue, startValue+messagesNumber)
                 .mapToObj(i -> {
                     initializeDB(i);
                     CommandOperationDTO command = CommandOperationDTO.builder()
                             .entityId(INITIATIVEID.formatted(i))
                             .operationTime(LocalDateTime.now())
-                            .additionalParams(additionalParams)
                             .build();
 
                     if(i%2 == 0){
@@ -217,7 +216,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         errorUseCases.add(Pair.of(
                 () -> {
                     Mockito.doThrow(new MongoException("Command error dummy"))
-                            .when(rewardNotificationRuleRepository).deleteById(errorInitiativeId);
+                            .when(rewardNotificationRuleRepository).findByIdWithBatch(errorInitiativeId, pageSize);
                     return commandOperationErrorString;
                 },
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_NOTIFICATION_COMMANDS] An error occurred evaluating commands", commandOperationErrorString)

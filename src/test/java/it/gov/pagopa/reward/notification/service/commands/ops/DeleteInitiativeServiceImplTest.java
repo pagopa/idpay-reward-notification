@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.notification.service.commands.ops;
 import com.mongodb.MongoException;
 import it.gov.pagopa.reward.notification.model.*;
 import it.gov.pagopa.reward.notification.repository.*;
-import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationExportsFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationImportFaker;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
@@ -53,13 +52,8 @@ class DeleteInitiativeServiceImplTest {
         String userid = "USERID";
         String id = "ID";
 
-        RewardNotificationRule rewardNotificationRule = RewardNotificationRuleFaker.mockInstanceBuilder(1)
-                .initiativeId(initiativeId)
-                .build();
-        Mockito.when(rewardNotificationRuleRepositoryMock.findByIdWithBatch(initiativeId,PAGE_SIZE))
-                .thenReturn(Flux.just(rewardNotificationRule));
-        Mockito.when(rewardNotificationRuleRepositoryMock.deleteById(rewardNotificationRule.getInitiativeId()))
-                .thenReturn(Mono.empty());
+        Mockito.when(rewardNotificationRuleRepositoryMock.deleteById(initiativeId))
+                .thenReturn(Mono.just(Mockito.mock(Void.class)));
 
         RewardOrganizationExport rewardOrganizationExport = RewardOrganizationExportsFaker.mockInstanceBuilder(1)
                 .initiativeId(initiativeId)
@@ -117,7 +111,6 @@ class DeleteInitiativeServiceImplTest {
 
         Assertions.assertNotNull(result);
 
-        Mockito.verify(rewardNotificationRuleRepositoryMock, Mockito.times(1)).findByIdWithBatch(Mockito.anyString(), Mockito.anyInt());
         Mockito.verify(rewardNotificationRuleRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyString());
         Mockito.verify(rewardOrganizationExportsRepositoryMock, Mockito.times(1)).deleteByInitiativeId(Mockito.anyString());
         Mockito.verify(rewardOrganizationImportsRepositoryMock, Mockito.times(1)).findByInitiativeIdWithBatch(Mockito.anyString(), Mockito.anyInt());
@@ -135,7 +128,7 @@ class DeleteInitiativeServiceImplTest {
     @Test
     void executeError() {
         String initiativeId = "INITIATIVEID";
-        Mockito.when(rewardNotificationRuleRepositoryMock.findByIdWithBatch(initiativeId, PAGE_SIZE))
+        Mockito.when(rewardNotificationRuleRepositoryMock.deleteById(initiativeId))
                 .thenThrow(new MongoException("DUMMY_EXCEPTION"));
 
         try{

@@ -66,16 +66,12 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteRewardRuleNotification(String initiativeId){
-        Mono<Long> monoDelay = Mono.delay(Duration.ofMillis(delay));
-        return rewardNotificationRuleRepository.findByIdWithBatch(initiativeId, pageSize)
-                .flatMap(rn -> rewardNotificationRuleRepository.deleteById(rn.getInitiativeId())
-                        .then(monoDelay), pageSize)
-                .doOnNext(v -> {
+        return rewardNotificationRuleRepository.deleteById(initiativeId)
+                .doOnSuccess(v -> {
                     log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: reward_notification_rule", initiativeId);
                     auditUtilities.logDeletedRewardRuleNotification(
                         initiativeId);
-                })
-                .then();
+                });
     }
 
     private Mono<Void> deleteRewardOrganizationExport(String initiativeId){

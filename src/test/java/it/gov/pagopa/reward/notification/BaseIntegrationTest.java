@@ -100,7 +100,7 @@ import java.util.regex.Pattern;
                 "app.email-notification.base-url=http://localhost:${wiremock.server.port}",
                 "app.selc.base-url=http://localhost:${wiremock.server.port}",
                 "app.wallet.base-url=http://localhost:${wiremock.server.port}",
-                "app.merchant.base-url=http://localhost:${wiremock.server.port}"
+                "app.merchant.base-url=http://localhost:${wiremock.server.port}",
                 //endregion
         })
 @AutoConfigureDataMongo

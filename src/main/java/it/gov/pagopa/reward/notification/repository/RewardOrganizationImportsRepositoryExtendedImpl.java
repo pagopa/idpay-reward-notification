@@ -63,6 +63,12 @@ public class RewardOrganizationImportsRepositoryExtendedImpl implements RewardOr
                 );
     }
 
+    @Override
+    public Flux<RewardOrganizationImport> findByInitiativeIdWithBatch(String initiativeId, int batchSize) {
+        Query query = Query.query(Criteria.where(RewardOrganizationImport.Fields.initiativeId).is(initiativeId)).cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, RewardOrganizationImport.class);
+    }
+
     private Criteria getCriteria(String organizationId, String initiativeId, FeedbackImportFilter filters) {
         Criteria criteria = Criteria
                 .where(FIELD_ORGANIZATION_ID).is(organizationId)

@@ -64,7 +64,7 @@ microservice-chart:
     KAFKA_REWARD_NOTIFICATION_UPLOAD_GROUP_ID: "idpay-reward-notification-storage-group"
     KAFKA_COMMANDS_GROUP_ID: "idpay-commands-reward-notification-consumer-group"
     EXPORT_BASE_PATH: ""
-    DELETE_PAGINATION_SIZE: "100"
+    DELETE_PAGINATION_SIZE: "45"
     DELETE_DELAY_TIME: "1000"
 
   envConfigMapExternals:

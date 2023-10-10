@@ -20,4 +20,5 @@ public interface RewardsNotificationRepositoryExtended {
 
     Flux<RewardsNotification> findAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters, Pageable pageable);
     Mono<Long> countAll(String exportId, String organizationId, String initiativeId, ExportDetailFilter filters);
+    Flux<RewardsNotification> findByInitiativeIdWithBatch(String initiativeId, int batchSize);
 }

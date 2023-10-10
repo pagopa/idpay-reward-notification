@@ -5,8 +5,11 @@ import it.gov.pagopa.reward.notification.model.*;
 import it.gov.pagopa.reward.notification.repository.*;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 @Service
 @Slf4j
@@ -20,6 +23,10 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private final RewardsSuspendedUserRepository rewardsSuspendedUserRepository;
     private final AuditUtilities auditUtilities;
 
+    private final int pageSize;
+
+    private final long delay;
+
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public DeleteInitiativeServiceImpl(RewardNotificationRuleRepository rewardNotificationRuleRepository,
                                        RewardOrganizationExportsRepository rewardOrganizationExportsRepository,
@@ -27,7 +34,10 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                                        RewardsNotificationRepository rewardsNotificationRepository,
                                        RewardIbanRepository rewardIbanRepository,
                                        RewardsRepository rewardsRepository,
-                                       RewardsSuspendedUserRepository rewardsSuspendedUserRepository, AuditUtilities auditUtilities) {
+                                       RewardsSuspendedUserRepository rewardsSuspendedUserRepository,
+                                       AuditUtilities auditUtilities,
+                                       @Value("${app.delete.paginationSize}") int pageSize,
+                                       @Value("${app.delete.delayTime}") long delay) {
 
         this.rewardNotificationRuleRepository = rewardNotificationRuleRepository;
         this.rewardOrganizationExportsRepository = rewardOrganizationExportsRepository;
@@ -37,6 +47,8 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         this.rewardsRepository = rewardsRepository;
         this.rewardsSuspendedUserRepository = rewardsSuspendedUserRepository;
         this.auditUtilities = auditUtilities;
+        this.pageSize = pageSize;
+        this.delay = delay;
     }
 
     @Override
@@ -74,7 +86,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteRewardOrganizationImport(String initiativeId) {
-        return rewardOrganizationImportsRepository.deleteByInitiativeId(initiativeId)
+        return rewardOrganizationImportsRepository.findByInitiativeIdWithBatch(initiativeId, pageSize)
+                .flatMap(ri -> rewardOrganizationImportsRepository.deleteById(ri.getFilePath())
+                        .then(Mono.just(ri).delayElement(Duration.ofMillis(delay))), pageSize)
                 .doOnNext(rewardOrganizationImport ->
                         auditUtilities.logDeletedRewardOrgImports(
                             initiativeId,
@@ -86,7 +100,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteRewardNotification(String initiativeId) {
-        return rewardsNotificationRepository.deleteByInitiativeId(initiativeId)
+        return rewardsNotificationRepository.findByInitiativeIdWithBatch(initiativeId, pageSize)
+                .flatMap(rn -> rewardsNotificationRepository.deleteById(rn.getId())
+                        .then(Mono.just(rn).delayElement(Duration.ofMillis(delay))), pageSize)
                 .map(RewardsNotification::getBeneficiaryId)
                 .distinct()
                 .doOnNext(beneficiaryId -> auditUtilities.logDeletedRewardNotification(initiativeId, beneficiaryId))
@@ -95,7 +111,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deletedIban(String initiativeId){
-        return rewardIbanRepository.deleteByInitiativeId(initiativeId)
+        return rewardIbanRepository.findByInitiativeIdWithBatch(initiativeId, pageSize)
+                .flatMap(ri -> rewardIbanRepository.deleteById(ri.getId())
+                        .then(Mono.just(ri).delayElement(Duration.ofMillis(delay))), pageSize)
                 .map(RewardIban::getUserId)
                 .distinct()
                 .doOnNext(userId -> auditUtilities.logDeletedRewardIban(initiativeId, userId))
@@ -103,8 +121,10 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .doOnNext(i -> log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: rewards_iban", initiativeId));
     }
 
-    private Mono<Void> deletedRewards(String initiativeId){
-        return rewardsRepository.deleteByInitiativeId(initiativeId)
+    private Mono<Void> deletedRewards(String initiativeId) {
+        return rewardsRepository.findByInitiativeIdWithBatch(initiativeId, pageSize)
+                .flatMap(r -> rewardsRepository.deleteById(r.getId())
+                        .then(Mono.just(r).delayElement(Duration.ofMillis(delay))), pageSize)
                 .map(Rewards::getUserId)
                 .distinct()
                 .doOnNext(userId -> auditUtilities.logDeletedRewards(initiativeId, userId))
@@ -113,7 +133,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteRewardSuspendedUser(String initiativeId){
-        return rewardsSuspendedUserRepository.deleteByInitiativeId(initiativeId)
+        return rewardsSuspendedUserRepository.findByInitiativeIdWithBatch(initiativeId, pageSize)
+                .flatMap(rsu -> rewardsSuspendedUserRepository.deleteById(rsu.getId())
+                        .then(Mono.just(rsu).delayElement(Duration.ofMillis(delay))), pageSize)
                 .map(RewardSuspendedUser::getUserId)
                 .distinct()
                 .doOnNext(userId -> auditUtilities.logDeletedSuspendedUser(initiativeId, userId))

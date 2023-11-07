@@ -40,7 +40,7 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 @TestPropertySource(properties = {
-        "app.csv.export.split-size=500",
+        "app.csv.export.split-size=50",
         "logging.level.it.gov.pagopa.reward.notification.connector.rest.UserRestClientImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })

@@ -144,7 +144,7 @@ public class NotificationControllerImpl implements NotificationController {
         return organizationImportsService
                 .getErrorsCsvByImportId(organizationId, initiativeId, buildImportId(organizationId, initiativeId, fileName))
                 .map(csv -> ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName.replace(".zip", ".csv")).build().toString())
+                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName.replace(".zip", "") + "_errors.csv").build().toString())
                         .body(csv))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find import file " + fileName))));
     }

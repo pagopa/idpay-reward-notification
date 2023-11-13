@@ -44,7 +44,8 @@ public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNoti
                         return Mono.just(r);
                     } else {
                         log.info("[REWARD_NOTIFICATION] Found exported notification even if scheduled for the future. Probably manually changed: {} having status {}", r.getId(), r.getStatus());
-                        return rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), notificationDate, RewardNotificationStatus.TO_SEND)
+                        String beneficiaryId = getBeneficiaryId(trx, rule);
+                        return rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(beneficiaryId, rule.getInitiativeId(), notificationDate, RewardNotificationStatus.TO_SEND)
                                 .switchIfEmpty(
                                         createNewNotificationWithProgressiveId(trx, rule, notificationDate, notificationId)
                                 )
@@ -73,7 +74,7 @@ public class RewardNotificationTemporalHandlerServiceImpl extends BaseRewardNoti
 
     private String buildNotificationId(RewardTransactionDTO trx, RewardNotificationRule rule, LocalDate notificationDate) {
         return "%s_%s_%s".formatted(
-                trx.getUserId(),
+                getBeneficiaryId(trx, rule),
                 rule.getInitiativeId(),
                 notificationDate.format(Utils.FORMATTER_DATE)
         );

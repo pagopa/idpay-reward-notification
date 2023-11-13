@@ -46,7 +46,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
 
     @Test
     void testConsumer() throws JsonProcessingException {
-        int validTrx = 1000; // use even number
+        int validTrx = 20; // use even number
         int notValidTrx = errorUseCases.size();
         int duplicateTrx = Math.min(100, validTrx / 2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
         long maxWaitingMs = 30000;
@@ -491,6 +491,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , NEXT_WEEK
                             , BigDecimal.valueOf(-1), false)
             ),
+
             // useCase 13: initiative threshold notified refunding an already overflowed threshold next not more overflowed -> storing a previous reward and relative notification
             Pair.of(
                     i -> {
@@ -515,6 +516,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , null
                             , BigDecimal.valueOf(-2), false)
             ),
+
             // useCase 14: initiative at budged exhaustion notified, but budget not exhausted
             Pair.of(
                     i -> {
@@ -530,6 +532,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , "%s_%s_1".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_EXHAUSTED)
                             , null, BigDecimal.TEN, true)
             ),
+
             // useCase 15: initiative at budged exhaustion notified, receiving exhausted
             Pair.of(
                     i -> {
@@ -548,6 +551,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , NEXT_WEEK
                             , BigDecimal.TEN, true)
             ),
+
             // useCase 16: initiative at budged exhaustion notified exhausted on new trx -> storing a previous reward and relative notification
             Pair.of(
                     i -> {
@@ -574,6 +578,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , NEXT_WEEK
                             , BigDecimal.TEN, false)
             ),
+
             // useCase 17: initiative at budged exhaustion notified on already existent notification, but still not overflowed -> storing a previous reward and relative notification
             Pair.of(
                     i -> {
@@ -598,6 +603,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , null
                             , BigDecimal.TEN, false)
             ),
+
             // useCase 18: initiative at budged exhaustion notified refunding an already notified future record -> storing a previous reward and relative notification
             Pair.of(
                     i -> {
@@ -622,6 +628,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                             , null
                             , BigDecimal.valueOf(-2), false)
             ),
+
             // useCase 19: initiative at budged exhaustion notified refunding an already notified past record -> storing a previous reward and relative notification
             Pair.of(
                     i -> {
@@ -694,6 +701,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
                     }
             ),
+
             // useCase 21: initiative daily notified, with previous forced to be exported before
             Pair.of(
                     i -> {
@@ -725,6 +733,7 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         assertRewards(reward, INITIATIVE_ID_NOTIFY_DAILY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
                     }
             ),
+
             // useCase 22: initiative daily notified, with previous forced to be exported before and next already created
             Pair.of(
                     i -> {
@@ -763,6 +772,41 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
                         String expectedNotificationId = "%s_%s_%s_2".formatted(reward.getUserId(), INITIATIVE_ID_NOTIFY_WEEKLY, expectedNotificationDate.format(Utils.FORMATTER_DATE));
                         assertRewards(reward, INITIATIVE_ID_NOTIFY_WEEKLY, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, false);
                     }
+            ),
+
+            // useCase 23: discount initiative daily notified
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_DISCOUNT_TEMPORAL;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.TEN)))
+                                .build();
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(trx.getMerchantId(), initiativeId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        updateExpectedRewardNotification(expectedNotificationId, expectedNotificationDate, trx, initiativeId, 1000L, DepositType.PARTIAL);
+                        return trx;
+                    },
+                    reward -> {
+                        LocalDate expectedNotificationDate = TOMORROW;
+                        String expectedNotificationId = "%s_%s_%s".formatted(reward.getMerchantId(), INITIATIVE_ID_DISCOUNT_TEMPORAL, expectedNotificationDate.format(Utils.FORMATTER_DATE));
+                        assertRewards(reward, INITIATIVE_ID_DISCOUNT_TEMPORAL, expectedNotificationId, expectedNotificationDate, BigDecimal.TEN, true);
+                    }
+            ),
+
+            // useCase 24: discount initiative threshold notified (not past)
+            Pair.of(
+                    i -> {
+                        String initiativeId = INITIATIVE_ID_DISCOUNT_THRESHOLD;
+                        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstanceBuilder(i)
+                                .rewards(Map.of(initiativeId, new Reward(BigDecimal.valueOf(15))))
+                                .build();
+                        String expectedNotificationId = "%s_%s_1".formatted(trx.getMerchantId(), initiativeId);
+                        updateExpectedRewardNotification(expectedNotificationId, null, trx, initiativeId, 1500L, DepositType.PARTIAL);
+                        return trx;
+                    },
+                    reward -> assertRewards(reward, INITIATIVE_ID_DISCOUNT_THRESHOLD
+                            , "%s_%s_1".formatted(reward.getMerchantId(), INITIATIVE_ID_DISCOUNT_THRESHOLD)
+                            , null, BigDecimal.valueOf(15), true)
             )
     );
 

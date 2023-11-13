@@ -43,7 +43,7 @@ class DeleteInitiativeServiceImplTest {
                 rewardIbanRepositoryMock,
                 rewardsRepositoryMock,
                 rewardsSuspendedUserRepositoryMock,
-                auditUtilitiesMock, PAGE_SIZE, 1000L);
+                auditUtilitiesMock, PAGE_SIZE, 100L);
     }
 
     @Test

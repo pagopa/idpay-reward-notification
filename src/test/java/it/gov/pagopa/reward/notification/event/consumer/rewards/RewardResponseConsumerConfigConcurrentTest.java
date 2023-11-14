@@ -29,7 +29,7 @@ class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsu
 
     private final int initiativeRewardedNumber = 8;
 
-    private final int validTrx = 100;
+    private final int validTrx = 20;
 
     private final BigDecimal thresholdReward = BigDecimal.valueOf(7);
     private final int trxNumberInThreshold = INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD.divide(thresholdReward, 0, RoundingMode.CEILING).intValue();

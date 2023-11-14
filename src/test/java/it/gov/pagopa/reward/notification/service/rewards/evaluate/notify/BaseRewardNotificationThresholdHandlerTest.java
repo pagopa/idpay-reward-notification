@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -13,6 +14,9 @@ import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -86,27 +90,42 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         Assertions.assertEquals(DayOfWeek.MONDAY, fieldNotificateNextDayOfWeek.get(configurationNextDayOfWeek));
     }
 
-    @Test void testHandleNewNotifyCharge_TOMORROW() {testHandleNewNotifyNotOverflowing(false, NOTIFICATION_DAY_TOMORROW);}
-    @Test void testHandleNewNotifyCharge_NEXTDAYOFWEEK() {testHandleNewNotifyNotOverflowing(false, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+    public static String getExpectedBeneficiaryId(InitiativeRewardType rewardType, RewardTransactionDTO trx) {
+        return InitiativeRewardType.REFUND.equals(rewardType)
+                ? trx.getUserId()
+                : trx.getMerchantId();
+    }
 
-    @Test void testHandleNewNotifyRefundNoFutureNotification_TOMORROW() {testHandleNewNotifyNotOverflowing(true, NOTIFICATION_DAY_TOMORROW);}
-    @Test void testHandleNewNotifyRefundNoFutureNotification_NEXTDAYOFWEEK() {testHandleNewNotifyNotOverflowing(true, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+    @ParameterizedTest
+    @CsvSource({
+            "false, " + NOTIFICATION_DAY_TOMORROW + ", REFUND",
+            "false, " + NOTIFICATION_DAY_NEXTDAYOFWEEK + ", REFUND",
+            "true, " + NOTIFICATION_DAY_TOMORROW + ", REFUND",
+            "true, " + NOTIFICATION_DAY_NEXTDAYOFWEEK + ", REFUND",
 
+            "false, " + NOTIFICATION_DAY_TOMORROW + ", DISCOUNT",
+            "false, " + NOTIFICATION_DAY_NEXTDAYOFWEEK + ", DISCOUNT",
+            "true, " + NOTIFICATION_DAY_TOMORROW + ", DISCOUNT",
+            "true, " + NOTIFICATION_DAY_NEXTDAYOFWEEK + ", DISCOUNT",
 
-    void testHandleNewNotifyNotOverflowing(boolean isRefund, String notificationDay) {
+    })
+    void testHandleNewNotifyNotOverflowing(boolean isRefundTrx, String notificationDay, InitiativeRewardType rewardType) {
         // Given
         BaseRewardNotificationThresholdBasedHandler service = buildService(notificationDay);
 
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule();
-        Reward reward = new Reward(BigDecimal.valueOf(isRefund ? -3 : 3));
+        rule.setInitiativeRewardType(rewardType);
+
+        Reward reward = new Reward(BigDecimal.valueOf(isRefundTrx ? -3 : 3));
 
         RewardsNotification[] expectedResult = new RewardsNotification[]{null};
         long expectedProgressive = 5L;
 
-        String expectedNotificationId = "USERID0_INITIATIVEID_%d".formatted(expectedProgressive);
+        String expectedBeneficiaryId = getExpectedBeneficiaryId(rewardType, trx);
+        String expectedNotificationId = "%s_INITIATIVEID_%d".formatted(expectedBeneficiaryId, expectedProgressive);
 
-        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
         Mockito.doAnswer(a -> {
                     expectedResult[0] = (RewardsNotification) a.callRealMethod();
                     return expectedResult[0];
@@ -114,10 +133,10 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
                 .when(mapperSpy)
                 .apply(Mockito.any(), Mockito.any(), Mockito.anyLong(), Mockito.any(), Mockito.any());
 
-        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive - 1));
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive - 1));
 
-        if (isRefund) {
-            Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
+        if (isRefundTrx) {
+            Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
         }
 
         service = Mockito.spy(service);
@@ -131,25 +150,31 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
 
         Assertions.assertEquals(expectedNotificationId, result.getId());
         Assertions.assertNull(result.getNotificationDate());
-        Assertions.assertEquals(isRefund ? -300L : 300L, result.getRewardCents());
+        Assertions.assertEquals(isRefundTrx ? -300L : 300L, result.getRewardCents());
         Assertions.assertEquals(expectedProgressive, result.getProgressive());
         Assertions.assertEquals(List.of(trx.getId()), result.getTrxIds());
         Assertions.assertEquals(getExpectedDepositType(), result.getDepositType());
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
-        Mockito.verify(repositoryMock).countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId());
-        Mockito.verify(mapperSpy).apply(Mockito.eq("USERID0_INITIATIVEID"), Mockito.isNull(), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
+        Mockito.verify(repositoryMock).countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId());
+        Mockito.verify(mapperSpy).apply(Mockito.eq(expectedBeneficiaryId + "_INITIATIVEID"), Mockito.isNull(), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
     }
 
-    @Test void testHandleNewNotifyRefundWithFutureNotificationNotOverflowing_TOMORROW() {testHandleNewNotifyRefundWithFutureNotification(false, NOTIFICATION_DAY_TOMORROW);}
-    @Test void testHandleNewNotifyRefundWithFutureNotificationNotOverflowing_NEXTDAYOFWEEK() {testHandleNewNotifyRefundWithFutureNotification(false, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
+    @ParameterizedTest
+    @CsvSource({
+            "false,"+NOTIFICATION_DAY_TOMORROW+",REFUND",
+            "false,"+NOTIFICATION_DAY_NEXTDAYOFWEEK+",REFUND",
+            "true,"+NOTIFICATION_DAY_TOMORROW+",REFUND",
+            "true,"+NOTIFICATION_DAY_NEXTDAYOFWEEK+",REFUND",
 
-    @Test void testHandleNewNotifyRefundWithFutureNotificationStillOverflowing_TOMORROW() {testHandleNewNotifyRefundWithFutureNotification(true, NOTIFICATION_DAY_TOMORROW);}
-    @Test void testHandleNewNotifyRefundWithFutureNotificationStillOverflowing_NEXTDAYOFWEEK() {testHandleNewNotifyRefundWithFutureNotification(true, NOTIFICATION_DAY_NEXTDAYOFWEEK);}
-
-    void testHandleNewNotifyRefundWithFutureNotification(boolean isStillOverflowing, String notificationDay) {
+            "false,"+NOTIFICATION_DAY_TOMORROW+",DISCOUNT",
+            "false,"+NOTIFICATION_DAY_NEXTDAYOFWEEK+",DISCOUNT",
+            "true,"+NOTIFICATION_DAY_TOMORROW+",DISCOUNT",
+            "true,"+NOTIFICATION_DAY_NEXTDAYOFWEEK+",DISCOUNT",
+    })
+    void testHandleNewNotifyRefundWithFutureNotification(boolean isStillOverflowing, String notificationDay, InitiativeRewardType rewardType) {
         // Given
         BaseRewardNotificationThresholdBasedHandler service = buildService(notificationDay);
 
@@ -157,20 +182,24 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
+        rule.setInitiativeRewardType(rewardType);
+
         Reward reward = testHandleNewNotifyRefundWithFutureNotification_buildOverFlowingReward(isStillOverflowing);
 
         LocalDate notificationDate = NOTIFICATION_DAY_TOMORROW.equals(notificationDay) ? TOMORROW : NEXT_MONDAY;
         long expectedProgressive = 5L;
-        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), notificationDate);
+        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), notificationDate, rewardType);
         expectedResult.setProgressive(expectedProgressive);
         expectedResult.setRewardCents(600L);
         expectedResult.setNotificationDate(notificationDate);
         expectedResult.getTrxIds().add("TRXID");
 
-        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
-        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
+        String expectedBeneficiaryId = getExpectedBeneficiaryId(rewardType, trx);
 
-        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId())).thenReturn(Mono.empty());
+
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
 
         service = Mockito.spy(service);
 
@@ -196,8 +225,9 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
 
     protected abstract long testHandleNewNotifyRefundWithFutureNotification_expectedReward(boolean isStillOverflowing);
 
-    @Test
-    void testHandleUpdateNotifyOverflowingThreshold() {
+    @ParameterizedTest
+    @EnumSource(InitiativeRewardType.class)
+    void testHandleUpdateNotifyOverflowingThreshold(InitiativeRewardType rewardType) {
         // Given
         BaseRewardNotificationThresholdBasedHandler service = buildService(NOTIFICATION_DAY_TOMORROW);
 
@@ -205,16 +235,20 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now().plusDays(1));
+        rule.setInitiativeRewardType(rewardType);
+
         Reward reward = testHandleUpdateNotifyOverflowingThreshold_buildOverFlowingReward();
 
         LocalDate expectedNotificationDate = TOMORROW;
         long expectedProgressive = 5L;
-        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
         expectedResult.setProgressive(expectedProgressive);
         expectedResult.setRewardCents(200L);
         expectedResult.getTrxIds().add("TRXID");
 
-        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
+        String expectedBeneficiaryId = getExpectedBeneficiaryId(rewardType, trx);
+
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), null, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
 
         service = Mockito.spy(service);
 

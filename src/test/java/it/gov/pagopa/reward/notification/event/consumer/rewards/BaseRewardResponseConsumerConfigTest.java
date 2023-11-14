@@ -117,6 +117,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
     protected static final String INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED = "INITIATIVEID_CLOSED_ALREADY_EXPIRED";
     protected static final String INITIATIVE_ID_NOTIFY_THRESHOLD = "INITIATIVEID_THRESHOLD";
     protected static final String INITIATIVE_ID_NOTIFY_EXHAUSTED = "INITIATIVEID_EXHAUSTED";
+    protected static final String INITIATIVE_ID_DISCOUNT_TEMPORAL = "INITIATIVE_ID_DISCOUNT_TEMPORAL";
+    protected static final String INITIATIVE_ID_DISCOUNT_THRESHOLD = "INITIATIVE_ID_DISCOUNT_THRESHOLD";
 
     protected static final LocalDate INITIATIVE_ENDDATE = TODAY.plusDays(10);
     protected static final LocalDate INITIATIVE_ENDDATE_NEXT_DAY = INITIATIVE_ENDDATE.plusDays(1);
@@ -125,6 +127,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
 
     protected void publishRewardRules() {
         List<InitiativeRefund2StoreDTO> rules = List.of(
+                // [REFUND][TEMPORAL] Daily exported initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_DAILY)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_DAILY)
@@ -144,6 +147,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                         .build())
                                 .build())
                         .build(),
+
+                // [REFUND][TEMPORAL] Weekly exported initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_WEEKLY)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_WEEKLY)
@@ -159,6 +164,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                         .build())
                                 .build())
                         .build(),
+
+                // [REFUND][TEMPORAL] Monthly exported initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_MONTHLY)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_MONTHLY)
@@ -174,6 +181,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                         .build())
                                 .build())
                         .build(),
+
+                // [REFUND][TEMPORAL] Quarterly exported initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_QUARTERLY)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_QUARTERLY)
@@ -189,6 +198,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                         .build())
                                 .build())
                         .build(),
+
+                // [REFUND][TEMPORAL] Ending exported initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_CLOSED)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_CLOSED)
@@ -204,6 +215,8 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                         .build())
                                 .build())
                         .build(),
+
+                // [REFUND][TEMPORAL] Ending exported initiative, already expired
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_CLOSED_ALREADY_EXPIRED)
@@ -220,6 +233,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                 .build())
                         .build(),
 
+                // [REFUND][THRESHOLD] Threshold based export initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_THRESHOLD)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_THRESHOLD)
@@ -230,12 +244,14 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
-                                .accumulatedAmount(AccumulatedAmountDTO.builder() // ignored because configured as timed
+                                .accumulatedAmount(AccumulatedAmountDTO.builder()
                                         .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)
                                         .refundThreshold(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD)
                                         .build())
                                 .build())
                         .build(),
+
+                // [REFUND][THRESHOLD] User budget exhausted based export initiative
                 InitiativeRefund2StoreDTO.builder()
                         .initiativeId(INITIATIVE_ID_NOTIFY_EXHAUSTED)
                         .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_NOTIFY_EXHAUSTED)
@@ -246,8 +262,43 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                                 .endDate(INITIATIVE_ENDDATE)
                                 .build())
                         .refundRule(InitiativeRefundRuleDTO.builder()
-                                .accumulatedAmount(AccumulatedAmountDTO.builder() // ignored because configured as timed
+                                .accumulatedAmount(AccumulatedAmountDTO.builder()
                                         .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED)
+                                        .build())
+                                .build())
+                        .build(),
+
+                // [DISCOUNT][TEMPORAL] Temporal based export initiative
+                InitiativeRefund2StoreDTO.builder()
+                        .initiativeId(INITIATIVE_ID_DISCOUNT_TEMPORAL)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_DISCOUNT_TEMPORAL)
+                        .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_DISCOUNT_TEMPORAL)
+                        .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_DISCOUNT_TEMPORAL)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .general(InitiativeGeneralDTO.builder()
+                                .endDate(INITIATIVE_ENDDATE)
+                                .build())
+                        .refundRule(InitiativeRefundRuleDTO.builder()
+                                .timeParameter(TimeParameterDTO.builder()
+                                        .timeType(TimeParameterDTO.TimeTypeEnum.DAILY)
+                                        .build())
+                                .build())
+                        .build(),
+
+                // [DISCOUNT][THRESHOLD] Threshold based export initiative
+                InitiativeRefund2StoreDTO.builder()
+                        .initiativeId(INITIATIVE_ID_DISCOUNT_THRESHOLD)
+                        .initiativeName("INITIATIVE_NAME_" + INITIATIVE_ID_DISCOUNT_THRESHOLD)
+                        .organizationId("ORGANIZATION_ID_" + INITIATIVE_ID_DISCOUNT_THRESHOLD)
+                        .organizationVat("ORGANIZATION_VAT_" + INITIATIVE_ID_DISCOUNT_THRESHOLD)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .general(InitiativeGeneralDTO.builder()
+                                .endDate(INITIATIVE_ENDDATE)
+                                .build())
+                        .refundRule(InitiativeRefundRuleDTO.builder()
+                                .accumulatedAmount(AccumulatedAmountDTO.builder()
+                                        .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)
+                                        .refundThreshold(INITIATIVE_THRESHOLD_VALUE_REFUND_THRESHOLD)
                                         .build())
                                 .build())
                         .build()
@@ -307,7 +358,9 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
                     .initiativeName("INITIATIVE_NAME_" + initiativeId)
                     .organizationId("ORGANIZATION_ID_" + initiativeId)
                     .organizationFiscalCode("ORGANIZATION_VAT_" + initiativeId)
-                    .initiativeRewardType(InitiativeRewardType.REFUND)
+                    .initiativeRewardType(initiativeId.contains("DISCOUNT")
+                            ? InitiativeRewardType.DISCOUNT
+                            : InitiativeRewardType.REFUND)
                     .build();
             n = notificationMapper.apply(notificationId, notificationDate, progressive, trx, rule);
         }

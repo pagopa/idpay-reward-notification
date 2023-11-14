@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.detail.PageImpl2ExportPageDT
 import it.gov.pagopa.reward.notification.dto.mapper.detail.RewardOrganizationExport2ExportSummaryDTOMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.detail.RewardsNotification2DTOMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.detail.RewardsNotification2DetailDTOMapper;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -178,7 +179,7 @@ class ExportDetailServiceImplTest {
     }
 
     private RewardsNotification rewardsNotificationMockInstance(int bias) {
-        return RewardsNotificationFaker.mockInstance(bias, "INITIATIVEID", DATE).toBuilder()
+        return RewardsNotificationFaker.mockInstance(bias, "INITIATIVEID", DATE, InitiativeRewardType.REFUND).toBuilder()
                 .id("USERID%s_INITIATIVEID_%s".formatted(bias, DATE.format(Utils.FORMATTER_DATE)))
                 .externalId("EXTERNALID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))

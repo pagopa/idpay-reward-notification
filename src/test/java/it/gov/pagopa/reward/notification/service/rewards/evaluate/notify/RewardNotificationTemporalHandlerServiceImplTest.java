@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -47,7 +49,6 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setInitiativeId("INITIATIVEID");
         rule.setTimeParameter(new TimeParameterDTO());
         rule.getTimeParameter().setTimeType(type);
-        rule.setInitiativeRewardType(InitiativeRewardType.REFUND);
         return rule;
     }
 
@@ -161,18 +162,22 @@ class RewardNotificationTemporalHandlerServiceImplTest {
 //endregion
 
 //region test handle method
-    @Test
-    void testHandleNewNotify(){
+    @ParameterizedTest
+    @EnumSource(InitiativeRewardType.class)
+    void testHandleNewNotify(InitiativeRewardType rewardType){
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
+        rule.setInitiativeRewardType(rewardType);
         Reward reward = new Reward(BigDecimal.TEN);
 
         RewardsNotification[] expectedResult = new RewardsNotification[]{null};
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
         long expectedProgressive = 5L;
 
-        String expectedNotificationId = "USERID0_INITIATIVEID_%s".formatted(expectedNotificationDate.format(Utils.FORMATTER_DATE));
+        String expectedBeneficiaryId = BaseRewardNotificationThresholdHandlerTest.getExpectedBeneficiaryId(rewardType, trx);
+
+        String expectedNotificationId = "%s_INITIATIVEID_%s".formatted(expectedBeneficiaryId, expectedNotificationDate.format(Utils.FORMATTER_DATE));
 
         Mockito.when(repositoryMock.findById(expectedNotificationId)).thenReturn(Mono.empty());
         Mockito.doAnswer(a ->{
@@ -182,7 +187,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
                 .when(mapperSpy)
                 .apply(Mockito.any(), Mockito.any(), Mockito.anyLong(), Mockito.any(), Mockito.any());
 
-        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive - 1));
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive - 1));
 
         service = Mockito.spy(service);
 
@@ -202,30 +207,34 @@ class RewardNotificationTemporalHandlerServiceImplTest {
 
         Mockito.verify(service).handle(Mockito.same(trx), Mockito.same(rule), Mockito.same(reward));
         Mockito.verify(service).calculateNotificationDate(Mockito.eq(LocalDate.now()), Mockito.same(rule));
-        Mockito.verify(repositoryMock).countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId());
+        Mockito.verify(repositoryMock).countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId());
         Mockito.verify(mapperSpy).apply(Mockito.eq(expectedNotificationId), Mockito.eq(expectedNotificationDate), Mockito.eq(expectedProgressive), Mockito.same(trx), Mockito.same(rule));
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
     }
 
-    @Test
-    void testHandleUpdateNotify(){
+    @ParameterizedTest
+    @EnumSource(InitiativeRewardType.class)
+    void testHandleUpdateNotify(InitiativeRewardType rewardType){
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
+        rule.setInitiativeRewardType(rewardType);
         Reward reward = new Reward(BigDecimal.TEN);
 
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
         long expectedProgressive = 5L;
-        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
         expectedResult.setProgressive(expectedProgressive);
         expectedResult.setRewardCents(100L);
         expectedResult.getTrxIds().add("TRXID");
 
+        String expectedBeneficiaryId = BaseRewardNotificationThresholdHandlerTest.getExpectedBeneficiaryId(rewardType, trx);
+
         Mockito.when(repositoryMock.findById(expectedResult.getId())).thenReturn(Mono.just(expectedResult));
-        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);
 
@@ -248,8 +257,9 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
     }
 
-    @Test
-    void testHandleNewNotifyOnAlreadyNotified(){
+    @ParameterizedTest
+    @EnumSource(InitiativeRewardType.class)
+    void testHandleNewNotifyOnAlreadyNotified(InitiativeRewardType rewardType){
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
@@ -258,16 +268,17 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setOrganizationId("ORGANIZATION_ID_0_hpd");
         rule.setOrganizationFiscalCode("ORGANIZATION_FISCAL_CODE_0_qdx");
         rule.setEndDate(LocalDate.now());
+        rule.setInitiativeRewardType(rewardType);
         Reward reward = new Reward(BigDecimal.TEN);
 
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-        RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
         alreadyNotified.setStatus(RewardNotificationStatus.EXPORTED);
 
         Mockito.when(repositoryMock.findById(alreadyNotified.getId())).thenReturn(Mono.just(alreadyNotified));
 
         long expectedProgressive = 5L;
-        RewardsNotification expectedNewNotify = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        RewardsNotification expectedNewNotify = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
         expectedNewNotify.setProgressive(expectedProgressive);
         expectedNewNotify.setId("%s_%d".formatted(expectedNewNotify.getId(), expectedProgressive));
         expectedNewNotify.setExternalId("%s_%d".formatted(expectedNewNotify.getExternalId(), expectedProgressive));
@@ -275,8 +286,10 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         expectedNewNotify.setDepositType(DepositType.FINAL);
         expectedNewNotify.getTrxIds().add(trx.getId());
 
-        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
-        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive-1));
+        String expectedBeneficiaryId = BaseRewardNotificationThresholdHandlerTest.getExpectedBeneficiaryId(rewardType, trx);
+
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.empty());
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId())).thenReturn(Mono.just(expectedProgressive-1));
 
         service = Mockito.spy(service);
 
@@ -293,30 +306,33 @@ class RewardNotificationTemporalHandlerServiceImplTest {
 
         Mockito.verifyNoMoreInteractions(repositoryMock, mapperSpy);
     }
-
-    @Test
-    void testHandleNotifyUpdatedOnAlreadyNotified(){
+    @ParameterizedTest
+    @EnumSource(InitiativeRewardType.class)
+    void testHandleNotifyUpdatedOnAlreadyNotified(InitiativeRewardType rewardType){
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
+        rule.setInitiativeRewardType(rewardType);
         Reward reward = new Reward(BigDecimal.TEN);
 
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
-        RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
         alreadyNotified.setStatus(RewardNotificationStatus.EXPORTED);
 
         Mockito.when(repositoryMock.findById(alreadyNotified.getId())).thenReturn(Mono.just(alreadyNotified));
 
         long expectedProgressive = 5L;
-        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate);
+        RewardsNotification expectedResult = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
         expectedResult.setProgressive(expectedProgressive);
         expectedResult.setRewardCents(100L);
         expectedResult.getTrxIds().add("TRXID");
 
-        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
-        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())).thenReturn(Mono.empty());
+        String expectedBeneficiaryId = BaseRewardNotificationThresholdHandlerTest.getExpectedBeneficiaryId(rewardType, trx);
+
+        Mockito.when(repositoryMock.findByBeneficiaryIdAndInitiativeIdAndNotificationDateAndStatusAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId(), expectedNotificationDate, RewardNotificationStatus.TO_SEND)).thenReturn(Flux.just(expectedResult));
+        Mockito.when(repositoryMock.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(expectedBeneficiaryId, rule.getInitiativeId())).thenReturn(Mono.empty());
 
         service = Mockito.spy(service);
 

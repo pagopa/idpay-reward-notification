@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.notification.service.commands.ops;
 
 import com.mongodb.MongoException;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.*;
 import it.gov.pagopa.reward.notification.repository.*;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationExportsFaker;
@@ -70,7 +71,7 @@ class DeleteInitiativeServiceImplTest {
                 .thenReturn(Mono.empty());
 
         RewardsNotification rewardsNotification = RewardsNotificationFaker
-                .mockInstanceBuilder(1, initiativeId, LocalDate.now())
+                .mockInstanceBuilder(1, initiativeId, LocalDate.now(), InitiativeRewardType.REFUND)
                 .build();
         Mockito.when(rewardsNotificationRepositoryMock.findByInitiativeIdWithBatch(initiativeId, PAGE_SIZE))
                 .thenReturn(Flux.just(rewardsNotification));

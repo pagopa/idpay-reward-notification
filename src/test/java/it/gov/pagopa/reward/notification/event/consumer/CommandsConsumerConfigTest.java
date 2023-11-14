@@ -4,6 +4,7 @@ import com.mongodb.MongoException;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.commands.CommandOperationDTO;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.*;
 import it.gov.pagopa.reward.notification.repository.*;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
@@ -159,7 +160,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         rewardOrganizationImport.setFilePath(FILEPATH.formatted(bias));
         rewardOrganizationImportsRepository.save(rewardOrganizationImport).block();
 
-        RewardsNotification rewardsNotification = RewardsNotificationFaker.mockInstanceBuilder(bias, INITIATIVEID.formatted(bias), LocalDate.now()).build();
+        RewardsNotification rewardsNotification = RewardsNotificationFaker.mockInstanceBuilder(bias, INITIATIVEID.formatted(bias), LocalDate.now(), InitiativeRewardType.REFUND).build();
         rewardsNotificationRepository.save(rewardsNotification).block();
 
         RewardIban rewardIban = RewardIban.builder()

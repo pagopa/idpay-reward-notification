@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.notification.event.consumer;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -74,7 +75,7 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
                 Objects.requireNonNull(
                         rewardsNotificationRepository.saveAll(
                                         IntStream.rangeClosed(0, 7).mapToObj(i -> {
-                                            RewardsNotification x = RewardsNotificationFaker.mockInstance(i, INITIATIVEID.formatted(i), today);
+                                            RewardsNotification x = RewardsNotificationFaker.mockInstance(i, INITIATIVEID.formatted(i), today, InitiativeRewardType.REFUND);
                                             x.setStatus(RewardNotificationStatus.ERROR);
                                             x.setExportId(null);
                                             if (i < 4) {
@@ -97,7 +98,7 @@ class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
                 Objects.requireNonNull(
                         rewardsNotificationRepository.saveAll(
                                         IntStream.rangeClosed(8, 15).mapToObj(i -> {
-                                            RewardsNotification x = RewardsNotificationFaker.mockInstance(i, INITIATIVEID.formatted(i), today);
+                                            RewardsNotification x = RewardsNotificationFaker.mockInstance(i, INITIATIVEID.formatted(i), today, InitiativeRewardType.REFUND);
                                             x.setStatus(RewardNotificationStatus.COMPLETED_KO);
                                             if (i > 11) {
                                                 x.setOrdinaryId(x.getId());

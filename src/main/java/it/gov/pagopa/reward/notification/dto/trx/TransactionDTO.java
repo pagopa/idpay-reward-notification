@@ -56,6 +56,8 @@ public class TransactionDTO {
 
     private String fiscalCode;
 
+    private String merchantFiscalCode;
+
     private String vat;
 
     private String posType;

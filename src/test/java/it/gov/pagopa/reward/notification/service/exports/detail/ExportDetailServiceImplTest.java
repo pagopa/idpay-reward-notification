@@ -171,6 +171,7 @@ class ExportDetailServiceImplTest {
                 .endDate(DATE)
                 .status(RewardNotificationStatus.EXPORTED)
                 .refundType(Utils.RefundType.ORDINARY)
+                .beneficiaryType("CITIZEN")
                 .cro("CRO%s".formatted(bias))
                 .transferDate(DATE)
                 .userNotificationDate(DATE)

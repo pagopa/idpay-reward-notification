@@ -43,6 +43,7 @@ class RewardsNotificationMapperTest {
                 "ordinaryExternalId",
                 "recoveredId",
                 "recoveredExternalId",
+                "merchantFiscalCode",
                 "depositType",
                 "endDepositDate",
                 "sendDate",

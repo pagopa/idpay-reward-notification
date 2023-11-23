@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
@@ -23,7 +24,8 @@ public abstract class BaseRewardNotificationHandlerService implements RewardNoti
         this.mapper = mapper;
     }
     protected Mono<RewardsNotification> createNewNotification(RewardTransactionDTO trx, RewardNotificationRule rule, LocalDate notificationDate, String notificationId) {
-        return rewardsNotificationRepository.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(trx.getUserId(), rule.getInitiativeId())
+        String beneficiaryId = getBeneficiaryId(trx, rule);
+        return rewardsNotificationRepository.countByBeneficiaryIdAndInitiativeIdAndOrdinaryIdIsNull(beneficiaryId, rule.getInitiativeId())
                 .defaultIfEmpty(0L)
                 .map(progressive -> mapper.apply(notificationId, notificationDate, progressive+1, trx, rule));
     }
@@ -50,5 +52,11 @@ public abstract class BaseRewardNotificationHandlerService implements RewardNoti
         return reward.getCounters().isExhaustedBudget() || (rule.getEndDate()!=null && !rule.getEndDate().isAfter(LocalDate.now()))
                 ? DepositType.FINAL
                 : DepositType.PARTIAL;
+    }
+
+    protected String getBeneficiaryId(RewardTransactionDTO trx, RewardNotificationRule rule){
+        return rule.getInitiativeRewardType().equals(InitiativeRewardType.REFUND)
+                ? trx.getUserId()
+                : trx.getMerchantId();
     }
 }

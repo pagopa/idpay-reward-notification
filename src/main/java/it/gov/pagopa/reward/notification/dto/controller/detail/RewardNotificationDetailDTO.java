@@ -22,6 +22,10 @@ public class RewardNotificationDetailDTO {
     private String externalId;
     @JsonProperty(value = "userId")
     private String userId;
+    @JsonProperty(value = "beneficiaryType")
+    private String beneficiaryType;
+    @JsonProperty(value = "merchantFiscalCode")
+    private String merchantFiscalCode;
     @JsonProperty(value = "iban")
     private String iban;
     @JsonProperty(value = "amount")

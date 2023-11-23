@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.notification.dto.mapper;
 
 import it.gov.pagopa.reward.notification.dto.rewards.csv.RewardNotificationExportCsvDto;
 import it.gov.pagopa.reward.notification.enums.DepositType;
+import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.model.User;
 import it.gov.pagopa.reward.notification.test.fakers.RewardsNotificationFaker;
@@ -17,7 +18,7 @@ class RewardNotificationExport2CsvMapperTest {
 
     @Test
     void test(){
-        RewardsNotification reward = RewardsNotificationFaker.mockInstance(1, "INITIATIVEID", LocalDate.of(2022,1,31));
+        RewardsNotification reward = RewardsNotificationFaker.mockInstance(1, "INITIATIVEID", LocalDate.of(2022,1,31), InitiativeRewardType.REFUND);
         reward.setStartDepositDate(LocalDate.of(2022,1,1));
         reward.setIban("IBAN");
         reward.setCheckIbanResult("IBANRESULT");

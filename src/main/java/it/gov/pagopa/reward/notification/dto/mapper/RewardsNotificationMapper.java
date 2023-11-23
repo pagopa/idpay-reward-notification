@@ -47,6 +47,7 @@ public class RewardsNotificationMapper {
             notification.setBeneficiaryType(BeneficiaryType.CITIZEN);
         } else if (initiativeRewardType == InitiativeRewardType.DISCOUNT) {
             notification.setBeneficiaryId(trx.getMerchantId());
+            notification.setMerchantFiscalCode(trx.getMerchantFiscalCode());
             notification.setBeneficiaryType(BeneficiaryType.MERCHANT);
         }
     }

@@ -83,6 +83,7 @@ public class RewardTransactionDTOFaker {
                 .amountCurrency("AMOUNTCURRENCY%s".formatted(bias))
                 .mcc("MCC%s".formatted(bias))
                 .acquirerId("ACQUIRERID%s".formatted(bias))
+                .merchantFiscalCode("12345")
                 .merchantId("MERCHANTID%s".formatted(bias))
                 .terminalId("TERMINALID%s".formatted(bias))
                 .bin("BIN%s".formatted(bias))

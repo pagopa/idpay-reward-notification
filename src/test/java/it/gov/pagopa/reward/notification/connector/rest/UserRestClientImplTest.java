@@ -12,6 +12,9 @@ import reactor.core.Exceptions;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.rest.UserRestClientImpl=WARN",
+
+        "app.pdv.retry.delay-millis=100",
+        "app.pdv.retry.max-attempts=1",
 })
 class UserRestClientImplTest extends BaseIntegrationTest {
 

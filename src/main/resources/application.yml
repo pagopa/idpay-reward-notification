@@ -304,6 +304,11 @@ app:
       separator: ${EXPORT_CSV_SEPARATOR:${CSV_SEPARATOR:;}}
       # The maximum number of rows to store in each csv
       split-size: ${EXPORT_CSV_SPLIT_SIZE:500000}
+      # the csv rows processing rate
+      rate:
+        millis: ${EXPORT_CSV_RATE_MILLIS:1000}
+        # The maximum concurrent row to build at millis rate configured
+        size: ${EXPORT_CSV_RATE_SIZE:50}
       # The maximum number of thread to use when updating reward_notification rows
       db-update-parallelism: ${EXPORT_CSV_DB_UPDATE_PARALLELISM:20}
     import:

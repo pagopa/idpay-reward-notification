@@ -55,7 +55,7 @@ class ExportInitiativeRewardsServiceTest {
 
     @BeforeEach
     void init() {
-        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock, userSuspensionServiceMock);
+        service = new ExportInitiativeRewardsServiceImpl(1000, 50, csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock, userSuspensionServiceMock);
         Mockito.when(userSuspensionServiceMock.isNotSuspendedUser(Mockito.eq(INITIATIVEID), Mockito.anyString())).thenReturn(Mono.just(Boolean.TRUE));
     }
 

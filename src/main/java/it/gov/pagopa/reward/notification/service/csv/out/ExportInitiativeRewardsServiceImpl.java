@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,6 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewardsService {
 
+    private final Duration rowProcessingRateDuration;
+    private final int rowProcessingRateSize;
     private final int csvMaxRows;
 
     private final RewardsNotificationRepository rewardsNotificationRepository;
@@ -38,13 +41,17 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
     private final Scheduler splitScheduler;
 
     public ExportInitiativeRewardsServiceImpl(
+            @Value("${app.csv.export.rate.millis}") int rowProcessingRateMillis,
+            @Value("${app.csv.export.rate.size}") int rowProcessingRateSize,
             @Value("${app.csv.export.split-size}") int csvMaxRows,
+
             RewardsNotificationRepository rewardsNotificationRepository,
             RewardNotification2ExportCsvService rewardNotification2ExportCsvService,
             Initiative2ExportRetrieverService initiative2ExportRetrieverService,
             RewardOrganizationExportsRepository exportsRepository,
             ExportCsvFinalizeService csvWriterService,
             UserSuspensionService suspensionService) {
+        this.rowProcessingRateSize = rowProcessingRateSize;
         this.csvMaxRows = csvMaxRows;
         this.rewardsNotificationRepository = rewardsNotificationRepository;
         this.reward2CsvLineService = rewardNotification2ExportCsvService;
@@ -52,6 +59,8 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
         this.exportsRepository = exportsRepository;
         this.csvWriterService = csvWriterService;
         this.suspensionService = suspensionService;
+
+        this.rowProcessingRateDuration = Duration.ofMillis(rowProcessingRateMillis);
 
         splitScheduler = Schedulers.newSingle("exportSplitProcessor");
     }
@@ -69,7 +78,9 @@ public class ExportInitiativeRewardsServiceImpl implements ExportInitiativeRewar
         //         1. search rewards 2 notify
         return retrieveRewards2Notify(export, isStuckExport)
                 // 2. build CSV line
-                .flatMap(reward2CsvLineService::apply)
+                .flatMap(reward -> reward2CsvLineService.apply(reward)
+                        .delayElement(rowProcessingRateDuration)
+                        , rowProcessingRateSize)
                 // 3. wait to fill split or the end of the rewards
                 .buffer(csvMaxRows)
                 // 3.1. if no rows has been correctly transformed into csvLines

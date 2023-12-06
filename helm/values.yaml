@@ -67,7 +67,7 @@ microservice-chart:
     DELETE_PAGINATION_SIZE: "45"
     DELETE_DELAY_TIME: "1000"
 
-  envConfigMapExternals:
+  externalConfigMapValues:
     idpay-common:
       TZ: TZ
     idpay-eventhub-01:
@@ -107,3 +107,9 @@ microservice-chart:
     PDV_DECRYPT_API_KEY: pdv-api-key
     SELC_EXTERNAL_API_KEY: selc-external-api-key
     EXPORT_AZURE_STORAGE_CONNECTION_STRING: refund-storage-blob-connection-string
+
+  externalConfigMapFiles:
+    create: true
+    configMaps:
+      - name: appinsights-config
+        key: applicationinsights.json

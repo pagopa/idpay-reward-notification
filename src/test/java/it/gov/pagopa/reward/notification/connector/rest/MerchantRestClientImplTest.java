@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.rest.MerchantRestClientImpl=WARN",
+        "app.merchant.retry.delay-millis=100",
+        "app.merchant.retry.max-attempts=1"
 })
 class MerchantRestClientImplTest extends BaseIntegrationTest {
 

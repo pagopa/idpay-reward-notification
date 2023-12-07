@@ -193,7 +193,7 @@ class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationT
         return rewardsRepository.saveAll(LongStream.range(baseId, baseId + number).mapToObj(bias -> {
             boolean isDiscount = discountInitiativeIds.contains(initiativeId);  // tmp
 
-            RewardsNotification reward = RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate)
+            RewardsNotification reward = RewardsNotificationFaker.mockInstanceBuilder((int) bias, initiativeId, notificationDate, isDiscount? InitiativeRewardType.DISCOUNT : InitiativeRewardType.REFUND)
                             .beneficiaryId(buildBeneficiaryIdFromUseCase(hasCf, isDiscount, bias))
                             .beneficiaryType(isDiscount ? BeneficiaryType.MERCHANT : BeneficiaryType.CITIZEN)
                             .initiativeId(initiativeId)

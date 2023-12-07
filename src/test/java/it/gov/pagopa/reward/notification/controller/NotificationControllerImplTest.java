@@ -415,7 +415,7 @@ class NotificationControllerImplTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/csv;charset=UTF-8")
-                .expectHeader().contentDisposition(ContentDisposition.attachment().filename("test.zip").build())
+                .expectHeader().contentDisposition(ContentDisposition.attachment().filename("test_errors.csv").build())
                 .expectBody(String.class).isEqualTo(expectedCsvString);
 
         Mockito.verify(organizationImportsServiceMock, Mockito.times(1)).getErrorsCsvByImportId("orgId", "initiativeId", importId);

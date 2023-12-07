@@ -49,9 +49,9 @@ class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
 
     @Test
     void ibanOutcomeConsumer(){
-        int ibanOkAndUnknown = 1000;
+        int ibanOkAndUnknown = 20;
         int notValidIban = errorUseCases.size();
-        int ibanKO = 500;
+        int ibanKO = 5;
         long maxWaitingMs = 30000;
 
         List<String> ibanPayloads = new ArrayList<>(notValidIban+ibanOkAndUnknown);

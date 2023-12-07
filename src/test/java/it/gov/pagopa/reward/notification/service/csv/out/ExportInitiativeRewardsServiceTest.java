@@ -55,7 +55,7 @@ class ExportInitiativeRewardsServiceTest {
 
     @BeforeEach
     void init() {
-        service = new ExportInitiativeRewardsServiceImpl(csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock, userSuspensionServiceMock);
+        service = new ExportInitiativeRewardsServiceImpl(1000, 50, csvMaxRows, rewardsNotificationRepositoryMock, reward2CsvLineServiceMock, initiative2ExportRetrieverServiceMock, exportsRepositoryMock, csvWriterServiceMock, userSuspensionServiceMock);
         Mockito.when(userSuspensionServiceMock.isNotSuspendedUser(Mockito.eq(INITIATIVEID), Mockito.anyString())).thenReturn(Mono.just(Boolean.TRUE));
     }
 
@@ -204,7 +204,7 @@ class ExportInitiativeRewardsServiceTest {
             invocationOrder.add("writing export %s".formatted(invocationExport.getId()));
             return Mono.fromSupplier(() ->{
                 // first splits will wait more time
-                TestUtils.wait((maxProgressive-invocationExport.getProgressive()), TimeUnit.SECONDS);
+                TestUtils.wait((maxProgressive-invocationExport.getProgressive())*10, TimeUnit.MILLISECONDS);
                 invocationOrder.add("export %s completed".formatted(invocationExport.getId()));
                 return invocationExport;
             });

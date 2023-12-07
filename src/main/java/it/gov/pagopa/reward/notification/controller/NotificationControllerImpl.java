@@ -1,11 +1,12 @@
 package it.gov.pagopa.reward.notification.controller;
 
+import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeApiRetryable;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.RewardImportsDTO;
 import it.gov.pagopa.reward.notification.dto.controller.detail.*;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.service.RewardsNotificationExpiredInitiativeHandlerService;
@@ -69,6 +70,7 @@ public class NotificationControllerImpl implements NotificationController {
     }
 
     @Override
+    @MongoRequestRateTooLargeApiRetryable
     public Flux<RewardsNotification> forceExpiredInitiativesScheduling() {
         log.info("Forcing rewardNotification expired initiatives handling");
         return expiredInitiativeHandlerService.handle();
@@ -144,7 +146,7 @@ public class NotificationControllerImpl implements NotificationController {
         return organizationImportsService
                 .getErrorsCsvByImportId(organizationId, initiativeId, buildImportId(organizationId, initiativeId, fileName))
                 .map(csv -> ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName).build().toString())
+                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName.replace(".zip", "") + "_errors.csv").build().toString())
                         .body(csv))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find import file " + fileName))));
     }

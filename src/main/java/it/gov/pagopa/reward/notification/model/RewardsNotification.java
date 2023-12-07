@@ -40,6 +40,7 @@ public class RewardsNotification {
     private String organizationFiscalCode;
     private String beneficiaryId;
     private BeneficiaryType beneficiaryType;
+    private String merchantFiscalCode;
     private Long progressive;
     private Long rewardCents;
     @Builder.Default

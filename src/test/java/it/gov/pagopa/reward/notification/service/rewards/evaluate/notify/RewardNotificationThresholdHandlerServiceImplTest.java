@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.notification.service.rewards.evaluate.notify;
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.enums.DepositType;
-import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 
 import java.math.BigDecimal;
@@ -22,7 +21,6 @@ class RewardNotificationThresholdHandlerServiceImplTest extends BaseRewardNotifi
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());
         rule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED);
         rule.getAccumulatedAmount().setRefundThresholdCents(500L);
-        rule.setInitiativeRewardType(InitiativeRewardType.REFUND);
         return rule;
     }
 

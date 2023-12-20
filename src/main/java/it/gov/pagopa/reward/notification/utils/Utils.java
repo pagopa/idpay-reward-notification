@@ -55,4 +55,19 @@ public final class Utils {
         ORDINARY,
         REMEDIAL
     }
+
+    public static final class ExceptionCode {
+        private ExceptionCode(){}
+
+        public static final String TOO_MANY_REQUESTS = "REWARD_NOTIFICATION_TOO_MANY_REQUESTS";
+        public static final String GENERIC_ERROR = "REWARD_NOTIFICATION_GENERIC_ERROR";
+        public static final String WALLET_INVOCATION_ERROR = "REWARD_NOTIFICATION_WALLET_INVOCATION_ERROR";
+        public static final String SUSPENSION_ERROR = "REWARD_NOTIFICATION_USER_SUSPENSION_ERROR";
+        public static final String READMISSION_ERROR = "REWARD_NOTIFICATION_USER_READMISSION_ERROR";
+        public static final String REWARD_NOTIFICATION_NOT_FOUND = "REWARD_NOTIFICATION_NOT_FOUND";
+        public static final String REWARD_NOTIFICATION_EXPORT_NOT_FOUND = "REWARD_NOTIFICATION_EXPORT_NOT_FOUND";
+        public static final String REWARD_NOTIFICATION_IMPORT_NOT_FOUND = "REWARD_NOTIFICATION_IMPORT_NOT_FOUND";
+        public static final String REWARD_NOTIFICATION_INITIATIVE_NOT_FOUND = "REWARD_NOTIFICATION_INITIATIVE_NOT_FOUND";
+    }
+
 }

@@ -28,10 +28,7 @@ import reactor.core.publisher.Mono;
 import wiremock.org.eclipse.jetty.util.BlockingArrayQueue;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -111,14 +108,19 @@ class ExportInitiativeRewardsServiceTest {
                 return false;
             }
 
-            // The first lines should be (in any order) the stuck rewards
+            // Not necessary the first lines should be (in any order) the stuck rewards: new rewards could occur in between
+            Map<Boolean, Set<String>> csvLinesGroupByStuckCondition = csvLines.stream()
+                    .map(RewardNotificationExportCsvDto::getUniqueID)
+                    .collect(Collectors.groupingBy(
+                            l->l.startsWith("STUCKREWARDSEXTERNALID"),
+                            Collectors.toSet()));
             Assertions.assertEquals(
                     stuckRewardNotification.stream().map(RewardsNotification::getExternalId).collect(Collectors.toSet()),
-                    csvLines.subList(0, stuckRewards).stream().map(RewardNotificationExportCsvDto::getUniqueID).collect(Collectors.toSet())
+                    csvLinesGroupByStuckCondition.get(true)
             );
 
             // the remaining rows are new records
-            newRewardIdsExported.addAll(csvLines.subList(stuckRewards, csvLines.size()).stream().map(RewardNotificationExportCsvDto::getUniqueID).toList());
+            newRewardIdsExported.addAll(csvLinesGroupByStuckCondition.get(false));
             Assertions.assertEquals(csvMaxRows - stuckRewards, newRewardIdsExported.size());
 
             return true;

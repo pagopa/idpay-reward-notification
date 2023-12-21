@@ -1,7 +1,8 @@
 package it.gov.pagopa.reward.notification.connector.wallet;
 
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.reward.notification.exception.custom.WalletInvocationException;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -36,7 +37,10 @@ class WalletRestClientImplTest extends BaseIntegrationTest {
 
         Executable executable = () -> walletRestClient.suspend("INITIATIVEID", userId).block();
 
-        Assertions.assertThrows(ClientExceptionNoBody.class, executable);
+        WalletInvocationException exception = Assertions.assertThrows(WalletInvocationException.class, executable);
+        Assertions.assertEquals(Utils.ExceptionCode.SUSPENSION_ERROR, exception.getCode());
+        Assertions.assertEquals("Something gone wrong while invoking wallet to suspend user USERID_KO_1 on initiative INITIATIVEID: obtained status code 500 INTERNAL_SERVER_ERROR", exception.getMessage());
+        Assertions.assertNull(exception.getPayload());
     }
 
     @Test
@@ -56,6 +60,9 @@ class WalletRestClientImplTest extends BaseIntegrationTest {
 
         Executable executable = () -> walletRestClient.readmit("INITIATIVEID", userId).block();
 
-        Assertions.assertThrows(ClientExceptionNoBody.class, executable);
+        WalletInvocationException exception = Assertions.assertThrows(WalletInvocationException.class, executable);
+        Assertions.assertEquals(Utils.ExceptionCode.READMISSION_ERROR, exception.getCode());
+        Assertions.assertEquals("Something gone wrong while invoking wallet to readmit user USERID_KO_1 on initiative INITIATIVEID: obtained status code 500 INTERNAL_SERVER_ERROR", exception.getMessage());
+        Assertions.assertNull(exception.getPayload());
     }
 }

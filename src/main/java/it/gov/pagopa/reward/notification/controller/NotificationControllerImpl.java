@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.controller;
 
 import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeApiRetryable;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.dto.controller.RewardExportsDTO;
@@ -16,6 +16,7 @@ import it.gov.pagopa.reward.notification.service.exports.detail.ExportDetailServ
 import it.gov.pagopa.reward.notification.service.imports.OrganizationImportsServiceImpl;
 import it.gov.pagopa.reward.notification.service.suspension.UserSuspensionService;
 import it.gov.pagopa.reward.notification.utils.AuditUtilities;
+import it.gov.pagopa.reward.notification.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -100,7 +101,7 @@ public class NotificationControllerImpl implements NotificationController {
     @Override
     public Mono<ExportSummaryDTO> getExport(String exportId, String organizationId, String initiativeId) {
         return exportDetailService.getExport(exportId, organizationId, initiativeId)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find export having id " + exportId))));
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, Utils.ExceptionCode.REWARD_NOTIFICATION_EXPORT_NOT_FOUND, "Cannot find export having id " + exportId))));
     }
 
     @Override
@@ -118,7 +119,7 @@ public class NotificationControllerImpl implements NotificationController {
     @Override
     public Mono<RewardNotificationDetailDTO> getRewardNotification(String notificationExternalId, String organizationId, String initiativeId) {
         return exportDetailService.getRewardNotification(notificationExternalId, organizationId, initiativeId)
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find rewardNotification having external id " + notificationExternalId))));
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, Utils.ExceptionCode.REWARD_NOTIFICATION_NOT_FOUND, "Cannot find rewardNotification having external id " + notificationExternalId))));
     }
 
     @Override
@@ -148,21 +149,21 @@ public class NotificationControllerImpl implements NotificationController {
                 .map(csv -> ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName.replace(".zip", "") + "_errors.csv").build().toString())
                         .body(csv))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find import file " + fileName))));
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, Utils.ExceptionCode.REWARD_NOTIFICATION_IMPORT_NOT_FOUND, "Cannot find import file " + fileName))));
     }
 
     @Override
     public Mono<ResponseEntity<Void>> suspendUserOnInitiative(String organizationId, String initiativeId, String userId) {
         return suspensionService.suspend(organizationId, initiativeId, userId)
                 .map(u -> new ResponseEntity<Void>(HttpStatus.OK))
-                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find initiative having id " + initiativeId)));
+                .switchIfEmpty(Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, Utils.ExceptionCode.REWARD_NOTIFICATION_INITIATIVE_NOT_FOUND, "Cannot find initiative having id " + initiativeId)));
     }
 
     @Override
     public Mono<ResponseEntity<Void>> readmitUserOnInitiative(String organizationId, String initiativeId, String userId) {
         return suspensionService.readmit(organizationId, initiativeId, userId)
                 .map(u -> new ResponseEntity<Void>(HttpStatus.OK))
-                .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find initiative having id " + initiativeId)));
+                .switchIfEmpty(Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, Utils.ExceptionCode.REWARD_NOTIFICATION_INITIATIVE_NOT_FOUND, "Cannot find initiative having id " + initiativeId)));
     }
 
     private String buildImportId(String organizationId, String initiativeId, String fileName) {

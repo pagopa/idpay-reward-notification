@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.connector.azure.storage;
+package it.gov.pagopa.common.reactive.azure.storage;
 
 import com.azure.core.http.rest.PagedFlux;
 import com.azure.core.http.rest.Response;
@@ -25,19 +25,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-abstract class BaseAzureBlobClientTest {
+class AzureBlobClientTest {
 
     private AzureBlobClient blobClient;
 
     @BeforeEach
     void init() {
-        blobClient = builtBlobInstance();
+        blobClient = buildBlobInstance();
     }
 
-    protected abstract AzureBlobClient builtBlobInstance();
+    protected AzureBlobClient buildBlobInstance(){
+        return new AzureBlobClientImpl("UseDevelopmentStorage=true;", "test");
+    }
 
     @Test
-    protected void test() throws IOException {
+    void test() throws IOException {
         // Given
         File testFile = new File("README.md");
         String destination = "baseAzureBlobClientTest/README.md";
@@ -105,7 +107,7 @@ abstract class BaseAzureBlobClientTest {
 
     protected BlobContainerAsyncClient mockClient(File file, String destination, Path downloadPath) {
         try {
-            Field clientField = ReflectionUtils.findField(BaseAzureBlobClientImpl.class, "blobContainerClient");
+            Field clientField = ReflectionUtils.findField(AzureBlobClientImpl.class, "blobContainerClient");
             Assertions.assertNotNull(clientField);
             clientField.setAccessible(true);
 

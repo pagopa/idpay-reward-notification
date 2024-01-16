@@ -1,17 +1,16 @@
-package it.gov.pagopa.reward.notification.connector.azure.storage;
+package it.gov.pagopa.common.reactive.azure.storage;
 
+import com.azure.core.http.HttpResponse;
 import com.azure.core.http.rest.PagedFlux;
 import com.azure.core.http.rest.Response;
 import com.azure.storage.blob.BlobAsyncClient;
 import com.azure.storage.blob.BlobContainerAsyncClient;
-import com.azure.storage.blob.models.BlobItem;
-import com.azure.storage.blob.models.BlobProperties;
-import com.azure.storage.blob.models.BlockBlobItem;
-import com.azure.storage.blob.models.DeleteSnapshotsOptionType;
+import com.azure.storage.blob.models.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Stubber;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Mono;
 
@@ -25,19 +24,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-abstract class BaseAzureBlobClientTest {
+class AzureBlobClientTest {
 
     private AzureBlobClient blobClient;
 
     @BeforeEach
     void init() {
-        blobClient = builtBlobInstance();
+        blobClient = buildBlobInstance();
     }
 
-    protected abstract AzureBlobClient builtBlobInstance();
+    protected AzureBlobClient buildBlobInstance(){
+        return new AzureBlobClientImpl("UseDevelopmentStorage=true;", "test");
+    }
 
     @Test
-    protected void test() throws IOException {
+    void test() throws IOException {
         // Given
         File testFile = new File("README.md");
         String destination = "baseAzureBlobClientTest/README.md";
@@ -105,7 +106,7 @@ abstract class BaseAzureBlobClientTest {
 
     protected BlobContainerAsyncClient mockClient(File file, String destination, Path downloadPath) {
         try {
-            Field clientField = ReflectionUtils.findField(BaseAzureBlobClientImpl.class, "blobContainerClient");
+            Field clientField = ReflectionUtils.findField(AzureBlobClientImpl.class, "blobContainerClient");
             Assertions.assertNotNull(clientField);
             clientField.setAccessible(true);
 
@@ -161,12 +162,22 @@ abstract class BaseAzureBlobClientTest {
     }
 
     private void mockDownloadFileOperation(String destination, Path downloadPath, boolean fileExists, BlobContainerAsyncClient clientMock) {
-        @SuppressWarnings("rawtypes") Response responseMock = Mockito.mock(Response.class);
-        Mockito.when(responseMock.getStatusCode()).thenReturn(206);
-
         BlobAsyncClient blobAsyncClientMock = clientMock.getBlobAsyncClient(destination);
 
-        Mockito.doReturn(fileExists? Mono.just(responseMock) : Mono.empty())
+        Stubber stubber;
+        if(fileExists){
+            @SuppressWarnings("rawtypes") Response responseMock = Mockito.mock(Response.class);
+            Mockito.when(responseMock.getStatusCode()).thenReturn(206);
+
+            stubber = Mockito.doReturn(Mono.just(responseMock));
+        } else {
+            HttpResponse responseMock = Mockito.mock(HttpResponse.class);
+            Mockito.when(responseMock.getStatusCode()).thenReturn(404);
+
+            stubber = Mockito.doReturn(Mono.error(new BlobStorageException("NOT FOUND", responseMock, null)));
+        }
+
+        stubber
                 .when(blobAsyncClientMock)
                 .downloadToFileWithResponse(Mockito.argThat(opt ->
                         opt.getFilePath().equals(downloadPath.toString()) && opt.getOpenOptions().equals(Set.of(

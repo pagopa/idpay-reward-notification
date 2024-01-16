@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.connector.azure.storage;
+package it.gov.pagopa.common.reactive.azure.storage;
 
 import com.azure.core.http.rest.PagedFlux;
 import com.azure.core.http.rest.Response;
@@ -8,6 +8,9 @@ import com.azure.storage.blob.models.*;
 import com.azure.storage.blob.options.BlobDownloadToFileOptions;
 import com.azure.storage.blob.options.BlobUploadFromFileOptions;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
@@ -18,11 +21,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
 @Slf4j
-public abstract class BaseAzureBlobClientImpl implements AzureBlobClient {
+@Component
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
+public class AzureBlobClientImpl implements AzureBlobClient {
 
     private final BlobContainerAsyncClient blobContainerClient;
 
-    protected BaseAzureBlobClientImpl(
+    protected AzureBlobClientImpl(
             String storageConnectionString,
             String blobContainerName
     ) {

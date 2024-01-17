@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.commands.CommandsMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.notification.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
 })
-class CommandsConsumerConfigTest extends BaseIntegrationTest {
+class CommandsConsumerConfigIntegration extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
     private final String ORGANIZATIONID = "ORGANIZATIONID%d";
     private final String FILEPATH = "directory/fileName%d";

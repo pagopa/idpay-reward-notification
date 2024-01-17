@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
+import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.BaseIntegrationTest;
@@ -9,7 +10,7 @@ import it.gov.pagopa.reward.notification.dto.rule.*;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
-import it.gov.pagopa.reward.notification.event.consumer.RefundRuleConsumerConfigTest;
+import it.gov.pagopa.reward.notification.event.consumer.RefundRuleConsumerConfigInst;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -17,7 +18,6 @@ import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleReposi
 import it.gov.pagopa.reward.notification.repository.RewardOrganizationExportsRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsNotificationRepository;
 import it.gov.pagopa.reward.notification.repository.RewardsRepository;
-import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -305,7 +305,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
         );
         rules.forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
 
-        RefundRuleConsumerConfigTest.waitForInitiativeStored(rules.size(), ruleRepository);
+        RefundRuleConsumerConfigInst.waitForInitiativeStored(rules.size(), ruleRepository);
     }
 
     protected BigDecimal add2InitiativeThreshold(BigDecimal value) {

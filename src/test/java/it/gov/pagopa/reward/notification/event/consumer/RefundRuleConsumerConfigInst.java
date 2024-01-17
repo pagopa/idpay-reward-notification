@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
-public class RefundRuleConsumerConfigTest extends BaseIntegrationTest {
+public class RefundRuleConsumerConfigInst extends BaseIntegrationTest {
 
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;

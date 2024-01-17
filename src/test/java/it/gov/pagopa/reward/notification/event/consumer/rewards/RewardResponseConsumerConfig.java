@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
-class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigTest {
+class RewardResponseConsumerConfig extends BaseRewardResponseConsumerConfigTest {
 
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
 
@@ -54,11 +54,11 @@ class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigT
         publishRewardRules();
 
         RewardTransactionDTO trxAlreadyProcessed = storeTrxAlreadyProcessed();
-		
+
         RewardTransactionDTO trxNotRewarded = RewardTransactionDTOFaker.mockInstance(0);
         trxNotRewarded.setRewards(Collections.emptyMap());
         trxNotRewarded.setId("NOTREWARDEDTRX");
-		
+
         RewardTransactionDTO trxAuthorized = RewardTransactionDTOFaker.mockInstance(1);
         trxAuthorized.setStatus(TrxConstants.TRX_STATUS_AUTHORIZED);
         trxAuthorized.setId("AUTHORIZEDTRX");

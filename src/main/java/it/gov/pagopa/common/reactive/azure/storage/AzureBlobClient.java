@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.notification.connector.azure.storage;
+package it.gov.pagopa.common.reactive.azure.storage;
 
 import com.azure.core.http.rest.PagedFlux;
 import com.azure.core.http.rest.Response;

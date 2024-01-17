@@ -54,9 +54,6 @@ import java.util.regex.Pattern;
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
-                // even if enabled into application.yml, spring test will not load it https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.jmx
-                "spring.jmx.enabled=true",
-
                 //region common feature disabled
                 "app.csv.export.schedule=-",
                 "app.rewards-notification.expired-initiatives.schedule=-",
@@ -78,7 +75,6 @@ import java.util.regex.Pattern;
                 "logging.level.state.change.logger=WARN",
                 "spring.cloud.stream.kafka.binder.configuration.security.protocol=PLAINTEXT",
                 "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
-                "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rewarded-transactions.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-checkiban-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",

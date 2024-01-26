@@ -75,14 +75,14 @@ spring:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_REWARD_RESPONSE_BROKER:${KAFKA_BROKER:}}
+              brokers: ${KAFKA_BROKER_00:${KAFKA_BROKER:}}
               configuration:
                 sasl.jaas.config: ${REWARD_RESPONSE_SASL_JAAS_CONFIG:}
         kafka-checkiban-outcome:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_CHECKIBAN_OUTCOME_BROKER:${KAFKA_BROKER:}}
+              brokers: ${KAFKA_BROKER_00:${KAFKA_BROKER:}}
               configuration.sasl.jaas.config: ${KAFKA_CHECKIBAN_OUTCOME_SASL_JAAS_CONFIG:}
         kafka-errors:
           type: kafka

@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-import static it.gov.pagopa.reward.notification.event.consumer.IbanOutcomeConsumerConfigTest.waitForIbanStoreChanged;
+import static it.gov.pagopa.reward.notification.event.consumer.IbanOutcomeConsumerConfigTestDeprecated.waitForIbanStoreChanged;
 
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.*=WARN",

@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Slf4j
-class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsumerConfigTest {
+class RewardResponseConsumerConfigConcurrentTestDeprecated extends BaseRewardResponseConsumerConfigTestDeprecated {
 
     private final int initiativeRewardedNumber = 8;
 

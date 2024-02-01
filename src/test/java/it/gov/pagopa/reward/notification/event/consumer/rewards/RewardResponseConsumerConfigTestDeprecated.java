@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
-class RewardResponseConsumerConfigTest extends BaseRewardResponseConsumerConfigTest {
+class RewardResponseConsumerConfigTestDeprecated extends BaseRewardResponseConsumerConfigTestDeprecated {
 
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
 

@@ -43,6 +43,7 @@ import java.util.stream.Stream;
         "logging.level.it.gov.pagopa.reward.notification.service.csv.in.RewardNotificationFeedbackMediatorService=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
 class OrganizationFeedbackUploadEventConsumerConfigTestDeprecated extends BaseIntegrationTest {
 
     @Autowired

@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
 class RewardResponseConsumerConfigTestDeprecated extends BaseRewardResponseConsumerConfigTestDeprecated {
 
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";

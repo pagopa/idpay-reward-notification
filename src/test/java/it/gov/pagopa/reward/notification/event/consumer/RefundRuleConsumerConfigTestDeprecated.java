@@ -31,6 +31,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.rule.RewardNotificationRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
 public class RefundRuleConsumerConfigTestDeprecated extends BaseIntegrationTest {
 
     @Autowired

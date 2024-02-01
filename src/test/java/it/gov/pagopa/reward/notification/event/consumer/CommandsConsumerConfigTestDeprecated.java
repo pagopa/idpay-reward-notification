@@ -35,6 +35,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.commands.CommandsMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.notification.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
 })
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
 class CommandsConsumerConfigTestDeprecated extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
     private final String ORGANIZATIONID = "ORGANIZATIONID%d";

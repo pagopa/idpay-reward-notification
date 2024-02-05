@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.notification.dto.rule.*;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
-import it.gov.pagopa.reward.notification.event.consumer.RefundRuleConsumerConfigTest;
+import it.gov.pagopa.reward.notification.event.consumer.RefundRuleConsumerConfigTestDeprecated;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -45,7 +45,7 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.notification.service.rewards.evaluate.notify=WARN",
 })
 @Slf4j
-abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest {
+abstract class BaseRewardResponseConsumerConfigTestDeprecated extends BaseIntegrationTest {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final LocalDate TOMORROW = TODAY.plusDays(1);
@@ -305,7 +305,7 @@ abstract class BaseRewardResponseConsumerConfigTest extends BaseIntegrationTest 
         );
         rules.forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicInitiative2StoreConsumer, null, null, i));
 
-        RefundRuleConsumerConfigTest.waitForInitiativeStored(rules.size(), ruleRepository);
+        RefundRuleConsumerConfigTestDeprecated.waitForInitiativeStored(rules.size(), ruleRepository);
     }
 
     protected BigDecimal add2InitiativeThreshold(BigDecimal value) {

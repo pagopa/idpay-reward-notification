@@ -25,7 +25,8 @@ import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Slf4j
-class RewardResponseConsumerConfigConcurrentTest extends BaseRewardResponseConsumerConfigTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class RewardResponseConsumerConfigConcurrentTestDeprecated extends BaseRewardResponseConsumerConfigTestDeprecated {
 
     private final int initiativeRewardedNumber = 8;
 

@@ -33,7 +33,8 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.iban.RewardIbanServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.IbanOutcomeMediatorServiceImpl=WARN",
 })
-class IbanOutcomeConsumerConfigTest extends BaseIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class IbanOutcomeConsumerConfigTestDeprecated extends BaseIntegrationTest {
 
     private final String userId = "USERID_%s";
     private final String initiativeId = "INITIATIVEID_%s";

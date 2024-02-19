@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ class RewardMediatorServiceTest {
     }
 
     @Test
-    void testFiltering0Rewards() {
+    void testFilteringRewardsStatusRewarded() {
         // Given
         Reward reward3 = new Reward(BigDecimal.ONE);
         RewardTransactionDTO trx = RewardTransactionDTO.builder()
@@ -55,6 +56,7 @@ class RewardMediatorServiceTest {
                         "ID2", new Reward(BigDecimal.ONE, BigDecimal.ZERO),
                         "ID3", reward3
                 ))
+                .status(TrxConstants.TRX_STATUS_REWARDED)
                 .build();
 
         Mockito.when(rewardsServiceMock.checkDuplicateReward(trx, "ID3")).thenReturn(Mono.just(trx));
@@ -69,6 +71,31 @@ class RewardMediatorServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(List.of(expectedResult),result);
     }
+
+    @Test
+    void testFilteringRewardsStatusNotRewarded() {
+        // Given
+        Reward reward3 = new Reward(BigDecimal.ONE);
+        RewardTransactionDTO trx = RewardTransactionDTO.builder()
+                .rewards(Map.of(
+                        "ID1", new Reward(BigDecimal.ZERO),
+                        "ID2", new Reward(BigDecimal.ONE, BigDecimal.ZERO),
+                        "ID3", reward3
+                ))
+                .status(TrxConstants.TRX_STATUS_AUTHORIZED)
+                .build();
+
+        // When
+        List<Rewards> result = service.execute(trx, null, new HashMap<>()).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertTrue(result.isEmpty());
+        Mockito.verify(rewardsServiceMock, Mockito.times(0)).checkDuplicateReward(trx, "ID3");
+        Mockito.verify(ruleEvaluatorServiceMock, Mockito.times(0)).retrieveAndEvaluate("ID3", reward3, trx, null);
+
+    }
+
 
     @Test
     void testTrxLockIdCalculationWhenUserId() {

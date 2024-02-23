@@ -87,7 +87,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
     @Override
     protected Mono<List<Rewards>> execute(RewardTransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
-				.filter(t -> !TrxConstants.TRX_STATUS_AUTHORIZED.equals(t.getStatus()) && !TrxConstants.TRX_STATUS_CANCELLED.equals(t.getStatus()))
+				.filter(t -> TrxConstants.TRX_STATUS_REWARDED.equals(t.getStatus()))
                 .flatMapMany(this::readRewards)
                 .flatMap(this::checkDuplicateReward)
                 .flatMap(r -> retrieveInitiativeAndEvaluate(r, message))

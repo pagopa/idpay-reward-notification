@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.test.fakers.RewardOrganizationImportFaker;
 import org.junit.jupiter.api.AfterEach;
@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 
-class RewardOrganizationImportsRepositoryTest extends BaseIntegrationTest {
+class RewardOrganizationImportsRepositoryTest extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private RewardOrganizationImportsRepository repository;

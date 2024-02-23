@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ import reactor.core.Exceptions;
         "app.pdv.retry.delay-millis=100",
         "app.pdv.retry.max-attempts=1",
 })
-class UserRestClientImplTest extends BaseIntegrationTest {
+class UserRestClientImplTest extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private UserRestClient userRestClient;

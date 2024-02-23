@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTest {
+class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private RewardOrganizationExportsRepository repository;

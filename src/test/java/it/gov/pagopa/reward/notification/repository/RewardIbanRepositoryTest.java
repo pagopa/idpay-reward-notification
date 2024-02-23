@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 
-class RewardIbanRepositoryTest extends BaseIntegrationTest {
+class RewardIbanRepositoryTest extends BaseIntegrationTestDeprecated {
 
     private final String userId = "userId_prova";
     private final String initiativeId = "initiativeId_prova";

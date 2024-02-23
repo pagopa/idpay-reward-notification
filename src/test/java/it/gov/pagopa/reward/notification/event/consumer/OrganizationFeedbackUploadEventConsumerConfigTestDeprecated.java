@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.event.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
 import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
@@ -44,7 +44,7 @@ import java.util.stream.Stream;
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 @SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
-class OrganizationFeedbackUploadEventConsumerConfigTestDeprecated extends BaseIntegrationTest {
+class OrganizationFeedbackUploadEventConsumerConfigTestDeprecated extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private RewardsNotificationRepository rewardsNotificationRepository;

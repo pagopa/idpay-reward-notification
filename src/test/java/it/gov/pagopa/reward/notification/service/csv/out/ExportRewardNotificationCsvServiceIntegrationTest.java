@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.service.csv.out;
 
 import it.gov.pagopa.common.utils.ZipUtils;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.mapper.IbanOutcomeDTO2RewardIbanMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardFeedbackMapper;
 import it.gov.pagopa.reward.notification.dto.rewards.RewardFeedbackDTO;
@@ -44,7 +44,7 @@ import java.util.stream.Stream;
         "logging.level.it.gov.pagopa.reward.notification.connector.rest.UserRestClientImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
-class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationTest {
+class ExportRewardNotificationCsvServiceIntegrationTest extends BaseIntegrationTestDeprecated {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final String TODAY_STR = Utils.FORMATTER_DATE.format(TODAY);

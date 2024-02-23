@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.service.email;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.connector.email.EmailNotificationRestClient;
 import it.gov.pagopa.reward.notification.connector.selc.SelcRestClient;
 import it.gov.pagopa.reward.notification.dto.email.EmailMessageDTO;
@@ -32,7 +32,7 @@ import java.util.Map;
                 "app.selc.headers.uid=selfcareUid1"
         }
 )
-class EmailNotificationServiceImplTest extends BaseIntegrationTest {
+class EmailNotificationServiceImplTest extends BaseIntegrationTestDeprecated {
 
     public static final String INITIATIVEID = "TEST_EMAIL_INITIATIVEID";
     public static final String INITIATIVENAME = "TEST_EMAIL_INITIATIVENAME";

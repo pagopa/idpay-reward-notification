@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
 
-class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
+class RewardsNotificationRepositoryTest extends BaseIntegrationTestDeprecated {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final LocalDate TOMORROW = TODAY.plusDays(1);

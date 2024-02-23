@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.event.consumer;
 
 import com.mongodb.MongoException;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.commands.CommandOperationDTO;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.*;
@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
 })
 @SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
-class CommandsConsumerConfigTestDeprecated extends BaseIntegrationTest {
+class CommandsConsumerConfigTestDeprecated extends BaseIntegrationTestDeprecated {
     private final String INITIATIVEID = "INITIATIVEID_%d";
     private final String ORGANIZATIONID = "ORGANIZATIONID%d";
     private final String FILEPATH = "directory/fileName%d";

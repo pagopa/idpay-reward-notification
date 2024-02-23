@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
@@ -32,7 +32,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 @SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
-public class RefundRuleConsumerConfigTestDeprecated extends BaseIntegrationTest {
+public class RefundRuleConsumerConfigTestDeprecated extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private RewardNotificationRuleRepository rewardNotificationRuleRepository;

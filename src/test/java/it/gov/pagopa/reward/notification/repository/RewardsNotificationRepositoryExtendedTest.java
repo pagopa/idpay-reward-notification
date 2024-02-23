@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
+class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTestDeprecated {
 
     public static final LocalDate NOTIFICATION_DATE = LocalDate.now();
     private static final String CRO = "ZYXWVU12345";

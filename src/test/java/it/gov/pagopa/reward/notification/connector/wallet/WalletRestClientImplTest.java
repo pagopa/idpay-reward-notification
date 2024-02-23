@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.connector.wallet;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.exception.custom.WalletInvocationException;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import org.junit.jupiter.api.Assertions;
@@ -15,7 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.rest.WalletRestClientImpl=WARN",
 })
-class WalletRestClientImplTest extends BaseIntegrationTest {
+class WalletRestClientImplTest extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private WalletRestClient walletRestClient;

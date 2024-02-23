@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-class RewardOrganizationExportsRepositoryExtendedImplTest extends BaseIntegrationTest {
+class RewardOrganizationExportsRepositoryExtendedImplTest extends BaseIntegrationTestDeprecated {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final String TEST_EXPORT_ID = "TEST_EXPORT";

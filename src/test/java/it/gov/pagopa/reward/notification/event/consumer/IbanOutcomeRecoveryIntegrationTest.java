@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.iban.IbanOutcomeDTO;
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
@@ -36,7 +36,7 @@ import static it.gov.pagopa.reward.notification.event.consumer.IbanOutcomeConsum
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.*=WARN",
 })
-class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTest {
+class IbanOutcomeRecoveryIntegrationTest extends BaseIntegrationTestDeprecated {
 
     private final int totalIban = 16;
 

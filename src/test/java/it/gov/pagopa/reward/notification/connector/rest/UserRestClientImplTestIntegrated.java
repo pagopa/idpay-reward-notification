@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
         properties = {
                 "app.pdv.base-url=https://api.uat.tokenizer.pdv.pagopa.it/tokenizer/v1"
         })
-class UserRestClientImplTestIntegrated extends BaseIntegrationTest {
+class UserRestClientImplTestIntegrated extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private UserRestClient userRestClient;

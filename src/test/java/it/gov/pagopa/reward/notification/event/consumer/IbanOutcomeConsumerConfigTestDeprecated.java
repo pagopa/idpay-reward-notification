@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.event.consumer;
 
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.model.RewardIban;
 import it.gov.pagopa.reward.notification.repository.RewardIbanRepository;
 import it.gov.pagopa.reward.notification.utils.IbanConstants;
@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.notification.service.iban.outcome.IbanOutcomeMediatorServiceImpl=WARN",
 })
 @SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
-class IbanOutcomeConsumerConfigTestDeprecated extends BaseIntegrationTest {
+class IbanOutcomeConsumerConfigTestDeprecated extends BaseIntegrationTestDeprecated {
 
     private final String userId = "USERID_%s";
     private final String initiativeId = "INITIATIVEID_%s";

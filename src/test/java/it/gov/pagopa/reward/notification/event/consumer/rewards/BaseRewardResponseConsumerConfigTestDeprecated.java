@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.notification.event.consumer.rewards;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardMapper;
 import it.gov.pagopa.reward.notification.dto.mapper.RewardsNotificationMapper;
 import it.gov.pagopa.reward.notification.dto.rule.*;
@@ -45,7 +45,7 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.notification.service.rewards.evaluate.notify=WARN",
 })
 @Slf4j
-abstract class BaseRewardResponseConsumerConfigTestDeprecated extends BaseIntegrationTest {
+abstract class BaseRewardResponseConsumerConfigTestDeprecated extends BaseIntegrationTestDeprecated {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final LocalDate TOMORROW = TODAY.plusDays(1);

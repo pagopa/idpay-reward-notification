@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.service;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends BaseIntegrationTest {
+class RewardsNotificationExpiredInitiativeHandlerServiceIntegrationTest extends BaseIntegrationTestDeprecated {
 
     public static final LocalDate TODAY = LocalDate.now();
 

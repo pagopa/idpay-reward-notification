@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.reward.notification.BaseIntegrationTestDeprecated;
 import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
         "app.merchant.retry.delay-millis=100",
         "app.merchant.retry.max-attempts=1"
 })
-class MerchantRestClientImplTest extends BaseIntegrationTest {
+class MerchantRestClientImplTest extends BaseIntegrationTestDeprecated {
 
     @Autowired
     private MerchantRestClient merchantRestClient;

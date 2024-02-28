@@ -102,7 +102,7 @@ import java.util.regex.Pattern;
 @AutoConfigureSingleInstanceMongodb
 @AutoConfigureWireMock(stubs = "classpath:/stub", port = 0)
 @AutoConfigureWebTestClient
-public abstract class BaseIntegrationTestDeprecated {
+public abstract class BaseIntegrationTest {
 
     @Autowired
     protected KafkaTestUtilitiesService kafkaTestUtilitiesService;

@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.notification.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -14,13 +14,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-class RewardOrganizationExportsRepositoryExtendedTest extends BaseIntegrationTest {
+@ContextConfiguration(classes = {
+        Initiative2ExportRetrieverServiceImpl.class
+})
+@MongoTest
+class RewardOrganizationExportsRepositoryExtendedTest {
 
     @Autowired
     private RewardOrganizationExportsRepository repository;

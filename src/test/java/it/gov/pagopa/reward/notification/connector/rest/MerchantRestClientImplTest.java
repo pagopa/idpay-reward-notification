@@ -1,21 +1,28 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.reactive.rest.config.WebClientConfig;
+import it.gov.pagopa.reward.notification.BaseWireMockTest;
 import it.gov.pagopa.reward.notification.dto.rest.MerchantDetailDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.Exceptions;
 
 import java.time.LocalDateTime;
 
+import static it.gov.pagopa.reward.notification.BaseWireMockTest.WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX;
+
+@ContextConfiguration(
+        classes = {
+                MerchantRestClientImpl.class,
+                WebClientConfig.class
+        })
 @TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.rest.MerchantRestClientImpl=WARN",
-        "app.merchant.retry.delay-millis=100",
-        "app.merchant.retry.max-attempts=1"
+        WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX + "app.merchant.base-url="
 })
-class MerchantRestClientImplTest extends BaseIntegrationTest {
+class MerchantRestClientImplTest extends BaseWireMockTest {
 
     @Autowired
     private MerchantRestClient merchantRestClient;

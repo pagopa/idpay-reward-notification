@@ -1,23 +1,26 @@
 package it.gov.pagopa.reward.notification.service.email;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
 import it.gov.pagopa.reward.notification.connector.email.EmailNotificationRestClient;
 import it.gov.pagopa.reward.notification.connector.selc.SelcRestClient;
 import it.gov.pagopa.reward.notification.dto.email.EmailMessageDTO;
+import it.gov.pagopa.reward.notification.dto.selc.UserResource;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
+import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,14 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@TestPropertySource(
-        properties = {
-                "app.email-notification.delimiter=,",
-                "app.selc.headers.subscription-key=subscriptionKey1",
-                "app.selc.headers.uid=selfcareUid1"
-        }
-)
-class EmailNotificationServiceImplTest extends BaseIntegrationTest {
+@ExtendWith(MockitoExtension.class)
+class EmailNotificationServiceImplTest {
 
     public static final String INITIATIVEID = "TEST_EMAIL_INITIATIVEID";
     public static final String INITIATIVENAME = "TEST_EMAIL_INITIATIVENAME";
@@ -41,34 +38,27 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
     public static final String TEST_EMAIL_KO = "TEST_EMAIL_KO";
     public static final String FILE_NAME = "testEmail.zip";
     public static final LocalDateTime DATE = LocalDateTime.of(2023, 3, 15, 0, 0);
-    @Value("${app.email-notification.delimiter}")
+    @Value("${app.email-notification.delimiter:,}")
     private String delimiter;
-    @SpyBean
-    private EmailNotificationRestClient emailRestClientSpy;
-    @Autowired
+    @Mock
+    private EmailNotificationRestClient emailRestClient;
+    @Mock
     private SelcRestClient selcRestClient;
-    @Autowired
+    @Mock
     private RewardNotificationRuleRepository notificationRuleRepository;
-
     private EmailNotificationService service;
 
 
     void setup(boolean ko) {
         service = new EmailNotificationServiceImpl(
-                delimiter,
-                emailRestClientSpy,
+                ",",
+                emailRestClient,
                 selcRestClient,
                 notificationRuleRepository,
                 ko ? TEST_EMAIL_KO : TEST_EMAIL_OK,
                 ko ? TEST_EMAIL_KO : TEST_EMAIL_OK,
                 ko ? TEST_EMAIL_KO : TEST_EMAIL_OK,
                 ko ? TEST_EMAIL_KO : TEST_EMAIL_OK);
-        prepareTestData();
-    }
-
-    @AfterEach
-    void clean() {
-        notificationRuleRepository.deleteById(INITIATIVEID).block();
     }
 
     @ParameterizedTest
@@ -77,22 +67,31 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
         setup(ko);
 
         RewardOrganizationImport expectedImport = buildExpectedImport(ko);
+        RewardOrganizationExport expectedExport = buildExpectedExport(ko);
 
-        RewardOrganizationImport result = service.send(expectedImport).block();
+        RewardNotificationRule rewardNotificationRule = RewardNotificationRuleFaker.mockInstance(1);
+        rewardNotificationRule.setInitiativeName(INITIATIVENAME);
 
-        Assertions.assertEquals(expectedImport, result);
+        Mockito.when(notificationRuleRepository.findById(Mockito.anyString())).thenReturn(Mono.just(rewardNotificationRule));
 
-        EmailMessageDTO expectedMessage = buildExpectedMessageDTO(ko);
-        Mockito.verify(emailRestClientSpy).send(expectedMessage);
-    }
+        Mockito.when(emailRestClient.send(Mockito.any())).thenReturn(Mono.empty());
 
-    private void prepareTestData() {
-        RewardNotificationRule rule = RewardNotificationRuleFaker.mockInstanceBuilder(1)
-                .initiativeId(INITIATIVEID)
-                .initiativeName(INITIATIVENAME)
-                .organizationId(ORGANIZATIONID)
-                .build();
-        notificationRuleRepository.save(rule).block();
+        UserResource userResource = UserResource.builder().email("test.email1@orgId.it").build();
+        UserResource userResource2 = UserResource.builder().email("test.email2@orgId.it").build();
+
+        Mockito.when(selcRestClient.getInstitutionProductUsers(Mockito.anyString())).thenReturn(ko ? Flux.empty() : Flux.just(userResource, userResource2));
+
+        RewardOrganizationImport importResult = service.send(expectedImport).block();
+        RewardOrganizationExport exportResult = service.send(expectedExport).block();
+
+        Assertions.assertEquals(expectedImport, importResult);
+        Assertions.assertEquals(expectedExport, exportResult);
+
+        EmailMessageDTO importMessage = buildExpectedMessageDTO(ko);
+        EmailMessageDTO exportMessage = buildExpectedMessageDTO(ko);
+
+        Mockito.verify(emailRestClient).send(importMessage);
+        Mockito.verify(emailRestClient).send(exportMessage);
     }
 
     private RewardOrganizationImport buildExpectedImport(boolean ko) {
@@ -109,6 +108,19 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
                 .status(RewardOrganizationImportStatus.COMPLETE)
                 .build();
     }
+    private RewardOrganizationExport buildExpectedExport(boolean ko) {
+        return RewardOrganizationExport.builder()
+                .filePath("%s/%s/export/%s".formatted(ORGANIZATIONID, INITIATIVEID, FILE_NAME))
+                .initiativeId(INITIATIVEID)
+                .organizationId(ko ? "ORGID_NOTFOUND" : ORGANIZATIONID)
+                .notificationDate(DATE.toLocalDate())
+                .exportDate(DATE.toLocalDate())
+                .progressive(1L)
+                .rewardsResulted(8L)
+                .feedbackDate(DATE)
+                .status(RewardOrganizationExportStatus.COMPLETE)
+                .build();
+    }
 
     private EmailMessageDTO buildExpectedMessageDTO(boolean ko) {
         Map<String, String> templateValues = new HashMap<>();
@@ -122,7 +134,7 @@ class EmailNotificationServiceImplTest extends BaseIntegrationTest {
                 .templateValues(templateValues)
                 .subject(ko ? TEST_EMAIL_KO : TEST_EMAIL_OK)
                 .senderEmail(null)
-                .recipientEmail(ko ? "" : String.join(delimiter, List.of("test.email1@orgId.it", "test.email2@orgId.it")))
+                .recipientEmail(ko ? "" : String.join(",", List.of("test.email1@orgId.it", "test.email2@orgId.it")))
                 .build();
     }
 }

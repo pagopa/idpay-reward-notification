@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -14,8 +14,8 @@ import org.springframework.data.domain.Example;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
-
-class RewardsNotificationRepositoryTest extends BaseIntegrationTest {
+@MongoTest
+class RewardsNotificationRepositoryTest {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final LocalDate TOMORROW = TODAY.plusDays(1);

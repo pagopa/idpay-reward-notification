@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.notification.dto.controller.ExportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
@@ -14,8 +14,8 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
-class RewardOrganizationExportsRepositoryExtendedImplTest extends BaseIntegrationTest {
+@MongoTest
+class RewardOrganizationExportsRepositoryExtendedImplTest {
 
     public static final LocalDate TODAY = LocalDate.now();
     public static final String TEST_EXPORT_ID = "TEST_EXPORT";

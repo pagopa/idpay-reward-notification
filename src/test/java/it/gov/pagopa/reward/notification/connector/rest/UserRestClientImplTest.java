@@ -1,26 +1,31 @@
 package it.gov.pagopa.reward.notification.connector.rest;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.reactive.rest.config.WebClientConfig;
+import it.gov.pagopa.reward.notification.BaseWireMockTest;
 import it.gov.pagopa.reward.notification.dto.rest.UserInfoPDV;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Exceptions;
 
-@TestPropertySource(properties = {
-        "logging.level.it.gov.pagopa.reward.notification.rest.UserRestClientImpl=WARN",
+import static it.gov.pagopa.reward.notification.BaseWireMockTest.WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX;
 
-        "app.pdv.retry.delay-millis=100",
-        "app.pdv.retry.max-attempts=1",
+@ContextConfiguration(
+        classes = {
+                UserRestClientImpl.class,
+                WebClientConfig.class
+        })
+@TestPropertySource(properties = {
+        WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX + "app.pdv.base-url="
 })
-class UserRestClientImplTest extends BaseIntegrationTest {
+class UserRestClientImplTest extends BaseWireMockTest {
 
     @Autowired
     private UserRestClient userRestClient;
-
 
     @Test
     void retrieveUserInfoOk() {

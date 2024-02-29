@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.notification.dto.controller.FeedbackImportFilter;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-class RewardOrganizationImportsRepositoryExtendedImplTest extends BaseIntegrationTest {
+@MongoTest
+class RewardOrganizationImportsRepositoryExtendedImplTest {
 
     public static final LocalDateTime TODAY = LocalDateTime.now();
     public static final String TEST_IMPORT_FILE_PATH = "test/import";

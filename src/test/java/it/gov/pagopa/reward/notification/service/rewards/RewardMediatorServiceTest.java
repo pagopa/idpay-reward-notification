@@ -1,5 +1,8 @@
 package it.gov.pagopa.reward.notification.service.rewards;
 
+import ch.qos.logback.classic.LoggerContext;
+import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.Rewards;
@@ -15,12 +18,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,12 +45,70 @@ class RewardMediatorServiceTest {
     @Mock private RewardsService rewardsServiceMock;
     @Mock private RewardNotificationRuleEvaluatorService ruleEvaluatorServiceMock;
     @Mock private RewardErrorNotifierService rewardErrorNotifierServiceMock;
+    @Mock
+    private Message<String> messageMock;
 
     private RewardsMediatorServiceImpl service;
+    private MemoryAppender memoryAppender;
 
     @BeforeEach
     void init(){
         service=new RewardsMediatorServiceImpl("APPNAME", lockServiceMock, rewardsServiceMock, ruleEvaluatorServiceMock, rewardErrorNotifierServiceMock, 500, TestUtils.objectMapper);
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("it.gov.pagopa.reward.notification.service.rewards.RewardsMediatorServiceImpl");
+        memoryAppender = new MemoryAppender();
+        memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(ch.qos.logback.classic.Level.INFO);
+        logger.addAppender(memoryAppender);
+        memoryAppender.start();
+    }
+    @Test
+    void getCommitDelay() {
+        Duration expected = Duration.ofMillis(500L);
+        Duration commitDelay = service.getCommitDelay();
+        Assertions.assertEquals(expected, commitDelay);
+    }
+
+    @Test
+    void givenMessagesWhenAfterCommitsThenSuccessfully() {
+        Flux<List<List<Rewards>>> afterCommits2Subscribe = Flux.just(List.of(List.of(new Rewards())));
+
+        service.subscribeAfterCommits(afterCommits2Subscribe);
+
+        Assertions.assertEquals(
+                "[REWARD_NOTIFICATION] Processed offsets committed successfully",
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void getObjectReader() {
+        ObjectReader objectReader = service.getObjectReader();
+        Assertions.assertNotNull(objectReader);
+    }
+
+    @Test
+    void givenErrorWhenNotifyErrorThenCallNotifierService() {
+        Throwable error = new RuntimeException("Test error");
+
+        service.notifyError(messageMock, error);
+
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardResponse(messageMock, "[REWARD_NOTIFICATION] An error occurred evaluating transaction result", true, error);
+    }
+
+    @Test
+    void givenDeserializationErrorWhenOnDeserializationErrorThenCallNotifierService() {
+        Throwable error = new RuntimeException("Test error");
+
+        service.onDeserializationError(messageMock).accept(error);
+
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardResponse(messageMock, "[REWARD_NOTIFICATION] Unexpected JSON", true, error);
+    }
+
+    @Test
+    void getFlowName() {
+        String expected = "REWARD_NOTIFICATION";
+        String flowName = service.getFlowName();
+        Assertions.assertEquals(expected, flowName);
     }
 
     @Test

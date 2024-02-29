@@ -34,6 +34,8 @@ class CommandsMediatorServiceImplTest {
     private RewardErrorNotifierService rewardErrorNotifierServiceMock;
     @Mock
     private DeleteInitiativeService deleteInitiativeServiceMock;
+    @Mock
+    private Message<String> messageMock;
     private CommandsMediatorServiceImpl commandsMediatorService;
     private MemoryAppender memoryAppender;
     @BeforeEach
@@ -81,6 +83,33 @@ class CommandsMediatorServiceImplTest {
     void getObjectReader() {
         ObjectReader objectReader = commandsMediatorService.getObjectReader();
         Assertions.assertNotNull(objectReader);
+    }
+    @Test
+    void givenErrorWhenNotifyErrorThenCallNotifierService() {
+        Throwable error = new RuntimeException("Test error");
+
+        commandsMediatorService.notifyError(messageMock, error);
+
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardCommands(
+                messageMock,
+                "[REWARD_NOTIFICATION_COMMANDS] An error occurred evaluating commands",
+                true,
+                error
+        );
+    }
+
+    @Test
+    void givenDeserializationErrorWhenOnDeserializationErrorThenCallNotifierService() {
+        Throwable error = new RuntimeException("Test error");
+
+        commandsMediatorService.onDeserializationError(messageMock).accept(error);
+
+        Mockito.verify(rewardErrorNotifierServiceMock).notifyRewardCommands(
+                messageMock,
+                "[REWARD_NOTIFICATION_COMMANDS] Unexpected JSON",
+                false,
+                error
+        );
     }
 
     @Test

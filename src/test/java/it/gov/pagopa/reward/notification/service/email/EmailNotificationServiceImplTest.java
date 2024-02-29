@@ -4,8 +4,10 @@ import it.gov.pagopa.reward.notification.connector.email.EmailNotificationRestCl
 import it.gov.pagopa.reward.notification.connector.selc.SelcRestClient;
 import it.gov.pagopa.reward.notification.dto.email.EmailMessageDTO;
 import it.gov.pagopa.reward.notification.dto.selc.UserResource;
+import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationImportStatus;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
+import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationImport;
 import it.gov.pagopa.reward.notification.repository.RewardNotificationRuleRepository;
 import it.gov.pagopa.reward.notification.test.fakers.RewardNotificationRuleFaker;
@@ -65,6 +67,7 @@ class EmailNotificationServiceImplTest {
         setup(ko);
 
         RewardOrganizationImport expectedImport = buildExpectedImport(ko);
+        RewardOrganizationExport expectedExport = buildExpectedExport(ko);
 
         RewardNotificationRule rewardNotificationRule = RewardNotificationRuleFaker.mockInstance(1);
         rewardNotificationRule.setInitiativeName(INITIATIVENAME);
@@ -78,13 +81,17 @@ class EmailNotificationServiceImplTest {
 
         Mockito.when(selcRestClient.getInstitutionProductUsers(Mockito.anyString())).thenReturn(ko ? Flux.empty() : Flux.just(userResource, userResource2));
 
-        RewardOrganizationImport result = service.send(expectedImport).block();
+        RewardOrganizationImport importResult = service.send(expectedImport).block();
+        RewardOrganizationExport exportResult = service.send(expectedExport).block();
 
-        Assertions.assertEquals(expectedImport, result);
+        Assertions.assertEquals(expectedImport, importResult);
+        Assertions.assertEquals(expectedExport, exportResult);
 
-        EmailMessageDTO message = buildExpectedMessageDTO(ko);
+        EmailMessageDTO importMessage = buildExpectedMessageDTO(ko);
+        EmailMessageDTO exportMessage = buildExpectedMessageDTO(ko);
 
-        Mockito.verify(emailRestClient).send(message);
+        Mockito.verify(emailRestClient).send(importMessage);
+        Mockito.verify(emailRestClient).send(exportMessage);
     }
 
     private RewardOrganizationImport buildExpectedImport(boolean ko) {
@@ -99,6 +106,19 @@ class EmailNotificationServiceImplTest {
                 .rewardsResulted(1L)
                 .elabDate(DATE)
                 .status(RewardOrganizationImportStatus.COMPLETE)
+                .build();
+    }
+    private RewardOrganizationExport buildExpectedExport(boolean ko) {
+        return RewardOrganizationExport.builder()
+                .filePath("%s/%s/export/%s".formatted(ORGANIZATIONID, INITIATIVEID, FILE_NAME))
+                .initiativeId(INITIATIVEID)
+                .organizationId(ko ? "ORGID_NOTFOUND" : ORGANIZATIONID)
+                .notificationDate(DATE.toLocalDate())
+                .exportDate(DATE.toLocalDate())
+                .progressive(1L)
+                .rewardsResulted(8L)
+                .feedbackDate(DATE)
+                .status(RewardOrganizationExportStatus.COMPLETE)
                 .build();
     }
 

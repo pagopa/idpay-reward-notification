@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.notification.repository;
 
-import it.gov.pagopa.reward.notification.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.notification.dto.controller.detail.ExportDetailFilter;
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
+@MongoTest
+class RewardsNotificationRepositoryExtendedTest {
 
     public static final LocalDate NOTIFICATION_DATE = LocalDate.now();
     private static final String CRO = "ZYXWVU12345";
@@ -34,7 +34,7 @@ class RewardsNotificationRepositoryExtendedTest extends BaseIntegrationTest {
     @Autowired
     private RewardsNotificationRepository repository;
 
-    @Value("${app.csv.export.day-before}")
+    @Value("${app.csv.export.day-before:30}")
     private Integer dayBefore;
 
     private List<RewardsNotification> testData;

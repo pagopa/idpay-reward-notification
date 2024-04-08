@@ -27,7 +27,6 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
 
     private final long delay;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public DeleteInitiativeServiceImpl(RewardNotificationRuleRepository rewardNotificationRuleRepository,
                                        RewardOrganizationExportsRepository rewardOrganizationExportsRepository,
                                        RewardOrganizationImportsRepository rewardOrganizationImportsRepository,

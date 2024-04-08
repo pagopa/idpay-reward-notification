@@ -36,7 +36,7 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .toBodilessEntity()
                 .map(r -> validateWalletResponse(r, "suspend", initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new WalletInvocationException(Utils.ExceptionCode.SUSPENSION_ERROR, "Something gone wrong while invoking wallet to suspend user %s on initiative %s: obtained status code %s".formatted(userId, initiativeId, e.getStatusCode()), null, true, e);
+                    throw new WalletInvocationException(Utils.ExceptionCode.SUSPENSION_ERROR, "Something gone wrong while invoking wallet to suspend user %s on initiative %s: obtained status code %s".formatted(userId, initiativeId, e.getStatusCode()), true, e);
                 });
     }
 
@@ -50,7 +50,7 @@ public class WalletRestClientImpl implements WalletRestClient {
                 .toBodilessEntity()
                 .map(r -> validateWalletResponse(r, "readmit", initiativeId, userId))
                 .onErrorResume(WebClientResponseException.class, e -> {
-                    throw new WalletInvocationException(Utils.ExceptionCode.READMISSION_ERROR, "Something gone wrong while invoking wallet to readmit user %s on initiative %s: obtained status code %s".formatted(userId, initiativeId, e.getStatusCode()), null, true, e);
+                    throw new WalletInvocationException(Utils.ExceptionCode.READMISSION_ERROR, "Something gone wrong while invoking wallet to readmit user %s on initiative %s: obtained status code %s".formatted(userId, initiativeId, e.getStatusCode()), true, e);
                 });
     }
 

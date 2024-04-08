@@ -59,16 +59,7 @@ class ServiceExceptionHandlerTest {
 
         @GetMapping("/test/customBody")
         Mono<String> testCustomBody() {
-            throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE", new ErrorPayloadTest("RESPONSE",0), true, null);
-        }
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    static class ErrorPayloadTest implements ServiceExceptionPayload {
-        private String stringCode;
-        private long longCode;
+            throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE", true, null);       }
     }
 
     @Test
@@ -88,7 +79,7 @@ class ServiceExceptionHandlerTest {
                 .uri(uriBuilder -> uriBuilder.path("/test/customBody").build())
                 .exchange()
                 .expectStatus().is5xxServerError()
-                .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
+                .expectBody().json("{\"code\":\"DUMMY_CODE\",\"message\":\"DUMMY_MESSAGE\"}", false);
 
         ErrorManagerTest.checkLog(memoryAppender,
                 "Something went wrong handling request GET /test/customBody \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",

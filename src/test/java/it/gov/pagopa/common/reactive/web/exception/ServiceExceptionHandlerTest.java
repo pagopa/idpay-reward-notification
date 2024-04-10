@@ -6,10 +6,6 @@ import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.common.web.exception.ErrorManager;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.common.web.exception.ServiceExceptionHandler;
-import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,10 +52,6 @@ class ServiceExceptionHandlerTest {
         Mono<String> test() {
             throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE");
         }
-
-        @GetMapping("/test/customBody")
-        Mono<String> testCustomBody() {
-            throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE", true, null);       }
     }
 
     @Test
@@ -73,19 +65,4 @@ class ServiceExceptionHandlerTest {
         ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "A ServiceException occurred handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE at it.gov.pagopa.common.reactive.web.exception.ServiceExceptionHandlerTest\\$TestController.test\\(ServiceExceptionHandlerTest.java:[0-9]+\\)");
     }
 
-    @Test
-    void testCustomBodyException() {
-        webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/test/customBody").build())
-                .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody().json("{\"code\":\"DUMMY_CODE\",\"message\":\"DUMMY_MESSAGE\"}", false);
-
-        ErrorManagerTest.checkLog(memoryAppender,
-                "Something went wrong handling request GET /test/customBody \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.web.exception.ServiceException: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.reactive.web.exception.ServiceExceptionHandlerTest$TestController.testCustomBody"
-
-                );
-    }
 }

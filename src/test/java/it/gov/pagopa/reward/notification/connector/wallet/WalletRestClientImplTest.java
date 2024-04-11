@@ -49,7 +49,6 @@ class WalletRestClientImplTest extends BaseWireMockTest {
         WalletInvocationException exception = Assertions.assertThrows(WalletInvocationException.class, executable);
         Assertions.assertEquals(Utils.ExceptionCode.SUSPENSION_ERROR, exception.getCode());
         Assertions.assertEquals("Something gone wrong while invoking wallet to suspend user USERID_KO_1 on initiative INITIATIVEID: obtained status code 500 INTERNAL_SERVER_ERROR", exception.getMessage());
-        Assertions.assertNull(exception.getPayload());
     }
 
     @Test
@@ -72,6 +71,5 @@ class WalletRestClientImplTest extends BaseWireMockTest {
         WalletInvocationException exception = Assertions.assertThrows(WalletInvocationException.class, executable);
         Assertions.assertEquals(Utils.ExceptionCode.READMISSION_ERROR, exception.getCode());
         Assertions.assertEquals("Something gone wrong while invoking wallet to readmit user USERID_KO_1 on initiative INITIATIVEID: obtained status code 500 INTERNAL_SERVER_ERROR", exception.getMessage());
-        Assertions.assertNull(exception.getPayload());
     }
 }

@@ -39,7 +39,6 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
 
     private final ObjectReader objectReader;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardsMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
             LockService lockService,

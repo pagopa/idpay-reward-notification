@@ -44,7 +44,6 @@ public class RewardNotificationFeedbackMediatorServiceImpl extends BaseKafkaBloc
 
     private final ObjectReader objectReader;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardNotificationFeedbackMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.rewardTrxConsumer-in-0.consumer.ackTime}") long commitMillis,

@@ -4,7 +4,6 @@ import it.gov.pagopa.reward.notification.dto.controller.detail.ExportSummaryDTO;
 import it.gov.pagopa.reward.notification.enums.RewardOrganizationExportStatus;
 import org.apache.commons.lang3.ObjectUtils;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Random;
 
@@ -34,8 +33,8 @@ public class ExportSummaryDTOFaker {
         bias = ObjectUtils.firstNonNull(bias, getRandomPositiveNumber(null));
 
         out.createDate(LocalDate.now());
-        out.totalAmount(BigDecimal.valueOf(bias*100L));
-        out.totalRefundedAmount(BigDecimal.valueOf(bias*10L));
+        out.totalAmountCents(bias*100L);
+        out.totalRefundedAmountCents(bias*10L);
         out.totalRefunds(bias+1L);
         out.successPercentage("10");
         out.status(RewardOrganizationExportStatus.EXPORTED);
@@ -49,8 +48,8 @@ public class ExportSummaryDTOFaker {
         bias = ObjectUtils.firstNonNull(bias, getRandomPositiveNumber(null));
 
         out.createDate(date);
-        out.totalAmount(BigDecimal.valueOf(bias*100L));
-        out.totalRefundedAmount(BigDecimal.valueOf(bias*10L));
+        out.totalAmountCents(bias*100L);
+        out.totalRefundedAmountCents(bias*10L);
         out.totalRefunds(bias+1L);
         out.successPercentage("10");
         out.status(RewardOrganizationExportStatus.EXPORTED);

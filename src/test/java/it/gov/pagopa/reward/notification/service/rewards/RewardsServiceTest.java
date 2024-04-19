@@ -19,7 +19,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +56,7 @@ class RewardsServiceTest {
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
 
-        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
+        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(100L), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
         Mockito.when(rewardsRepositoryMock.findById(trx.getId()+"_INITIATIVEID")).thenReturn(Mono.just(rewardDuplicate));
 
         Mockito.when(rewardsNotificationRepositoryMock.findById(rewardDuplicate.getNotificationId()))
@@ -79,7 +78,7 @@ class RewardsServiceTest {
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
 
-        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
+        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(100L), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
         rewardDuplicate.setStatus(RewardStatus.REJECTED);
         Mockito.when(rewardsRepositoryMock.findById(trx.getId()+"_INITIATIVEID")).thenReturn(Mono.just(rewardDuplicate));
 
@@ -97,7 +96,7 @@ class RewardsServiceTest {
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
 
-        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
+        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(100L), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
         rewardDuplicate.setNotificationId(null);
         Mockito.when(rewardsRepositoryMock.findById(trx.getId()+"_INITIATIVEID")).thenReturn(Mono.just(rewardDuplicate));
 
@@ -115,7 +114,7 @@ class RewardsServiceTest {
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
 
-        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
+        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(100L), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
         Mockito.when(rewardsRepositoryMock.findById(trx.getId()+"_INITIATIVEID")).thenReturn(Mono.just(rewardDuplicate));
 
         Mockito.when(rewardsNotificationRepositoryMock.findById(rewardDuplicate.getNotificationId())).thenReturn(Mono.just(new RewardsNotification()));
@@ -132,7 +131,7 @@ class RewardsServiceTest {
         // Given
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
 
-        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(BigDecimal.ONE), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
+        Rewards rewardDuplicate = rewardMapper.apply("INITIATIVEID", new Reward(100L), trx, RewardNotificationRuleFaker.mockInstance(1), "NOTIFICATIONID");
         Mockito.when(rewardsRepositoryMock.findById(trx.getId()+"_INITIATIVEID")).thenReturn(Mono.just(rewardDuplicate));
 
         Mockito.when(rewardsNotificationRepositoryMock.findById(rewardDuplicate.getNotificationId())).thenReturn(Mono.empty());

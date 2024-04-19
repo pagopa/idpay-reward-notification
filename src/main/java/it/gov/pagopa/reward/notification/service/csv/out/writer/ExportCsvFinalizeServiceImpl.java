@@ -160,7 +160,7 @@ public class ExportCsvFinalizeServiceImpl implements ExportCsvFinalizeService {
 
     private void updateExportCounters(List<RewardNotificationExportCsvDto> csvLines, RewardOrganizationExport export) {
         export.setRewardNotified((long) csvLines.size());
-        export.setRewardsExportedCents(csvLines.stream().mapToLong(RewardNotificationExportCsvDto::getAmount).sum());
+        export.setRewardsExportedCents(csvLines.stream().mapToLong(RewardNotificationExportCsvDto::getAmountCents).sum());
     }
 
 }

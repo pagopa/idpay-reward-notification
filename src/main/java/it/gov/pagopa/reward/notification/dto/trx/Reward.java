@@ -4,16 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Reward {
     /** The ruleEngine reward calculated */
-    private BigDecimal providedReward;
+    private Long providedRewardCents;
     /** The effective reward after CAP and REFUND evaluation */
-    private BigDecimal accruedReward;
+    private Long accruedRewardCents;
     /** True, if the reward has been capped due to budget threshold */
     private boolean capped;
 
@@ -32,21 +30,21 @@ public class Reward {
     /** Counters */
     private RewardCounters counters = new RewardCounters();
 
-    public Reward(BigDecimal reward){
-        this.providedReward=reward;
-        this.accruedReward=reward;
+    public Reward(Long rewardCents){
+        this.providedRewardCents =rewardCents;
+        this.accruedRewardCents =rewardCents;
         this.capped=false;
     }
 
-    public Reward(BigDecimal providedReward, BigDecimal accruedReward){
-        this.providedReward=providedReward;
-        this.accruedReward=accruedReward;
-        this.capped=providedReward.compareTo(accruedReward)!=0;
+    public Reward(Long providedRewardCents, Long accruedRewardCents){
+        this.providedRewardCents = providedRewardCents;
+        this.accruedRewardCents = accruedRewardCents;
+        this.capped= providedRewardCents.compareTo(accruedRewardCents)!=0;
     }
 
-    public Reward(BigDecimal providedReward, BigDecimal accruedReward, boolean capped){
-        this.providedReward=providedReward;
-        this.accruedReward=accruedReward;
+    public Reward(Long providedRewardCents, Long accruedRewardCents, boolean capped){
+        this.providedRewardCents = providedRewardCents;
+        this.accruedRewardCents = accruedRewardCents;
         this.capped=capped;
     }
 }

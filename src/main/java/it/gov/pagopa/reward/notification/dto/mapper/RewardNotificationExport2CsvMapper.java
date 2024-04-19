@@ -42,7 +42,7 @@ public class RewardNotificationExport2CsvMapper {
 
         out.setProgressiveCode(reward.getProgressive());
         out.setUniqueID(reward.getExternalId());
-        out.setAmount(reward.getRewardCents());
+        out.setAmountCents(reward.getRewardCents());
         out.setPaymentReason(buildPaymentReason(reward, depositStartDateStr, depositEndDateStr));
         out.setInitiativeName(reward.getInitiativeName());
         out.setInitiativeID(reward.getInitiativeId());

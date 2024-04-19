@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.notification.dto.controller.detail.ExportSummaryDTO;
 import it.gov.pagopa.reward.notification.model.RewardOrganizationExport;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -16,8 +15,8 @@ public class RewardOrganizationExport2ExportSummaryDTOMapper implements Function
     public ExportSummaryDTO apply(RewardOrganizationExport rewardOrganizationExport) {
         return ExportSummaryDTO.builder()
                 .createDate(rewardOrganizationExport.getExportDate())
-                .totalAmount(CommonUtilities.centsToEuro(rewardOrganizationExport.getRewardsExportedCents()))
-                .totalRefundedAmount(CommonUtilities.centsToEuro(rewardOrganizationExport.getRewardsResultsCents()))
+                .totalAmountCents(rewardOrganizationExport.getRewardsExportedCents())
+                .totalRefundedAmountCents(rewardOrganizationExport.getRewardsResultsCents())
                 .totalRefunds(rewardOrganizationExport.getRewardNotified())
                 .successPercentage(Utils.formatAsPercentage(rewardOrganizationExport.getPercentageResultedOk()))
                 .status(rewardOrganizationExport.getStatus())

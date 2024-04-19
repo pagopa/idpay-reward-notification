@@ -26,7 +26,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -117,7 +116,7 @@ abstract class BaseRewardNotificationThresholdHandlerTest {
         RewardNotificationRule rule = buildRule();
         rule.setInitiativeRewardType(rewardType);
 
-        Reward reward = new Reward(BigDecimal.valueOf(isRefundTrx ? -3 : 3));
+        Reward reward = new Reward(isRefundTrx ? -300L : 300L);
 
         RewardsNotification[] expectedResult = new RewardsNotification[]{null};
         long expectedProgressive = 5L;

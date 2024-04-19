@@ -2,14 +2,14 @@ package it.gov.pagopa.reward.notification.service.rewards;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.MemoryAppender;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.Rewards;
 import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
-import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
@@ -114,11 +113,11 @@ class RewardMediatorServiceTest {
     @Test
     void testFilteringRewardsStatusRewarded() {
         // Given
-        Reward reward3 = new Reward(BigDecimal.ONE);
+        Reward reward3 = new Reward(100L);
         RewardTransactionDTO trx = RewardTransactionDTO.builder()
                 .rewards(Map.of(
-                        "ID1", new Reward(BigDecimal.ZERO),
-                        "ID2", new Reward(BigDecimal.ONE, BigDecimal.ZERO),
+                        "ID1", new Reward(0L),
+                        "ID2", new Reward(100L, 0L),
                         "ID3", reward3
                 ))
                 .status(TrxConstants.TRX_STATUS_REWARDED)
@@ -140,11 +139,11 @@ class RewardMediatorServiceTest {
     @Test
     void testFilteringRewardsStatusNotRewarded() {
         // Given
-        Reward reward3 = new Reward(BigDecimal.ONE);
+        Reward reward3 = new Reward(100L);
         RewardTransactionDTO trx = RewardTransactionDTO.builder()
                 .rewards(Map.of(
-                        "ID1", new Reward(BigDecimal.ZERO),
-                        "ID2", new Reward(BigDecimal.ONE, BigDecimal.ZERO),
+                        "ID1", new Reward(0L),
+                        "ID2", new Reward(100L, 0L),
                         "ID3", reward3
                 ))
                 .status(TrxConstants.TRX_STATUS_AUTHORIZED)

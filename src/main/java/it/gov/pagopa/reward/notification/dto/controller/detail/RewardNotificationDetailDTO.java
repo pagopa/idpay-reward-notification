@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -28,8 +27,8 @@ public class RewardNotificationDetailDTO {
     private String merchantFiscalCode;
     @JsonProperty(value = "iban")
     private String iban;
-    @JsonProperty(value = "amount")
-    private BigDecimal amount;
+    @JsonProperty(value = "amountCents")
+    private Long amountCents;
     @JsonProperty(value = "startDate")
     private LocalDate startDate;
     @JsonProperty(value = "endDate")

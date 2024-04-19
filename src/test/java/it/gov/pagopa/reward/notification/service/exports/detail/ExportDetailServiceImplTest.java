@@ -27,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -69,8 +68,8 @@ class ExportDetailServiceImplTest {
 
         ExportSummaryDTO expectedSummary = ExportSummaryDTO.builder()
                 .createDate(DATE)
-                .totalAmount(BigDecimal.valueOf(100_00, 2))
-                .totalRefundedAmount(BigDecimal.valueOf(100_00, 2))
+                .totalAmountCents(10000L)
+                .totalRefundedAmountCents(10000L)
                 .totalRefunds(2L)
                 .successPercentage("10")
                 .status(RewardOrganizationExportStatus.EXPORTED)
@@ -166,7 +165,7 @@ class ExportDetailServiceImplTest {
                 .externalId("EXTERNALID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))
-                .amount(BigDecimal.valueOf(getCents(bias), 2))
+                .amountCents(getCents(bias))
                 .startDate(DATE)
                 .endDate(DATE)
                 .status(RewardNotificationStatus.EXPORTED)
@@ -203,7 +202,7 @@ class ExportDetailServiceImplTest {
         return RewardNotificationDTO.builder()
                 .eventId("EXTERNALID%s".formatted(bias))
                 .iban("IBAN%s".formatted(bias))
-                .amount(BigDecimal.valueOf(getCents(bias), 2))
+                .amountCents(getCents(bias))
                 .status(RewardNotificationStatus.EXPORTED)
                 .build();
     }

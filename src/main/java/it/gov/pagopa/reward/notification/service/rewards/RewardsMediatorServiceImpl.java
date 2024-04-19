@@ -2,12 +2,12 @@ package it.gov.pagopa.reward.notification.service.rewards;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
+import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.model.Rewards;
-import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.notification.service.RewardErrorNotifierService;
-import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.reward.notification.service.rewards.evaluate.RewardNotificationRuleEvaluatorService;
 import it.gov.pagopa.reward.notification.utils.TrxConstants;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -21,7 +21,6 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +113,7 @@ public class RewardsMediatorServiceImpl extends BaseKafkaBlockingPartitionConsum
         } else {
             return Flux.fromStream(
                     rewardTransactionDTO.getRewards().entrySet().stream()
-                            .filter(r->r.getValue().getAccruedReward().compareTo(BigDecimal.ZERO)!=0)
+                            .filter(r->r.getValue().getAccruedRewardCents() !=0)
                             .map(e -> Triple.of(rewardTransactionDTO, e.getKey(), e.getValue())));
         }
     }

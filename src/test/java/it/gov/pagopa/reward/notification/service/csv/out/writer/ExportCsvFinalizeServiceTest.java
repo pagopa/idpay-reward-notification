@@ -63,7 +63,7 @@ class ExportCsvFinalizeServiceTest {
                         .fiscalCode("fiscalCode%d".formatted(i))
                         .beneficiaryName("accountHolderName%d".formatted(i))
                         .iban("IBAN%d".formatted(i))
-                        .amount(100L)
+                        .amountCents(100L)
                         .paymentReason("paymentReason%d".formatted(i))
                         .initiativeName("initiativeName%d".formatted(i))
                         .initiativeID("initiativeID%d".formatted(i))
@@ -157,7 +157,7 @@ class ExportCsvFinalizeServiceTest {
             RewardNotificationExportCsvDto::getFiscalCode,
             RewardNotificationExportCsvDto::getBeneficiaryName,
             RewardNotificationExportCsvDto::getIban,
-            e -> e.getAmount()+"",
+            e -> e.getAmountCents()+"",
             RewardNotificationExportCsvDto::getPaymentReason,
             RewardNotificationExportCsvDto::getInitiativeName,
             RewardNotificationExportCsvDto::getInitiativeID,
@@ -179,7 +179,7 @@ class ExportCsvFinalizeServiceTest {
         RewardOrganizationExport export = new RewardOrganizationExport();
         export.setFilePath("TESTFILE");
         RewardNotificationExportCsvDto reward = new RewardNotificationExportCsvDto();
-        reward.setAmount(100L);
+        reward.setAmountCents(100L);
 
         @SuppressWarnings("unchecked") Response<BlockBlobItem> responseMocked = Mockito.mock(Response.class);
         Mockito.when(responseMocked.getStatusCode()).thenReturn(404);

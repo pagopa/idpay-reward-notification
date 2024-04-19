@@ -20,7 +20,7 @@ public class RewardNotificationExportCsvDto {
     @CsvBindByName(column="fiscalCode") private String fiscalCode;
     @CsvBindByName(column="beneficiaryName") private String beneficiaryName;
     @CsvBindByName(column="iban") private String iban;
-    @CsvBindByName(column="amount") private Long amount;
+    @CsvBindByName(column="amountCents") private Long amountCents;
     @CsvBindByName(column="paymentReason") private String paymentReason;
     @CsvBindByName(column="initiativeName") private String initiativeName;
     @CsvBindByName(column="initiativeID") private String initiativeID;

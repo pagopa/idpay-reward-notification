@@ -137,7 +137,7 @@ class ExportCsvFinalizeServiceTest {
 
             List<String> csvLinesStrs = Files.readAllLines(csvPath);
             Assertions.assertEquals(
-                    "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"beneficiaryName\";\"iban\";\"amount\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
+                    "\"progressiveCode\";\"uniqueID\";\"fiscalCode\";\"beneficiaryName\";\"iban\";\"amountCents\";\"paymentReason\";\"initiativeName\";\"initiativeID\";\"startDatePeriod\";\"endDatePeriod\";\"organizationId\";\"organizationFiscalCode\";\"checkIban\";\"typologyReward\";\"RelatedPaymentID\"",
                     csvLinesStrs.get(0));
 
             for (int i = 0; i < csvLines.size(); i++) {

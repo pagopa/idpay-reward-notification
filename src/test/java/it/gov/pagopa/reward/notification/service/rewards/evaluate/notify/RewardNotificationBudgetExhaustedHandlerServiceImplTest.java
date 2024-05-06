@@ -6,8 +6,6 @@ import it.gov.pagopa.reward.notification.dto.trx.RewardCounters;
 import it.gov.pagopa.reward.notification.enums.DepositType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 
-import java.math.BigDecimal;
-
 class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends BaseRewardNotificationThresholdHandlerTest {
 
     @Override
@@ -31,7 +29,7 @@ class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends BaseReward
 
     @Override
     protected Reward testHandleNewNotifyRefundWithFutureNotification_buildOverFlowingReward(boolean isStillOverflowing) {
-        Reward reward = new Reward(BigDecimal.valueOf(isStillOverflowing ? 0 : -3));
+        Reward reward = new Reward(isStillOverflowing ? 0L : -300L);
         reward.setCounters(new RewardCounters());
         reward.getCounters().setExhaustedBudget(isStillOverflowing);
         return reward;
@@ -44,7 +42,7 @@ class RewardNotificationBudgetExhaustedHandlerServiceImplTest extends BaseReward
 
     @Override
     protected Reward testHandleUpdateNotifyOverflowingThreshold_buildOverFlowingReward() {
-        Reward reward = new Reward(BigDecimal.valueOf(3));
+        Reward reward = new Reward(300L);
         reward.setCounters(new RewardCounters());
         reward.getCounters().setExhaustedBudget(true);
         return reward;

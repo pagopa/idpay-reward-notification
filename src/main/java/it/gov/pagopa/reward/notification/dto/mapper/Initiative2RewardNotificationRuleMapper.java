@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.notification.dto.mapper;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.notification.dto.rule.InitiativeRefund2StoreDTO;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
 import org.springframework.stereotype.Service;
@@ -25,8 +24,8 @@ public class Initiative2RewardNotificationRuleMapper implements Function<Initiat
                 .updateDate(LocalDateTime.now())
                 .initiativeRewardType(initiativeRefund2StoreDTO.getInitiativeRewardType())
                 .build();
-        if (out.getAccumulatedAmount() != null && out.getAccumulatedAmount().getRefundThreshold() != null) {
-            out.getAccumulatedAmount().setRefundThresholdCents(CommonUtilities.euroToCents(out.getAccumulatedAmount().getRefundThreshold()));
+        if (out.getAccumulatedAmount() != null && out.getAccumulatedAmount().getRefundThresholdCents() != null) {
+            out.getAccumulatedAmount().setRefundThresholdCents(out.getAccumulatedAmount().getRefundThresholdCents());
         }
         return out;
     }

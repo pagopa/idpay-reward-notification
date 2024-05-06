@@ -1,14 +1,13 @@
 package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.dto.rule.AccumulatedAmountDTO;
 import it.gov.pagopa.reward.notification.dto.rule.TimeParameterDTO;
 import it.gov.pagopa.reward.notification.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.notification.model.RewardNotificationRule;
-import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -34,7 +33,6 @@ public class RewardNotificationRuleFaker {
 
         AccumulatedAmountDTO accumulatedAmount = AccumulatedAmountDTO.builder()
                 .accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED)
-                .refundThreshold(new BigDecimal("100.00"))
                 .refundThresholdCents(10000L)
                 .build();
         out.accumulatedAmount(accumulatedAmount);

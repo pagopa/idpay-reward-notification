@@ -70,7 +70,7 @@ public class RewardMapperTest {
         Assertions.assertEquals(trx.getUserId(), result.getUserId());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(trx.getOperationTypeTranscoded(), result.getOperationType());
-        Assertions.assertEquals(trx.getRewards().get(initiativeId).getAccruedReward(), result.getReward());
+        Assertions.assertEquals(trx.getRewards().get(initiativeId).getAccruedRewardCents(), result.getRewardCents());
 
         RewardStatus expectedStatus=rule==null || notificationId==null ? RewardStatus.REJECTED : RewardStatus.ACCEPTED;
         Assertions.assertEquals(expectedStatus, result.getStatus());

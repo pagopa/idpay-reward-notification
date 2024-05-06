@@ -1,15 +1,12 @@
 package it.gov.pagopa.reward.notification.dto.trx;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.reward.notification.enums.OperationType;
-import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,8 +35,7 @@ public class TransactionDTO {
 
     private String correlationId;
 
-    @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
-    private BigDecimal amount;
+    private Long amountCents;
 
     private String amountCurrency;
 
@@ -73,7 +69,7 @@ public class TransactionDTO {
     private OperationType operationTypeTranscoded;
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
-    private BigDecimal effectiveAmount;
+    private Long effectiveAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;

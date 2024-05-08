@@ -19,8 +19,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-
 @ExtendWith(MockitoExtension.class)
 class RewardNotificationHandlerServiceFacadeServiceTest {
     @Mock private RewardNotificationTemporalHandlerServiceImpl temporalHandlerMock;
@@ -57,7 +55,7 @@ class RewardNotificationHandlerServiceFacadeServiceTest {
         RewardNotificationRule rule = new RewardNotificationRule();
         rule.setAccumulatedAmount(new AccumulatedAmountDTO());
         rule.getAccumulatedAmount().setAccumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED);
-        rule.getAccumulatedAmount().setRefundThreshold(BigDecimal.ONE);
+        rule.getAccumulatedAmount().setRefundThresholdCents(100L);
 
         test(rule, thresholdHandlerMock);
     }

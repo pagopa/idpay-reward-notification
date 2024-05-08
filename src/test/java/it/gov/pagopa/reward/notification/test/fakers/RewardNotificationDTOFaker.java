@@ -4,7 +4,6 @@ import it.gov.pagopa.reward.notification.dto.controller.detail.RewardNotificatio
 import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import org.apache.commons.lang3.ObjectUtils;
 
-import java.math.BigDecimal;
 import java.util.Random;
 
 public class RewardNotificationDTOFaker {
@@ -29,7 +28,7 @@ public class RewardNotificationDTOFaker {
         bias = ObjectUtils.firstNonNull(bias, getRandomPositiveNumber(null));
 
         out.iban("IBAN%s".formatted(bias));
-        out.amount(BigDecimal.valueOf(bias*10L));
+        out.amountCents(bias*10L);
         out.status(RewardNotificationStatus.EXPORTED);
 
         return out;

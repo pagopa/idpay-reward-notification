@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -67,7 +66,7 @@ public abstract class BaseRewardNotificationThresholdBasedHandler extends BaseRe
 
     private Mono<RewardsNotification> handleNoOpenNotification(RewardTransactionDTO trx, RewardNotificationRule rule, Reward reward) {
         Flux<RewardsNotification> findFutureIfRefund;
-        if(reward.getAccruedReward().compareTo(BigDecimal.ZERO) <= 0){
+        if(reward.getAccruedRewardCents() <= 0){
             log.debug("[REWARD_NOTIFICATION] searching for future notification for userId {} and initiativeId {}", trx.getUserId(), rule.getInitiativeId());
             String beneficiaryId = getBeneficiaryId(trx, rule);
             findFutureIfRefund = rewardsNotificationRepository.findByBeneficiaryIdAndInitiativeIdAndNotificationDateGreaterThanAndStatusAndOrdinaryIdIsNull(beneficiaryId, rule.getInitiativeId(), LocalDate.now(), RewardNotificationStatus.TO_SEND);

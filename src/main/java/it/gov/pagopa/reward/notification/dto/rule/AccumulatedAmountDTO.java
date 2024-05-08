@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,9 +13,6 @@ import java.math.BigDecimal;
 public class AccumulatedAmountDTO {
     @JsonProperty("accumulatedType")
     private AccumulatedTypeEnum accumulatedType;
-
-    @JsonProperty("refundThreshold")
-    private BigDecimal refundThreshold;
 
     // calculated inside mapper
     private Long refundThresholdCents;

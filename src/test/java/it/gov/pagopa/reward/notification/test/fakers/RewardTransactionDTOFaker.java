@@ -2,13 +2,13 @@ package it.gov.pagopa.reward.notification.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.notification.dto.trx.Reward;
 import it.gov.pagopa.reward.notification.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.notification.enums.OperationType;
-import it.gov.pagopa.common.utils.TestUtils;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -70,6 +70,8 @@ public class RewardTransactionDTOFaker {
 
         BigDecimal amount = TestUtils.bigDecimalValue(getRandomPositiveNumber(bias, 200));
 
+        Long amountCents = CommonUtilities.euroToCents(amount);
+
         RewardTransactionDTO.RewardTransactionDTOBuilder<?, ?> out = RewardTransactionDTO.builder()
                 .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))
                 .acquirerCode("ACQUIRERCODE%s".formatted(bias))
@@ -79,7 +81,7 @@ public class RewardTransactionDTOFaker {
                 .circuitType("CIRCUITTYPE%s".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%s".formatted(bias))
                 .correlationId("CORRELATIONID%s".formatted(bias))
-                .amount(amount)
+                .amountCents(amountCents)
                 .amountCurrency("AMOUNTCURRENCY%s".formatted(bias))
                 .mcc("MCC%s".formatted(bias))
                 .acquirerId("ACQUIRERID%s".formatted(bias))
@@ -94,13 +96,13 @@ public class RewardTransactionDTOFaker {
                 .par("PAR%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
 
-                .effectiveAmount(amount)
+                .effectiveAmountCents(amountCents)
                 .trxChargeDate(trxOffsetDate)
                 .operationTypeTranscoded(OperationType.CHARGE)
 
                 .status("REWARDED")
                 .rewards(Map.of(
-                        initiativeId, new Reward(amount.multiply(BigDecimal.valueOf(0.1)).setScale(2, RoundingMode.HALF_DOWN))
+                        initiativeId, new Reward((long) (amountCents * 0.1))
                 ));
 
         out.id(computeTrxId(out.build()));

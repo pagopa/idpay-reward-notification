@@ -38,7 +38,7 @@ public class RewardNotificationHandlerFacadeServiceImpl implements RewardNotific
         } else if(rule.getAccumulatedAmount() != null){
             if(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED.equals(rule.getAccumulatedAmount().getAccumulatedType())){
                 handler = budgetExhaustedHandler;
-            } else if(rule.getAccumulatedAmount().getRefundThreshold() != null)  {
+            } else if(rule.getAccumulatedAmount().getRefundThresholdCents() != null)  {
                 handler = thresholdHandler;
             } else {
                 return Mono.error(new IllegalStateException("[REWARD_NOTIFICATION] [INVALID_INITIATIVE] Not valid threshold rule %s".formatted(rule.getInitiativeId())));

@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.notification.dto.mapper.detail;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.notification.dto.controller.detail.RewardNotificationDetailDTO;
 import it.gov.pagopa.reward.notification.model.RewardsNotification;
 import it.gov.pagopa.reward.notification.utils.Utils;
@@ -18,7 +17,7 @@ public class RewardsNotification2DetailDTOMapper {
                 .beneficiaryType(String.valueOf(notification.getBeneficiaryType()))
                 .merchantFiscalCode(notification.getMerchantFiscalCode())
                 .iban(notification.getIban())
-                .amount(CommonUtilities.centsToEuro(notification.getRewardCents()))
+                .amountCents(notification.getRewardCents())
                 .startDate(notification.getStartDepositDate())
                 .endDate(notification.getNotificationDate())
                 .status(notification.getStatus())

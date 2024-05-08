@@ -61,7 +61,7 @@ public class RewardsNotificationDateReschedulerServiceImpl implements RewardsNot
         } else if(r.getAccumulatedAmount() != null){
             if(AccumulatedAmountDTO.AccumulatedTypeEnum.BUDGET_EXHAUSTED.equals(r.getAccumulatedAmount().getAccumulatedType())){
                 return budgetExhaustedHandler.calculateNotificationDate();
-            } else if(r.getAccumulatedAmount().getRefundThreshold() != null)  {
+            } else if(r.getAccumulatedAmount().getRefundThresholdCents() != null)  {
                 return thresholdHandler.calculateNotificationDate();
             } else {
                 throw new IllegalStateException("Not valid threshold rule %s".formatted(r.getInitiativeId()));

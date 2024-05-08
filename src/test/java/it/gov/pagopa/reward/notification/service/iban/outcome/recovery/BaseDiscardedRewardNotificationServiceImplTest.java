@@ -24,7 +24,6 @@ import org.mockito.stubbing.OngoingStubbing;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.IsoFields;
@@ -140,7 +139,7 @@ abstract class BaseDiscardedRewardNotificationServiceImplTest {
         RewardNotificationRule rule = RewardNotificationRuleFaker.mockInstance(1);
         rule.setEndDate(TODAY);
         rule.setTimeParameter(null);
-        rule.setAccumulatedAmount(AccumulatedAmountDTO.builder().accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED).refundThreshold(BigDecimal.TEN).build());
+        rule.setAccumulatedAmount(AccumulatedAmountDTO.builder().accumulatedType(AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED).refundThresholdCents(1000L).build());
 
         List<RewardsNotification> remedials = test(rule, NEXT_WEEK);
 

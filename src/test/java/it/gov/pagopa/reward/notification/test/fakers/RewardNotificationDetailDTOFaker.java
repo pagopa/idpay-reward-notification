@@ -7,7 +7,6 @@ import it.gov.pagopa.reward.notification.enums.RewardNotificationStatus;
 import it.gov.pagopa.reward.notification.utils.Utils;
 import org.apache.commons.lang3.ObjectUtils;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Random;
@@ -49,7 +48,7 @@ public class RewardNotificationDetailDTOFaker {
         out.externalId("NOTIFICATIONID%s".formatted(bias));
         out.userId("USERID%s".formatted(bias));
         out.iban("IBAN%s".formatted(bias));
-        out.amount(BigDecimal.valueOf(bias*10L));
+        out.amountCents(bias*10L);
         out.startDate(LocalDate.now().minusDays(1));
         out.endDate(LocalDate.now());
         out.status(RewardNotificationStatus.EXPORTED);
@@ -72,7 +71,7 @@ public class RewardNotificationDetailDTOFaker {
         out.externalId("NOTIFICATIONID%s".formatted(bias));
         out.userId("USERID%s".formatted(bias));
         out.iban("IBAN%s".formatted(bias));
-        out.amount(BigDecimal.valueOf(bias*10L));
+        out.amountCents(bias*10L);
         out.startDate(date.minusDays(1));
         out.endDate(date);
         out.status(RewardNotificationStatus.EXPORTED);

@@ -7,73 +7,146 @@ info:
 tags:
   - name: "refundRuleConsumer"
     description: ""
+  - name: "refundRuleNotifyError"
+    description: ""
   - name: "rewardTrxConsumer"
+    description: ""
+  - name: "rewardTrxNotifyEvaluationError"
     description: ""
   - name: "ibanOutcomeConsumer"
     description: ""
+  - name: "ibanNotifyOutcomeEvaluationError"
+    description: ""
   - name: "rewardNotificationUploadConsumer"
+    description: ""
+  - name: "rewardNotificationUploadError"
     description: ""
   - name: "rewardNotificationFeedback"
     description: ""
+  - name: "rewardNotificationFeedbackError"
+    description: ""
   - name: "deleteInitiative"
     description: "Delete the initiative"
+  - name: "deleteInitiativeError"
+    description: "Error of delete initiative"
 channels:
   reward-notification-refund-rule-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/InitiativeRefund2StoreDTO'
+        $ref: '#/components/messages/RewardNotificationRule'
       bindings:
         kafka:
-          topic: idpay-transaction-rule-update
+          topic: idpay-rule-update
       tags:
         - name: "refundRuleConsumer"
-  reward-notification-reward-trx-consumer:
+  reward-notification-refund-rule-error:
     publish:
       message:
-        $ref: '#/components/messages/RewardTransactionDTO'
+        $ref: '#/components/messages/RewardNotificationRuleError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "refundRuleNotifyError"
+  reward-notification-reward-trx-consumer:
+    subscribe:
+      message:
+        $ref: '#/components/messages/RewardNotificationEvaluation'
       bindings:
         kafka:
           topic: idpay-transaction
       tags:
         - name: "rewardTrxConsumer"
+  reward-notification-reward-trx-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardNotificationEvaluationError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "rewardTrxNotifyEvaluationError"
   reward-notification-iban-outcome-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/IbanOutcomeDTO'
+        $ref: '#/components/messages/RewardIbanOutcomeEvaluation'
       bindings:
         kafka:
           topic: idpay-checkiban-outcome
       tags:
         - name: "ibanOutcomeConsumer"
+  reward-notification-iban-outcome-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardIbanOutcomeEvaluationError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "ibanNotifyOutcomeEvaluationError"
   reward-notification-upload-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/'
+        $ref: '#/components/messages/RewardNotificationUploadRefundedStatus'
       bindings:
         kafka:
           topic: idpay-reward-notification-storage-events
       tags:
         - name: "rewardNotificationUploadConsumer"
+  reward-notification-upload-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardNotificationUploadRefundedStatusError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "rewardNotificationUploadError"
   reward-notification-feedback:
     publish:
       message:
-        $ref: '#/components/messages/StorageEventDto'
+        $ref: '#/components/messages/OrganizationFeedbackUpload'
       bindings:
         kafka:
           topic: idpay-reward-notification-response
       tags:
         - name: "rewardNotificationFeedback"
-  reeard-notification-delete-initiative:
+  reward-notification-feedback-error:
+    publish:
+      message:
+        $ref: '#/components/messages/OrganizationFeedbackUploadError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "rewardNotificationFeedbackError"
+  reward-notification-delete-initiative-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/QueueCommandOperationDTO'
+        $ref: '#/components/messages/DeleteInitiative'
       bindings:
         kafka:
           topic: idpay-commands
       tags:
         - name: "deleteInitiative"
+  reward-notification-delete-initiative-error:
+    publish:
+      message:
+        $ref: '#/components/messages/DeleteInitiativeError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "deleteInitiativeError"
 components:
   messages:
+    RewardNotificationRule:
+      contentType: application/json
+      description: >-
+        Receive reward notification rule initiative
+      summary: Information about reward notification rule
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
     RewardNotificationRuleError:
       contentType: application/json
       description: >-
@@ -81,6 +154,19 @@ components:
       summary: Informs of reward notification rule handling error
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+    RewardNotificationEvaluation:
+      contentType: application/json
+      description: >-
+        Receive information about the evaluation of the reward notification
+      summary: Information about reward notification evaluation
+      payload:
+        oneOf:
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-calculator/IDP-2479-documentazione-async-idpay-reward-calculator/specs/asyncapi.yaml#/components/schemas/TransactionProcessed'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionRejectedDTO'
+
     RewardNotificationEvaluationError:
       contentType: application/json
       description: >-
@@ -88,6 +174,18 @@ components:
       summary: Informs of reward notification evaluation error
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        oneOf:
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-calculator/IDP-2479-documentazione-async-idpay-reward-calculator/specs/asyncapi.yaml#/components/schemas/TransactionProcessed'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionRejectedDTO'
+    RewardIbanOutcomeEvaluation:
+      contentType: application/json
+      description: >-
+        Receive information about evaluation of the IBAN outcome for reward notification
+      summary: Information about IBAN outcome evaluation for reward notification
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-iban/IDP-2493-async-documentation/specs/asyncapi.yml#/components/schemas/IbanQueueWalletDTO"
     RewardIbanOutcomeEvaluationError:
       contentType: application/json
       description: >-
@@ -95,6 +193,37 @@ components:
       summary: Informs of IBAN outcome evaluation error for reward notification
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-iban/IDP-2493-async-documentation/specs/asyncapi.yml#/components/schemas/IbanQueueWalletDTO"
+    RewardNotificationUploadRefundedStatus:
+      contentType: application/json
+      description: >-
+        Receive information about upload refunded status
+      summary: Informations about upload of refunded status
+      payload:
+        $ref: "#/components/schemas/StorageEventDto"
+    RewardNotificationUploadRefundedStatusError:
+      contentType: application/json
+      description: >-
+        Send information about upload refunded status error
+      summary: Informations about upload of refunded status
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: "#/components/schemas/StorageEventDto"
+    OrganizationFeedbackUpload:
+      contentType: application/json
+      description: >-
+        Send information about organization feedback upload
+      summary: Information about organization feedback upload
+      headers:
+        properties:
+          kafka_messageKey:
+            type: "string"
+            description: concatenation of beneficiaryId and initiativeId (beneficiaryId_initiativeId)
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab_674661626073785876cb5aa7601"
+      payload:
+        $ref: "#/components/schemas/RewardFeedbackDTO" #TODO -> da inserire RewardFeedbackDTO
     OrganizationFeedbackUploadError:
       contentType: application/json
       description: >-
@@ -102,15 +231,28 @@ components:
       summary: Informs of organization feedback upload event handling error for reward notification
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
-    QueueCommandOperationDTO:
+      payload:
+        $ref: "#/components/schemas/RewardFeedbackDTO" #TODO -> da inserire RewardFeedbackDTO
+    DeleteInitiative:
       contentType: application/json
       description: >-
         Event consumed from application when a delete initiative command has published
       summary: Delete documents of the initiative
       payload:
-        $ref: "#/components/schemas/QueueCommandOperationDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
+    DeleteInitiativeError:
+      contentType: application/json
+      description: >-
+        An error occured when a delete initiative command has published
+      summary: Delete documents of the initiative error
+      headers:
+        $ref:  "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
 
   schemas:
+    RewardFeedbackDTO:
+      type: object
     Reward:
       type: object
       properties:

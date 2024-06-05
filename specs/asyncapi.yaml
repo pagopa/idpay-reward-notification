@@ -146,7 +146,7 @@ components:
         Receive reward notification rule initiative
       summary: Information about reward notification rule
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/RuleUpdate"
     RewardNotificationRuleError:
       contentType: application/json
       description: >-
@@ -155,7 +155,7 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/RuleUpdate"
     RewardNotificationEvaluation:
       contentType: application/json
       description: >-
@@ -163,9 +163,9 @@ components:
       summary: Information about reward notification evaluation
       payload:
         oneOf:
-          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
-          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-calculator/IDP-2479-documentazione-async-idpay-reward-calculator/specs/asyncapi.yaml#/components/schemas/TransactionProcessed'
-          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionRejectedDTO'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/main/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-calculator/main/specs/asyncapi.yaml#/components/schemas/TransactionProcessed'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionRejectedDTO'
 
     RewardNotificationEvaluationError:
       contentType: application/json
@@ -176,16 +176,16 @@ components:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
         oneOf:
-          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
-          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-calculator/IDP-2479-documentazione-async-idpay-reward-calculator/specs/asyncapi.yaml#/components/schemas/TransactionProcessed'
-          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionRejectedDTO'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/main/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-calculator/main/specs/asyncapi.yaml#/components/schemas/TransactionProcessed'
+          - $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionRejectedDTO'
     RewardIbanOutcomeEvaluation:
       contentType: application/json
       description: >-
         Receive information about evaluation of the IBAN outcome for reward notification
       summary: Information about IBAN outcome evaluation for reward notification
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-iban/IDP-2493-async-documentation/specs/asyncapi.yml#/components/schemas/IbanQueueWalletDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-iban/main/specs/asyncapi.yml#/components/schemas/IbanQueueWalletDTO"
     RewardIbanOutcomeEvaluationError:
       contentType: application/json
       description: >-
@@ -194,7 +194,7 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-iban/IDP-2493-async-documentation/specs/asyncapi.yml#/components/schemas/IbanQueueWalletDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-iban/main/specs/asyncapi.yml#/components/schemas/IbanQueueWalletDTO"
     RewardNotificationUploadRefundedStatus:
       contentType: application/json
       description: >-
@@ -223,7 +223,7 @@ components:
             description: concatenation of beneficiaryId and initiativeId (beneficiaryId_initiativeId)
             example: "bcf3651c-d2d3-4998-81a9-5f24302ab_674661626073785876cb5aa7601"
       payload:
-        $ref: "#/components/schemas/RewardFeedbackDTO" #TODO -> da inserire RewardFeedbackDTO
+        $ref: "#/components/schemas/RewardFeedbackDTO"
     OrganizationFeedbackUploadError:
       contentType: application/json
       description: >-
@@ -232,14 +232,14 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "#/components/schemas/RewardFeedbackDTO" #TODO -> da inserire RewardFeedbackDTO
+        $ref: "#/components/schemas/RewardFeedbackDTO"
     DeleteInitiative:
       contentType: application/json
       description: >-
         Event consumed from application when a delete initiative command has published
       summary: Delete documents of the initiative
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
     DeleteInitiativeError:
       contentType: application/json
       description: >-
@@ -248,11 +248,114 @@ components:
       headers:
         $ref:  "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
 
   schemas:
     RewardFeedbackDTO:
       type: object
+      description: DTO for reward feedback
+      properties:
+        id:
+          type: string
+          description: ID of the reward feedback
+        externalId:
+          type: string
+          description: External ID associated with the reward feedback
+        initiativeId:
+          type: string
+          description: ID of the initiative
+        beneficiaryId:
+          type: string
+          description: ID of the beneficiary
+        beneficiaryType:
+          $ref: '#/components/schemas/BeneficiaryType'
+        organizationId:
+          type: string
+          description: ID of the organization
+        rewardNotificationId:
+          type: string
+          description: ID of the reward notification
+        iban:
+          type: string
+          description: IBAN associated with the reward feedback
+        status:
+          type: string
+          description: Status of the reward feedback
+        rewardStatus:
+          $ref: '#/components/schemas/RewardNotificationStatus'
+        rejectionCode:
+          type: string
+          description: Code associated with rejection of the reward
+        rejectionReason:
+          type: string
+          description: Reason for rejection of the reward
+        refundType:
+          $ref: '#/components/schemas/RefundType'
+        rewardCents:
+          type: integer
+          format: int64
+          description: Reward amount in cents
+        effectiveRewardCents:
+          type: integer
+          format: int64
+          description: Effective reward amount in cents
+        startDate:
+          type: string
+          format: date
+          description: Start date of the reward feedback
+        endDate:
+          type: string
+          format: date
+          description: End date of the reward feedback
+        feedbackDate:
+          type: string
+          format: date-time
+          description: Feedback date of the reward feedback
+        feedbackProgressive:
+          type: integer
+          description: Progressive feedback number
+        executionDate:
+          type: string
+          format: date
+          description: Execution date of the reward feedback
+        cro:
+          type: string
+          description: CRO (Customer Reference Number) associated with the reward feedback
+        transferDate:
+          type: string
+          format: date
+          description: Transfer date of the reward feedback
+        userNotificationDate:
+          type: string
+          format: date
+          description: User notification date of the reward feedback
+
+    BeneficiaryType:
+      type: string
+      enum:
+        - CITIZEN
+        - MERCHANT
+      description: Type of beneficiary
+
+    RewardNotificationStatus:
+      type: string
+      enum:
+        - TO_SEND
+        - SKIPPED
+        - ERROR
+        - RECOVERED
+        - EXPORTED
+        - COMPLETED_OK
+        - COMPLETED_KO
+        - SUSPENDED
+      description: Status of the reward notification
+
+    RefundType:
+      type: string
+      enum:
+        - ORDINARY
+        - REMEDIAL
+      description: Type of refund
     Reward:
       type: object
       properties:

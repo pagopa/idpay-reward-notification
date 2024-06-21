@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @Builder
 @AllArgsConstructor
@@ -18,8 +16,8 @@ public class RewardNotificationDTO {
     private String eventId;
     @JsonProperty(value = "iban")
     private String iban;
-    @JsonProperty(value = "amount")
-    private BigDecimal amount;
+    @JsonProperty(value = "amountCents")
+    private Long amountCents;
     @JsonProperty(value = "status")
     private RewardNotificationStatus status;
 }

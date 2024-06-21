@@ -20,7 +20,7 @@ public class RewardMapper {
                 .operationType(trx.getOperationTypeTranscoded())
                 .notificationId(notificationId)
 
-                .reward(reward != null ? reward.getAccruedReward() : null)
+                .rewardCents(reward != null ? reward.getAccruedRewardCents() : null)
 
                 .organizationId(rule==null? null : rule.getOrganizationId())
 

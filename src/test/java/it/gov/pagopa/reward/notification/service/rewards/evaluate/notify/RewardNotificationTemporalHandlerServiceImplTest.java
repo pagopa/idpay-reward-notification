@@ -26,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
@@ -169,7 +168,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeRewardType(rewardType);
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         RewardsNotification[] expectedResult = new RewardsNotification[]{null};
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
@@ -222,7 +221,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
         rule.setInitiativeRewardType(rewardType);
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
         long expectedProgressive = 5L;
@@ -269,7 +268,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setOrganizationFiscalCode("ORGANIZATION_FISCAL_CODE_0_qdx");
         rule.setEndDate(LocalDate.now());
         rule.setInitiativeRewardType(rewardType);
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
         RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
@@ -315,7 +314,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
         rule.setInitiativeRewardType(rewardType);
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         LocalDate expectedNotificationDate = LocalDate.now().plusDays(1);
         RewardsNotification alreadyNotified = RewardsNotificationFaker.mockInstance(0, rule.getInitiativeId(), expectedNotificationDate, rewardType);
@@ -362,7 +361,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         // Given
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeId("INITIATIVEID");
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         // When
         DepositType result = service.calcDepositType(rule, reward);
@@ -377,7 +376,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now().plusDays(1));
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         // When
         DepositType result = service.calcDepositType(rule, reward);
@@ -392,7 +391,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeId("INITIATIVEID");
         rule.setEndDate(LocalDate.now());
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
 
         // When
         DepositType result = service.calcDepositType(rule, reward);
@@ -406,7 +405,7 @@ class RewardNotificationTemporalHandlerServiceImplTest {
         // Given
         RewardNotificationRule rule = buildRule(TimeParameterDTO.TimeTypeEnum.DAILY);
         rule.setInitiativeId("INITIATIVEID");
-        Reward reward = new Reward(BigDecimal.TEN);
+        Reward reward = new Reward(1000L);
         reward.getCounters().setExhaustedBudget(true);
 
         // When

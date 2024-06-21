@@ -30,7 +30,7 @@ public class RewardNotificationRuleValidatorServiceImpl implements RewardNotific
                 throw new IllegalArgumentException("[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid accumulated rule %s".formatted(rule));
             } else if (
                     AccumulatedAmountDTO.AccumulatedTypeEnum.THRESHOLD_REACHED.equals(accumulatedAmount.getAccumulatedType()) &&
-                            accumulatedAmount.getRefundThreshold() == null) {
+                            accumulatedAmount.getRefundThresholdCents() == null) {
                 throw new IllegalArgumentException("[REWARD_NOTIFICATION_RULE] [INVALID_RULE] Invalid threshold rule %s".formatted(rule));
             }
         }

@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -17,10 +16,10 @@ import java.time.LocalDate;
 public class ExportSummaryDTO {
     @JsonProperty(value = "createDate")
     private LocalDate createDate;
-    @JsonProperty(value = "totalAmount")
-    private BigDecimal totalAmount;
-    @JsonProperty(value = "totalRefundedAmount")
-    private BigDecimal totalRefundedAmount;
+    @JsonProperty(value = "totalAmountCents")
+    private Long totalAmountCents;
+    @JsonProperty(value = "totalRefundedAmountCents")
+    private Long totalRefundedAmountCents;
     @JsonProperty(value = "totalRefunds")
     private long totalRefunds;
     @JsonProperty(value = "successPercentage")

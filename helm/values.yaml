@@ -66,6 +66,7 @@ microservice-chart:
     EXPORT_BASE_PATH: ""
     DELETE_PAGINATION_SIZE: "45"
     DELETE_DELAY_TIME: "1000"
+    HEALTH_MONGO_ENABLED: "false"
 
   externalConfigMapValues:
     idpay-common:

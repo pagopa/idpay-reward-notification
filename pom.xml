@@ -67,6 +67,11 @@
             <version>1.11.0</version>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
             <version>3.1.11</version>

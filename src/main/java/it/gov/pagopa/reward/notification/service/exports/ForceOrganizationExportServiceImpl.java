@@ -31,6 +31,7 @@ public class ForceOrganizationExportServiceImpl implements ForceOrganizationExpo
                 .flatMap(this::cleanTodayExport)
                 .collectList()
                 .thenMany(exportRewardNotificationCsvService.execute(notificationDateToSearch));
+
     }
 
     private Mono<RewardOrganizationExport> cleanTodayExport(RewardOrganizationExport export) {
